@@ -28,7 +28,7 @@ By default, a dark and responsive Hugo theme. Typography used is Space Mono, mon
 
 ## 1. Features
 
-- Responsive, uses [UiKit v3](https://github.com/uikit/uikit/) v3 beta
+- Responsive, uses [UiKit v3](https://github.com/uikit/uikit/) beta
 - Suitable for researchers, PhD candidates, personal website and bloggers
 - Disqus support
 - Google Ads support (Only for blogs)
