@@ -17,7 +17,7 @@
           <image:image>
             <image:loc>{{ .imageLoc | absURL }}</image:loc>
             <image:title>{{ $title }}</image:title>
-            <image:cation>{{ .imageCaption }}</image:cation>
+            <image:caption>{{ .imageCaption }}</image:cation>
           </image:image>
         {{ end }}
       {{ end }}
