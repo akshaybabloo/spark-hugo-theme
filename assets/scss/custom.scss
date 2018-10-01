@@ -97,16 +97,27 @@ body {
     color: $text-color !important;
 }
 
-.gol-links a {
+.gol-links a:not(.uk-icon) {
     color: $text-color !important;
     text-decoration: none;
     border-bottom: 2px solid $text-color !important;
 }
 
-.gol-links a:hover,
-.gol-links a:focus {
+.gol-links a:hover:not(.uk-icon),
+.gol-links a:focus:not(.uk-icon) {
     text-decoration: none;
     border-bottom: 3px solid $primary !important;
+}
+
+a,
+.uk-link {
+  color: $primary !important;
+  text-decoration: none;
+  cursor: pointer;
+}
+a:hover,
+.uk-link:hover {
+  color: $secondary !important;
 }
 
 h2 {
