@@ -26,6 +26,8 @@ By default, a dark and responsive Hugo theme. Typography used is Space Mono, mon
 
 <!-- /TOC -->
 
+![Screenshot](https://github.com/akshaybabloo/gollahalli.com/raw/master/screeshot/home-page.png)
+
 ## 1. Features
 
 - Responsive, uses [UiKit v3](https://github.com/uikit/uikit/) beta
