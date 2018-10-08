@@ -2,8 +2,10 @@
 <div class="uk-section uk-section-default">
     <div class="uk-container uk-container-xsmall uk-text-justify">
         <article class="uk-article gol-links">
+            <link itemprop="mainEntityOfPage" href="{{ .Permalink }}" />
+            <link itemprop="author" content="{{ .Params.author.firstName }} {{ .Params.author.lastName }}" />
 
-            <h1 class="uk-article-title">{{.Title}}</h1>
+            <h1 class="uk-article-title" itemprop="headline">{{.Title}}</h1>
 
             <p class="uk-article-meta">{{.PublishDate.Format "January 2, 2006"}} &bullet; {{ range .Params.tags }} <a href="{{ `/tags/` | relLangURL }}{{ . | urlize }}">{{ . }}</a> {{ end }}</p>
 
