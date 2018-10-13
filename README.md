@@ -18,7 +18,7 @@ By default, a dark and responsive Hugo theme. Typography used is Space Mono, mon
     - [3.2.3. `blog` Page](#323-blog-page)
     - [3.2.4. `projects` Page](#324-projects-page)
     - [3.2.5. `sitemap.xml` page](#325-sitemapxml-page)
-    - [`searchindex.json` Search Index](#searchindexjson-search-index)
+    - [3.2.6. `searchindex.json` Search Index](#326-searchindexjson-search-index)
   - [3.3. Data files](#33-data-files)
     - [3.3.1. Education.json](#331-educationjson)
     - [3.3.2. Experience.json](#332-experiencejson)
@@ -100,7 +100,7 @@ siteMapImages:
 
 The image title is taken as the page title `{{ .Title }}`.
 
-#### `searchindex.json` Search Index
+#### 3.2.6. `searchindex.json` Search Index
 
 Make sure you add the following in your `config.toml` file for `searchindex.json` to generate:
 
@@ -150,7 +150,7 @@ Format:
       "where": "location",
       "from": "month, year",
       "to": "month, year",
-      "current": false,
+      "current": false
     }
   ]
 }
