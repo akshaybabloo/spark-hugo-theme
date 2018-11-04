@@ -6,7 +6,7 @@
 </head>
 <body>
 <div class="uk-height-viewport uk-background-cover uk-background-primary uk-overflow-hidden uk-light uk-flex uk-flex-top"
-    style="background: #1d1f21">
+    style="background: {{ .Site.Params.scss.backgroundColor }}">
     <div class="uk-width-1-2@xl uk-text-center uk-margin-auto uk-margin-auto-vertical">
         <h1 hidden>{{ .Title }}</h1>
         {{ if .Site.Params.logoSVG }}
