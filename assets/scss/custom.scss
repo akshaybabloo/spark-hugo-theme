@@ -5,6 +5,8 @@ $background-color-light: {{ .Site.Params.scss.backgroundColorLight }};
 $text-color: {{ .Site.Params.scss.textColor }};
 $sub-text-color: {{ .Site.Params.scss.subTextColor }};
 $global-font-family: {{ .Site.Params.scss.globalFontFamily }} !important;
+$label-background-color: {{ .Site.Params.scss.labelBackgroundColor }};
+$label-text-color: {{ .Site.Params.scss.labelTextColor }};
 
 // $primary: #A36441;
 // $secondary: #997953;
@@ -26,6 +28,7 @@ code{
 body {
     color: $text-color !important;
     background-color: $background-color !important;
+    font-size: 1em;
 }
 
 ::placeholder { /* Chrome, Firefox, Opera, Safari 10.1+ */
@@ -84,17 +87,18 @@ body {
 }
 
 .uk-label {
-    background-color: $secondary !important;
+    background-color: $label-background-color !important;
     font-size: x-small;
 }
 
 .uk-label a {
-    color: $text-color !important;
+    color: $label-text-color !important;
+    font-weight: 700;
 }
 
 .uk-label a:hover,
 .uk-label a:focus {
-    color: $text-color !important;
+    color: $label-text-color !important;
 }
 
 .gol-links a:not(.uk-icon) {
