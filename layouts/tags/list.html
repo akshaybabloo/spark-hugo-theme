@@ -5,13 +5,11 @@
         <div class="uk-section uk-section-default">
             <div class="uk-container uk-container-xsmall uk-text-justify" uk-height-viewport="offset-bottom: 32">
 
-                {{ range .Pages.GroupByPublishDate "2006" }}
-                <h2>{{.Key}}</h2>
+                <h2>{{ if ne "Tags" .Title }}{{.Title}} &mdash; {{ end }}{{"Tags"}}</h2>
                 <dl class="uk-description-list gol-links">
                     {{ range .Pages }}
                     <dt>
                         <time datetime="{{.PublishDate}}" itemprop="datePublished" class="uk-text-left">
-                            {{.PublishDate.Format "01-02-2006"}}
                         </time>
                     </dt>
                     <dd>
@@ -19,7 +17,6 @@
                     </dd>
                     {{end}}
                 </dl>
-                {{end}}
             </div>
         </div>
 
