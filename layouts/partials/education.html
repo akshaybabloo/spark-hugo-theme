@@ -1,6 +1,6 @@
 <table class="uk-table uk-table-responsive">
     <tbody>
-        {{ range . }}
+        {{ range sort . "from" "desc" }}
             <tr>
                 <td>{{.from}} - {{.to}}</td>
                 <td>
