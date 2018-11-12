@@ -7,6 +7,10 @@
 
 <meta name="robots" content="index, follow">
 
+{{ if (isset .Params "externalurl") }}
+<meta http-equiv="refresh" content="2;url={{ .Params.externalurl }}" />
+{{ end }}
+
 <link rel="shortcut icon" href="{{`favicon.ico` | relURL}}">
 
 <link rel="canonical" href="{{ .Permalink }}"/>
