@@ -5,7 +5,7 @@ description = "Dark hugo for researchers and software developers."
 homepage = "https://github.com/akshaybabloo/spark-hugo-theme"
 tags = ["dark theme", "research"]
 features = ["google ads", "unique blog tags", "researchers specific", "custom sitemap", "direct link to external pages", "inlince CSS and JS"]
-min_version = "0.49"
+min_version = "0.51"
 
 [author]
   name = "Akshay Raj Gollahalli"

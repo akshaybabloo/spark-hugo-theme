@@ -42,7 +42,7 @@ $ git clone https://github.com/akshaybabloo/spark-hugo-theme.git themes/Spark
 
 ### 3.1. Configuration
 
-Please see the configuration [here](https://github.com/akshaybabloo/gollahalli.com/blob/master/config.toml). This theme is built on Hugo v0.49.
+Please see the configuration [here](https://github.com/akshaybabloo/gollahalli.com/blob/master/config.toml). This theme is built on Hugo v0.51+.
 
 ### 3.2. Front Matter
 
