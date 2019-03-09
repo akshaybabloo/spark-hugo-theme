@@ -6,22 +6,21 @@
     <div class="uk-width-expand@m">
         <div class="uk-section uk-section-default">
             <div class="uk-container uk-container-xsmall uk-text-justify uk-text-break">
-
-                {{ range .Pages.GroupByPublishDate "2006" }}
-                <h2>{{.Key}}</h2>
-                <dl class="uk-description-list gol-links">
+                {{ range (.Paginate (.Pages.GroupByPublishDate "2006")).PageGroups }}
                     {{ range .Pages }}
-                    <dt>
-                        <time datetime="{{.PublishDate}}" itemprop="datePublished" class="uk-text-left">
-                            {{.PublishDate.Format "01-02-2006"}}
-                        </time>
-                    </dt>
-                    <dd>
-                        <a href="{{.Permalink}}">{{.Title}}</a>
-                    </dd>
-                    {{end}}
-                </dl>
+                        <article class="uk-article gol-links uk-margin-large">
+                            {{ if .Params.images }}
+                            <a href="{{.Permalink}}"><img class="uk-border-rounded uk-align-center" src="{{ index .Params.images 0 }}" alt="{{.Title}}" width="500" uk-img></a>
+                            {{ end }}
+                            <a href="{{.Permalink}}">{{.Title}}</a>
+                            <p class="uk-article-meta">
+                                <time datetime="{{.PublishDate}}" itemprop="datePublished" class="uk-text-left">{{.PublishDate.Format "01-02-2006"}}</time>
+                            </p>
+                            <p>{{.Description}}</p>
+                        </article>
+                    {{ end }}
                 {{end}}
+                {{ partial "pagination.html" . }}
             </div>
         </div>
     </div>
