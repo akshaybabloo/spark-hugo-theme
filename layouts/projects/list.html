@@ -9,7 +9,7 @@
             {{ range .Pages }}
             <li>
                 {{ if (isset .Params "externalurl") }}
-                    <a href="{{ .Params.externalurl }}">{{ .Title }}</a>
+                    <a href="{{ .Params.externalurl }}">{{ .Title }}</a> <img class="uk-icon" width="10" src="{{ `/img/external-link.svg` | relURL }}" uk-svg>
                 {{ else }}
                     <a href="{{ .Permalink }}">{{ .Title }}</a>
                 {{ end }}
