@@ -21,7 +21,7 @@ html {
     font-family: $global-font-family;
 }
 
-code{
+code {
     font-family: $global-font-family;
 }
 
@@ -31,18 +31,22 @@ body {
     font-size: 1em;
 }
 
-::placeholder { /* Chrome, Firefox, Opera, Safari 10.1+ */
+::placeholder {
+    /* Chrome, Firefox, Opera, Safari 10.1+ */
     color: $primary !important;
-    opacity: 1; /* Firefox */
+    opacity: 1;
+    /* Firefox */
     text-transform: uppercase;
     font-size: 0.875rem;
 }
 
-:-ms-input-placeholder { /* Internet Explorer 10-11 */
+:-ms-input-placeholder {
+    /* Internet Explorer 10-11 */
     color: $primary !important;
 }
 
-::-ms-input-placeholder { /* Microsoft Edge */
+::-ms-input-placeholder {
+    /* Microsoft Edge */
     color: $primary !important;
 }
 
@@ -58,10 +62,11 @@ body {
     outline: none;
 }
 
-.gol-subnav > ::before {
+.gol-subnav> ::before {
     border-left: 2px solid $primary !important;
 }
-.gol-tr-bgcolor{
+
+.gol-tr-bgcolor {
     background: $background-color-light
 }
 
@@ -115,13 +120,14 @@ body {
 
 a,
 .uk-link {
-  color: $primary !important;
-  text-decoration: none;
-  cursor: pointer;
+    color: $primary !important;
+    text-decoration: none;
+    cursor: pointer;
 }
+
 a:hover,
 .uk-link:hover {
-  color: $secondary !important;
+    color: $secondary !important;
 }
 
 h2 {
@@ -144,6 +150,6 @@ blockquote {
     color: $sub-text-color !important;
 }
 
-time{
+time {
     color: $sub-text-color;
 }

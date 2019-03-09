@@ -6,32 +6,13 @@ By default, a dark and responsive Hugo theme. Typography used is Space Mono, mon
 
 **Table of Content**
 
-<!-- TOC -->
-
-- [1. Features](#1-features)
-- [2. Quick Start](#2-quick-start)
-- [3. Usage](#3-usage)
-  - [3.1. Configuration](#31-configuration)
-  - [3.2. Front Matter](#32-front-matter)
-    - [3.2.1. All Pages](#321-all-pages)
-    - [3.2.2. `about` Page](#322-about-page)
-    - [3.2.3. `blog` Page](#323-blog-page)
-    - [3.2.4. `projects` Page](#324-projects-page)
-    - [3.2.5. `sitemap.xml` page](#325-sitemapxml-page)
-    - [3.2.6. `searchindex.json` Search Index](#326-searchindexjson-search-index)
-  - [3.3. Data files](#33-data-files)
-    - [3.3.1. Education.json](#331-educationjson)
-    - [3.3.2. Experience.json](#332-experiencejson)
-- [4. Development](#4-development)
-- [5. License](#5-license)
-
-<!-- /TOC -->
+<!-- TOC -->autoauto- [1. Features](#1-features)auto- [2. Quick Start](#2-quick-start)auto- [3. Usage](#3-usage)auto  - [3.1. Configuration](#31-configuration)auto  - [3.2. Front Matter](#32-front-matter)auto    - [3.2.1. All Pages](#321-all-pages)auto    - [3.2.2. `about` Page](#322-about-page)auto    - [3.2.3. `blog` Page](#323-blog-page)auto    - [3.2.4. `projects` Page](#324-projects-page)auto    - [3.2.5. `sitemap.xml` page](#325-sitemapxml-page)auto    - [3.2.6. `searchindex.json` Search Index](#326-searchindexjson-search-index)auto  - [3.3. Data files](#33-data-files)auto    - [3.3.1. Education.json](#331-educationjson)auto    - [3.3.2. Experience.json](#332-experiencejson)auto- [4. Development](#4-development)auto- [5. License](#5-license)autoauto<!-- /TOC -->
 
 ![Screenshot](https://github.com/akshaybabloo/gollahalli.com/raw/master/screeshot/home-page.png)
 
 ## 1. Features
 
-- Responsive, uses [UiKit v3](https://github.com/uikit/uikit/) beta
+- Responsive, uses [UiKit v3](https://github.com/uikit/uikit/)
 - Suitable for researchers, PhD candidates, personal website and bloggers
 - Disqus support
 - Google Ads support (Only for blogs)
