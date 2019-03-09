@@ -22,7 +22,7 @@ By default, a dark and responsive Hugo theme. Typography used is Space Mono, mon
 - Can change the colour of the theme
 - Education and experience data files
 - Search index json file (with Algolia support)
-- Custom sitemap with images support and custom stylesheet
+- Custom sitemap with images support, custom stylesheet, priority and change frequency
 - Structured data for website and articles
 - With blog pagination
 - Support for external links in blog

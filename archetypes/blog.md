@@ -15,4 +15,7 @@ author:
   email: ""
   addressCity: ""
   addressCountry: ""
+sitemap:
+  priority: 0.8
+  changeFreq: monthly
 ---
