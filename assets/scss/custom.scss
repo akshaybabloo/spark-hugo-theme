@@ -153,3 +153,8 @@ blockquote {
 time {
     color: $sub-text-color;
 }
+
+.uk-badge {
+    background: $primary !important;
+    color: $label-text-color !important;
+}
