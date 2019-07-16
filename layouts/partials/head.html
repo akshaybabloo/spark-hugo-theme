@@ -69,7 +69,9 @@
   <META NAME="ROBOTS" CONTENT="NOINDEX, NOFOLLOW">
 {{end}}
 
-{{ template "_internal/google_analytics_async.html" . }}
+{{ if eq (getenv "HUGO_ENV") "production" }}
+   {{ template "_internal/google_analytics_async.html" . }}
+{{ end }}
 {{ template "_internal/google_news.html" . }}
 {{ template "_internal/opengraph.html" . }}
 {{ template "_internal/schema.html" . }}
