@@ -19,4 +19,7 @@ author:
 sitemap:
   priority: 0.8
   changeFreq: monthly
+# siteMapImages:
+#   - imageLoc: ""
+#     imageCaption: ""
 ---
