@@ -134,6 +134,10 @@ h2 {
     color: $secondary !important;
 }
 
+h2 > code {
+    font-size: 1.7rem;
+}
+
 h3 {
     color: $secondary !important;
 }
@@ -157,4 +161,18 @@ time {
 .uk-badge {
     background: $primary !important;
     color: $label-text-color !important;
+}
+
+#searchBox input{
+    border: 1px solid $primary !important;
+    color: $primary !important;
+}
+
+#searchBox, .ais-SearchBox-loadingIndicator{
+    padding-right: 10px;
+    stroke: $primary !important;
+}
+
+.ais-SearchBox-loadingIcon {
+    stroke: $primary !important;
 }
