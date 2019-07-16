@@ -1,10 +1,17 @@
-if (document.getElementById("search-input") != null) {
+if (document.getElementById("searchBox") != null) {
     search.addWidget(
         instantsearch.widgets.searchBox({
-            container: '#search-input',
+            container: '#searchBox',
             placeholder: 'Search...',
+            showSubmit: false,
             magnifier: false,
-            reset: false
+            showReset: false,
+            cssClasses: {
+                input: ['uk-search-input'],
+                loadingIndicator: ['uk-form-icon', 'uk-form-icon-flip', 'uk-preserve'],
+            },
+            showLoadingIndicator: true,
+            searchAsYouType: true
         })
     );
 }
@@ -15,20 +22,27 @@ if (document.getElementById("hits") != null) {
             container: '#hits',
             templates: {
                 empty: 'No results',
-                item: '> <a class="gol-links" href="{{{uri}}}">{{{title}}}</a>'
-            },
-            escapeHits: true
+                item: '<a class="gol-links" href="{{{uri}}}">{{{title}}}</a>'
+            }
         })
     );
 }
 
-if (document.getElementById("search-input-sidenav") != null) {
+if (document.getElementById("searchBox-sideNav") != null) {
     search.addWidget(
         instantsearch.widgets.searchBox({
-            container: '#search-input-sidenav',
+            container: '#searchBox-sideNav',
             placeholder: 'Search...',
+            autofocus: true,
             magnifier: false,
-            reset: false
+            showSubmit: false,
+            showReset: false,
+            cssClasses: {
+                input: ['uk-search-input', 'uk-text-center'],
+                loadingIndicator: ['uk-form-icon', 'uk-form-icon-flip'],
+            },
+            showLoadingIndicator: true,
+            searchAsYouType: true
         })
     );
 }
@@ -39,9 +53,8 @@ if (document.getElementById("hits-sidenav") != null) {
             container: '#hits-sidenav',
             templates: {
                 empty: 'No results',
-                item: '> <a class="gol-links" href="{{{uri}}}">{{{title}}}</a>'
-            },
-            escapeHits: true
+                item: '<a class="gol-links" href="{{{uri}}}">{{{title}}}</a>'
+            }
         })
     );
 }
