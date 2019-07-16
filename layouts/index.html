@@ -22,11 +22,12 @@
                 <li><a href="{{ .URL }}">{{ .Name }}</a></li>
             {{ end }}
         </ul>
-        {{ with .Content }}
-            <p class="uk-text-justify uk-margin-left uk-margin-right">
-                {{ . }}
-            </p>
-        {{end}}
+        <p class="uk-text-justify uk-margin-left uk-margin-right">
+            {{ if .Site.Params.namedLogo }}
+                <img class="uk-align-center" src="{{ .Site.Params.namedLogo | relURL}}" alt="Akshay Raj Gollahalli's logo" width="300" height="70" uk-svg>
+            {{ end }}
+            {{ .Content }}
+        </p>
         {{ if .Site.Params.pgp }}
             <p>
                 PGP: {{ .Site.Params.pgp }}
