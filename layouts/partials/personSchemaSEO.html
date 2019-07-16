@@ -3,9 +3,9 @@
       "@context": "http://schema.org/",
       "@type": "Person",
       {{ if (isset .Params "images") }}
-        "image":"{{ (index .Params.images 0) | absURL }}",
+        "image":{{ (index .Params.images 0) | absURL | jsonify | safeJS }},
       {{ else }}
-      "image":"{{ .Site.Params.thumbnailUrl | absURL }}",
+      "image":{{ .Site.Params.thumbnailUrl | absURL | jsonify | safeJS }},
       {{ end }}
       "honorificPrefix": "{{ .Params.author.prefix }}",
       "name": "{{ .Params.author.firstName }} {{ .Params.author.lastName }}",

@@ -1,12 +1,12 @@
 <script type="application/ld+json">
     {
-        "url":"{{ .Permalink }}",
+        "url":{{ .Permalink }},
         "name":"{{ .Site.Title }}",
-        "description":"{{ .Params.description }}",
+        "description":{{ .Params.description | jsonify | safeJS  }},
         {{ if (isset .Params "images") }}
-        "image":"{{ (index .Params.images 0) | absURL }}",
+        "image":{{ (index .Params.images 0) | absURL | jsonify | safeJS }},
         {{ else }}
-        "image":"{{ .Site.Params.thumbnailUrl | absURL }}",
+        "image":{{ .Site.Params.thumbnailUrl | absURL | jsonify | safeJS }},
         {{ end }}
         "@context":"http://schema.org",
         "@type":"WebSite"
