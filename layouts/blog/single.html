@@ -31,6 +31,16 @@
                     </ul>
                 </div>
 
+                {{ if (isset .Params "sitemapimages" )}}
+                    {{ range $index, $element := .Params.siteMapImages }}
+                        {{if eq $index 0 }}
+                            <figure>
+                                <img src="{{ .imageLoc | absURL }}" alt="{{ .imageCaption }}" uk-img>
+                            </figure>
+                        {{end}}
+                    {{end}}
+                {{ end }}
+                
                 {{.Content}}
 
             </article>
