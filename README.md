@@ -4,26 +4,29 @@ By default, a dark and responsive Hugo theme. Typography used is Space Mono, mon
 
 [Demo](https://www.gollahalli.com)
 
+> Note: Working example of this theme can be found at [https://github.com/akshaybabloo/gollahalli.com/](https://github.com/akshaybabloo/gollahalli.com/)
+
 **Table of Content**
 
-<!-- TOC -->
+<!-- TOC depthFrom:2 -->
 
-- [1. Features](#1-features)
-- [2. Quick Start](#2-quick-start)
-- [3. Usage](#3-usage)
-  - [3.1. Configuration](#31-configuration)
-  - [3.2. Front Matter](#32-front-matter)
-    - [3.2.1. All Pages](#321-all-pages)
-    - [3.2.2. `about` Page](#322-about-page)
-    - [3.2.3. `blog` Page](#323-blog-page)
-    - [3.2.4. `projects` Page](#324-projects-page)
-    - [3.2.5. `sitemap.xml` page](#325-sitemapxml-page)
-    - [3.2.6. `searchindex.json` Search Index](#326-searchindexjson-search-index)
-  - [3.3. Data files](#33-data-files)
-    - [3.3.1. Education.json](#331-educationjson)
-    - [3.3.2. Experience.json](#332-experiencejson)
-- [4. Development](#4-development)
-- [5. License](#5-license)
+- [Spark](#Spark)
+  - [1. Features](#1-Features)
+  - [2. Quick Start](#2-Quick-Start)
+  - [3. Usage](#3-Usage)
+    - [3.1. Configuration](#31-Configuration)
+    - [3.2. Front Matter](#32-Front-Matter)
+      - [3.2.1. All Pages](#321-All-Pages)
+      - [3.2.2. `about` Page](#322-about-Page)
+      - [3.2.3. `blog` Page](#323-blog-Page)
+      - [3.2.4. `projects` Page](#324-projects-Page)
+      - [3.2.5. `sitemap.xml` page](#325-sitemapxml-page)
+      - [3.2.6. `searchindex.json` Search Index](#326-searchindexjson-Search-Index)
+    - [3.3. Data files](#33-Data-files)
+      - [3.3.1. Education.json](#331-Educationjson)
+      - [3.3.2. Experience.json](#332-Experiencejson)
+  - [4. Development](#4-Development)
+  - [5. License](#5-License)
 
 <!-- /TOC -->
 
@@ -45,8 +48,12 @@ By default, a dark and responsive Hugo theme. Typography used is Space Mono, mon
 - Structured data for website and articles
 - With blog pagination and categories
 - Support for external links in blog
-
-AMP coming soon.
+- AMP Support
+  - Blog contents now support AMP
+- For production, `HUGO_ENV` must be set to `production`, so that Google Analytics can work.
+- SEO
+  - Optimised for search engine
+  - Custom schemas
 
 ## 2. Quick Start
 
@@ -61,7 +68,7 @@ $ git clone https://github.com/akshaybabloo/spark-hugo-theme.git themes/Spark
 
 ### 3.1. Configuration
 
-Please see the configuration [here](https://github.com/akshaybabloo/gollahalli.com/blob/master/config.toml). This theme is built on Hugo v0.51+.
+Please see the configuration [here](https://github.com/akshaybabloo/gollahalli.com/blob/master/config.toml). This theme is built on Hugo v0.55+.
 
 ### 3.2. Front Matter
 
