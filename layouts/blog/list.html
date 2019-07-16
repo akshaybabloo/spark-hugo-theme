@@ -9,15 +9,16 @@
                 {{ range (.Paginate (.Pages.GroupByPublishDate "2006")).PageGroups }}
                     {{ range .Pages }}
                         <article class="uk-article gol-links uk-margin-large">
+                            <p class="uk-article-meta">
+                                <time datetime="{{.PublishDate}}" itemprop="datePublished" class="uk-text-left">{{.PublishDate.Format "02 Jan 2006"}}</time> <br>
+                                <a class="uk-margin-bottom uk-text-large" style="font-size: 1.2rem;" href="{{.Permalink}}">{{.Title}}</a>
+                            </p>
                             {{ if .Params.images }}
                             <a href="{{.Permalink}}"><img class="uk-border-rounded uk-align-center" src="{{ index .Params.images 0 }}" alt="{{.Title}}" width="500" uk-img></a>
                             {{ end }}
-                            <a href="{{.Permalink}}">{{.Title}}</a>
-                            <p class="uk-article-meta">
-                                <time datetime="{{.PublishDate}}" itemprop="datePublished" class="uk-text-left">{{.PublishDate.Format "01-02-2006"}}</time>
-                            </p>
                             <p>{{.Description}}</p>
                         </article>
+                        <hr class="uk-divider-icon">
                     {{ end }}
                 {{end}}
                 {{ partial "pagination.html" . }}
