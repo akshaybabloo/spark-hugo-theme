@@ -1,25 +1,36 @@
 {{ define "main" }}
 
-<div class="uk-section uk-section-default" uk-height-viewport="offset-bottom: 32">
-    <div class="uk-container uk-container-xsmall uk-text-justify">
+    <div class="uk-section uk-section-default" uk-height-viewport="offset-bottom: 32">
+        <div class="uk-container">
 
-        {{ range .Data.Pages.GroupByParam "projectcategory" }}
-        <h2>{{.Key}}</h2>
-        <ul class="uk-list gol-links">
-            {{ range .Pages }}
-            <li>
-                {{ if (isset .Params "externalurl") }}
-                    <a href="{{ .Params.externalurl }}">{{ .Title }}</a> <img class="uk-icon" width="10" src="{{ `/img/external-link.svg` | relURL }}" uk-svg>
-                {{ else }}
-                    <a href="{{ .Permalink }}">{{ .Title }}</a>
-                {{ end }}
-            </li>
+            {{ range .Data.Pages.GroupByParam "projectcategory" }}
+                <h2>{{.Key}}</h2>
+                <div class="uk-child-width-1-3@m uk-grid-small uk-grid-match" uk-grid>
+                    {{ range .Pages }}
+                        {{ if (isset .Params "externalurl") }}
+                            <div>
+                                <div class="uk-card uk-card-default uk-card-body">
+                                    <h3 class="uk-card-title uk-h5"><a href="{{ .Params.externalurl }}">{{ .Title }}
+                                            <img class="uk-icon" width="12"
+                                                 src="{{ `/img/external-link.svg` | relURL }}"
+                                                 uk-svg></a></h3>
+                                    <p class="uk-text-meta">{{ .Params.description }}</p>
+                                </div>
+                            </div>
+                        {{ else }}
+                            <div>
+                                <div class="uk-card uk-card-default uk-card-body">
+                                    <h3 class="uk-card-title uk-h5">{{ .Title }}</h3>
+                                    <p class="uk-text-meta">{{ .Params.description }}</p>
+                                </div>
+                            </div>
+                        {{ end }}
+                    {{ end }}
+                </div>
             {{ end }}
-        </ul>
-        {{ end }}
 
+        </div>
     </div>
-</div>
 
 
 {{end}}
