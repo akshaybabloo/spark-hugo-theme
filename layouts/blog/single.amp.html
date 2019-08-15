@@ -30,9 +30,13 @@
     {{ end }}
     <header class="main-header">
         <nav class="blog-title">
-            <a href="{{ .Site.BaseURL }}">
-                {{ .Site.Title }}
-            </a>
+            {{ if .Site.Params.namedLogo }}
+                <amp-img width="150" height="36" layout="fixed" src="{{ .Site.Params.namedLogo | relURL}}"></amp-img>
+            {{ else }}
+                <a href="{{ .Site.BaseURL }}">
+                    {{ .Site.Title }}
+                </a>
+            {{ end }}
         </nav>
     </header>
 
