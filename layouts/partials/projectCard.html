@@ -1,0 +1,16 @@
+<div class="uk-card uk-card-default">
+    <div class="uk-card-header">
+        <div class="uk-grid-small uk-flex-middle" uk-grid>
+            <div class="uk-width-expand">
+                <h3 class="uk-card-title uk-margin-remove-bottom">{{ if (isset .Params "externalurl") }}
+                        <a href="{{ .Params.externalurl }}" onclick="ga('send', 'event', 'Project', 'click', '{{ .Title }}')">{{ .Title }}</a> <img class="uk-icon" width="12"
+                                                                                  src="{{ `/img/external-link.svg` | relURL }}"
+                                                                                  uk-svg alt="New window icon">{{else}}{{ .Title }}{{end}}
+                </h3>
+            </div>
+        </div>
+    </div>
+    <div class="uk-card-body">
+        <p>{{ .Params.description }}</p>
+    </div>
+</div>
