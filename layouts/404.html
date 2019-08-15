@@ -24,9 +24,15 @@
 <div class="uk-position-medium uk-position-top-right uk-visible@m">
     <a class="uk-search-toggle" uk-search-icon href="#"></a>
     <div class="uk-drop" uk-drop="mode: click; pos: left-center; offset: 0">
-        <form class="uk-search uk-search-navbar uk-width-1-1">
-            <input class="uk-search-input" type="search" placeholder="Search..." autofocus>
-        </form>
+        <div class="uk-search uk-search-navbar uk-width-1-1">
+            <div class="uk-search-input" id="searchBox"></div>
+            <div uk-dropdown="mode: click">
+                <div id="hits"></div>
+                <br/>
+                <img class="uk-margin-remove uk-align-right uk-preserve"
+                     src="{{`img/algolia-powered-by-8762ce8b.svg` | relURL}}" uk-svg alt="Algolia logo">
+            </div>
+        </div>
     </div>
 </div>
 <!--end search console-->
