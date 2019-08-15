@@ -25,14 +25,15 @@
             "sameAs": [
                 {{ .Site.Params.twitter | jsonify | safeJS }},
                 {{ .Site.Params.github | jsonify | safeJS }},
-                {{ .Site.Params.linkedin | jsonify | safeJS }}
+                {{ .Site.Params.linkedin | jsonify | safeJS }},
+                {{ .Site.BaseURL | jsonify | safeJS }}
             ]
         },
         "headline": "{{ .Title }}",
         "url": {{ .Permalink | jsonify | safeJS }},
-        "datePublished": "{{ .PublishDate.Format "2006-01-02T15:04:05-0700" | safeHTML}}",
+        "datePublished": {{ .PublishDate.Format "2006-01-02T15:04:05-0700" | safeHTML}},
         {{- if not (eq .Lastmod .Date) -}}
-        "dateModified": "{{ .Lastmod.Format "2006-01-02T15:04:05-0700" | safeHTML}}",
+        "dateModified": {{ .Lastmod.Format "2006-01-02T15:04:05-0700" | safeHTML}},
         {{- end -}}
         "image": {
             "@type": "ImageObject",
