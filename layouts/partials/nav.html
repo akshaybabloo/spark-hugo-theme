@@ -5,13 +5,13 @@
 
                 <ul class="uk-navbar-nav uk-visible@m">
                     <li>
-                        <a href="{{ .Site.BaseURL }}" class="uk-link-text">
+                        <a onclick="ga('send', 'event', 'Menu', 'click', 'Home')" href="{{ .Site.BaseURL }}" class="uk-link-text">
                             <span class="uk-icon uk-margin-small-right" uk-icon="icon: home"></span>
                             Home
                         </a>
                     </li>
                     {{ range .Site.Menus.main }}
-                    <li><a href="{{ .URL }}" class="uk-link-text">{{ .Name }}</a></li>
+                        <li><a onclick="ga('send', 'event', 'Menu', 'click', '{{ .Name }}')" href="{{ .URL }}" class="uk-link-text">{{ .Name }}</a></li>
                     {{ end }}
                 </ul>
 
@@ -23,13 +23,16 @@
                         <div class="uk-search uk-search-navbar uk-width-1-1">
                             <div class="uk-search-input" id="searchBox"></div>
                             <div uk-dropdown="mode: click">
-                                <div id="hits"></div> <br/>
-                                <img class="uk-margin-remove uk-align-right uk-preserve" height="15" src="{{`img/algolia-powered-by-8762ce8b.svg` | relURL}}" uk-svg alt="Algolia logo">
+                                <div id="hits"></div>
+                                <br/>
+                                <img class="uk-margin-remove uk-align-right uk-preserve" height="15"
+                                     src="{{`img/algolia-powered-by-8762ce8b.svg` | relURL}}" uk-svg alt="Algolia logo">
                             </div>
                         </div>
                     </div>
                 </div>
-                <a class="uk-navbar-toggle uk-link-text uk-hidden@m" href="#offcanvas" uk-navbar-toggle-icon uk-toggle></a>
+                <a class="uk-navbar-toggle uk-link-text uk-hidden@m" href="#offcanvas" uk-navbar-toggle-icon
+                   uk-toggle></a>
             </div>
 
         </div>
@@ -43,13 +46,13 @@
 
         <ul class="uk-nav uk-nav-default">
             <li>
-                <a href="{{ .Site.BaseURL }}" class="uk-link-text">
+                <a onclick="ga('send', 'event', 'OffcanvasMenu', 'click', 'Home')" href="{{ .Site.BaseURL }}" class="uk-link-text">
                     <span class="uk-icon uk-margin-small-right" uk-icon="icon: home"></span>
                     Home
                 </a>
             </li>
             {{ range .Site.Menus.main }}
-            <li><a href="{{ .URL }}" class="uk-link-text">{{ .Name }}</a></li>
+                <li><a onclick="ga('send', 'event', 'OffcanvasMenu', 'click', '{{ .Name }}')" href="{{ .URL }}" class="uk-link-text">{{ .Name }}</a></li>
             {{ end }}
         </ul>
 

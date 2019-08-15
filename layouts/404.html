@@ -6,13 +6,15 @@
 </head>
 <body>
 <div class="uk-height-viewport uk-background-cover uk-background-primary uk-overflow-hidden uk-light uk-flex uk-flex-top"
-    style="background: #1d1f21">
+     style="background: #1d1f21">
     <div class="uk-width-1-2@xl uk-text-center uk-margin-auto uk-margin-auto-vertical">
         <h1>404!</h1>
 
         <ul class="uk-subnav uk-subnav-divider uk-flex-center uk-visible@m gol-subnav">
             {{ range .Site.Menus.main }}
-                <li><a href="{{ .URL }}">{{ .Name }}</a></li>
+                <li>
+                    <a onclick="ga('send', 'event', 'Menu', 'click', '{{ .Name }}')" href="{{ .URL }}">{{ .Name }}</a>
+                </li>
             {{ end }}
         </ul>
         <p>The page you are looking for cannot be found.</p>
@@ -46,7 +48,9 @@
 
         <ul class="uk-nav uk-nav-default">
             {{ range .Site.Menus.main }}
-            <li><a href="{{ .URL }}">{{ .Name }}</a></li>
+                <li>
+                    <a onclick="ga('send', 'event', 'Menu', 'click', '{{ .Name }}')" href="{{ .URL }}">{{ .Name }}</a>
+                </li>
             {{ end }}
         </ul>
 
