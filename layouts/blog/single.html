@@ -1,7 +1,8 @@
 {{ define "head"}}
-{{ with .OutputFormats.Get "amp" }}
-    <link rel="amphtml" href="{{ .Permalink }}">
-{{ end }}
+    {{ with .OutputFormats.Get "amp" }}
+        <link rel="amphtml" href="{{ .Permalink }}">
+    {{ end }}
+    {{- partial "articleSchemaSEO.html" . -}}
 {{ end }}
 
 {{ define "main"}}
