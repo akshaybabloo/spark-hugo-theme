@@ -7,7 +7,7 @@
 
 <meta name="description"
       content="{{ .Description }}"/>
-<link rel="shortcut icon" href="/favicon.png" type="image/png"/>
+<link rel="shortcut icon" href="{{`img/favicon-144-precomposed.png` | relURL}}" type="image/png"/>
 {{ with .OutputFormats.Get "html" }}
     <link rel="canonical" href="{{ .Permalink }}"/>
 {{ end }}
@@ -21,31 +21,6 @@
 {{ template "_internal/opengraph.html" . }}
 {{ template "_internal/schema.html" . }}
 {{ template "_internal/twitter_cards.html" . }}
-
-{{/*<meta property="og:site_name" content="Ghost"/>*/}}
-{{/*<meta property="og:type" content="article"/>*/}}
-{{/*<meta property="og:title" content="Advanced Sitemap Plugin for Gatsby – Ghost – Headless CMS"/>*/}}
-{{/*<meta property="og:description"*/}}
-{{/*      content="We just shipped a new plugin that automatically generates advanced sitemaps for static sites built with Gatsby"/>*/}}
-{{/*<meta property="og:url" content="https://blog.ghost.org/advanced-sitemaps-gatsby/"/>*/}}
-{{/*<meta property="og:image" content="https://blog.ghost.org/content/images/2019/03/Advanced-SiteMap-GHG.png"/>*/}}
-{{/*<meta property="article:published_time" content="2019-03-12T14:00:00.000Z"/>*/}}
-{{/*<meta property="article:modified_time" content="2019-03-12T14:50:49.000Z"/>*/}}
-{{/*<meta property="article:tag" content="New"/>*/}}
-
-{{/*<meta name="twitter:card" content="summary_large_image"/>*/}}
-{{/*<meta name="twitter:title" content="Advanced Sitemap Plugin for Gatsby – Ghost – Headless CMS"/>*/}}
-{{/*<meta name="twitter:description"*/}}
-{{/*      content="We just shipped a new plugin that automatically generates advanced sitemaps for static sites built with Gatsby"/>*/}}
-{{/*<meta name="twitter:url" content="https://blog.ghost.org/advanced-sitemaps-gatsby/"/>*/}}
-{{/*<meta name="twitter:image" content="https://blog.ghost.org/content/images/2019/03/Advanced-SiteMap-GHG.png"/>*/}}
-{{/*<meta name="twitter:label1" content="Written by"/>*/}}
-{{/*<meta name="twitter:data1" content="Kym Ellis"/>*/}}
-{{/*<meta name="twitter:label2" content="Filed under"/>*/}}
-{{/*<meta name="twitter:data2" content="New"/>*/}}
-{{/*<meta name="twitter:creator" content="@kymellis"/>*/}}
-{{/*<meta property="og:image:width" content="2600"/>*/}}
-{{/*<meta property="og:image:height" content="1430"/>*/}}
 
 <link rel="alternate" type="application/rss+xml" title="RSS Feed for {{ .Site.Title }}" href="{{ `index.xml` | absURL }}" />
 
@@ -246,8 +221,8 @@
     body {
         max-height: 100%;
         height: 100%;
-        color: #3a4145;
-        background: #f4f8fb;
+        color: {{ .Site.Params.scss.textColor }};
+        background: {{ .Site.Params.scss.backgroundColor }};
         letter-spacing: 0.01rem;
         font-family: "Merriweather", serif;
         font-size: 1.8rem;
@@ -268,7 +243,7 @@
 
     h1, h2, h3, h4, h5, h6 {
         margin: 0 0 0.3em 0;
-        color: #2e2e2e;
+        color: {{ .Site.Params.scss.secondary }};
         font-family: "Open Sans", sans-serif;
         line-height: 1.15em;
         text-rendering: geometricPrecision;
@@ -306,11 +281,13 @@
     }
 
     a {
-        color: #4a4a4a
+        color: {{ .Site.Params.scss.primary }}
     }
 
     a:hover {
-        color: #111
+        color: {{ .Site.Params.scss.secondary }};
+        text-decoration: underline;
+        outline: none;
     }
 
     p, ul, ol, dl {
@@ -399,6 +376,10 @@
 
     mark {
         background-color: #fdffb6
+    }
+
+    :not(pre) > code {
+        color: {{ .Site.Params.scss.labelTextColor }};
     }
 
     code, tt {
@@ -558,15 +539,15 @@
         box-sizing: border-box;
         width: 100%;
         height: 50px;
-        background: #5ba4e5 no-repeat center center;
+        background: {{ .Site.Params.scss.backgroundColor }} no-repeat center center;
         background-size: cover;
-        text-align: left;
+        text-align: center;
         -webkit-box-sizing: border-box;
         -moz-box-sizing: border-box
     }
 
     .content {
-        background: #fff;
+        background: {{ .Site.Params.scss.backgroundColor }};
         padding-top: 15px
     }
 
@@ -715,7 +696,12 @@
     .copyright {
         display: block;
         float: left;
-        width: 45%
+        width: 45%;
+        color: {{ .Site.Params.scss.subTextColor }};
+    }
+
+    .copyright a {
+        color: {{ .Site.Params.scss.subTextColor }};
     }
 </style>
 
