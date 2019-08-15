@@ -37,15 +37,15 @@ By default, a dark and responsive Hugo theme. Typography used is Space Mono, mon
 - Responsive, uses [UiKit v3](https://github.com/uikit/uikit/)
 - Suitable for researchers, PhD candidates, personal website and bloggers
 - Disqus support
-- Google Ads support (Only for blogs)
-- Google analytics support
+- Google Ads support (Only for blogs) and AMP blogs
+- Google analytics support with event tracking
 - Inline CSS and JS, no need of cache bursting
 - Uses SASS/SCSS, no NodeJS needed
 - Can change the colour of the theme
 - Education and experience data files
 - Search index json file (with Algolia support)
 - Custom sitemap with images support, custom stylesheet, priority and change frequency
-- Structured data for website and articles
+- Structured data for website and blogs
 - With blog pagination and categories
 - Support for external links in blog
 - AMP Support
