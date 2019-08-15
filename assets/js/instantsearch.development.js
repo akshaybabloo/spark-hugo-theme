@@ -1,4 +1,4 @@
-/*! InstantSearch.js 3.5.4 | © Algolia, Inc. and contributors; MIT License | https://github.com/algolia/instantsearch.js */
+/*! InstantSearch.js 3.6.0 | © Algolia, Inc. and contributors; MIT License | https://github.com/algolia/instantsearch.js */
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
   typeof define === 'function' && define.amd ? define(factory) :
@@ -74,20 +74,35 @@
     return _extends.apply(this, arguments);
   }
 
-  function _objectSpread(target) {
+  function ownKeys(object, enumerableOnly) {
+    var keys = Object.keys(object);
+
+    if (Object.getOwnPropertySymbols) {
+      var symbols = Object.getOwnPropertySymbols(object);
+      if (enumerableOnly) symbols = symbols.filter(function (sym) {
+        return Object.getOwnPropertyDescriptor(object, sym).enumerable;
+      });
+      keys.push.apply(keys, symbols);
+    }
+
+    return keys;
+  }
+
+  function _objectSpread2(target) {
     for (var i = 1; i < arguments.length; i++) {
       var source = arguments[i] != null ? arguments[i] : {};
-      var ownKeys = Object.keys(source);
 
-      if (typeof Object.getOwnPropertySymbols === 'function') {
-        ownKeys = ownKeys.concat(Object.getOwnPropertySymbols(source).filter(function (sym) {
-          return Object.getOwnPropertyDescriptor(source, sym).enumerable;
-        }));
+      if (i % 2) {
+        ownKeys(source, true).forEach(function (key) {
+          _defineProperty(target, key, source[key]);
+        });
+      } else if (Object.getOwnPropertyDescriptors) {
+        Object.defineProperties(target, Object.getOwnPropertyDescriptors(source));
+      } else {
+        ownKeys(source).forEach(function (key) {
+          Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key));
+        });
       }
-
-      ownKeys.forEach(function (key) {
-        _defineProperty(target, key, source[key]);
-      });
     }
 
     return target;
@@ -4746,16 +4761,10 @@
       value.forEach(function(subValue) {
         result.add(baseClone(subValue, bitmask, customizer, subValue, value, stack));
       });
-
-      return result;
-    }
-
-    if (isMap_1(value)) {
+    } else if (isMap_1(value)) {
       value.forEach(function(subValue, key) {
         result.set(key, baseClone(subValue, bitmask, customizer, key, value, stack));
       });
-
-      return result;
     }
 
     var keysFunc = isFull
@@ -5887,7 +5896,7 @@
   var _assignMergeValue = assignMergeValue;
 
   /**
-   * Gets the value at `key`, unless `key` is "__proto__".
+   * Gets the value at `key`, unless `key` is "__proto__" or "constructor".
    *
    * @private
    * @param {Object} object The object to query.
@@ -5895,6 +5904,10 @@
    * @returns {*} Returns the property value.
    */
   function safeGet(object, key) {
+    if (key === 'constructor' && typeof object[key] === 'function') {
+      return;
+    }
+
     if (key == '__proto__') {
       return;
     }
@@ -6029,8 +6042,8 @@
       return;
     }
     _baseFor(source, function(srcValue, key) {
+      stack || (stack = new _Stack);
       if (isObject_1(srcValue)) {
-        stack || (stack = new _Stack);
         _baseMergeDeep(object, source, key, srcIndex, baseMerge, customizer, stack);
       }
       else {
@@ -14108,7 +14121,7 @@
         templates = _ref.templates,
         templatesConfig = _ref.templatesConfig;
     var preparedTemplates = prepareTemplates(defaultTemplates, templates);
-    return _objectSpread({
+    return _objectSpread2({
       templatesConfig: templatesConfig
     }, preparedTemplates);
   }
@@ -14896,7 +14909,7 @@
     var compileOptions = arguments.length > 1 ? arguments[1] : undefined;
     var data = arguments.length > 2 ? arguments[2] : undefined;
     return Object.keys(helpers).reduce(function (acc, helperKey) {
-      return _objectSpread({}, acc, _defineProperty({}, helperKey, function () {
+      return _objectSpread2({}, acc, _defineProperty({}, helperKey, function () {
         var _this = this;
 
         return function (text) {
@@ -14932,7 +14945,7 @@
     }
 
     var transformedHelpers = transformHelpersToHogan(helpers, compileOptions, data);
-    return hogan.compile(template, compileOptions).render(_objectSpread({}, data, {
+    return hogan.compile(template, compileOptions).render(_objectSpread2({}, data, {
       helpers: transformedHelpers
     })).replace(/[ \n\r\t\f\xA0]+/g, function (spaces) {
       return spaces.replace(/(^|\xA0+)[^\xA0]+/g, '$1 ');
@@ -15104,7 +15117,7 @@
     var helper = _ref.helper,
         _ref$attributesToClea = _ref.attributesToClear,
         attributesToClear = _ref$attributesToClea === void 0 ? [] : _ref$attributesToClea;
-    var finalState = helper.state;
+    var finalState = helper.state.setPage(0);
     attributesToClear.forEach(function (attribute) {
       if (attribute === '_tags') {
         finalState = finalState.clearTags();
@@ -15268,6 +15281,26 @@
     }) : value;
   }
 
+  // We aren't using the native `Array.prototype.findIndex` because the refactor away from Lodash is not
+  // published as a major version.
+  // Relying on the `findIndex` polyfill on user-land, which before was only required for niche use-cases,
+  // was decided as too risky.
+  // @MAJOR Replace with the native `Array.prototype.findIndex` method
+  // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/findIndex
+  function findIndex$1(array, comparator) {
+    if (!Array.isArray(array)) {
+      return -1;
+    }
+
+    for (var i = 0; i < array.length; i++) {
+      if (comparator(array[i])) {
+        return i;
+      }
+    }
+
+    return -1;
+  }
+
   /**
    * Deeply merges all the object values in a new object.
    *
@@ -15427,7 +15460,7 @@
 
   var addAbsolutePosition = function addAbsolutePosition(hits, page, hitsPerPage) {
     return hits.map(function (hit, idx) {
-      return _objectSpread({}, hit, {
+      return _objectSpread2({}, hit, {
         __position: hitsPerPage * page + idx + 1
       });
     });
@@ -15439,7 +15472,7 @@
     }
 
     return hits.map(function (hit) {
-      return _objectSpread({}, hit, {
+      return _objectSpread2({}, hit, {
         __queryID: queryID
       });
     });
@@ -15569,7 +15602,7 @@
         // We have to create a `SearchParameters` because `getAllSearchParameters`
         // expects an instance of `SearchParameters` and not a plain object.
         var currentSearchParameters = algoliasearchHelper_1.SearchParameters.make(currentConfiguration);
-        return _objectSpread({}, this.getAllSearchParameters({
+        return _objectSpread2({}, this.getAllSearchParameters({
           uiState: this.currentUiState,
           currentSearchParameters: currentSearchParameters
         }));
@@ -15644,7 +15677,7 @@
             uiState: _this2.currentUiState
           });
 
-          callback(_objectSpread({}, searchParameters));
+          callback(_objectSpread2({}, searchParameters));
         });
       }
     }]);
@@ -15870,7 +15903,7 @@
     return _construct(BrowserHistory, args);
   }
 
-  var version$1 = '3.5.4';
+  var version$1 = '3.6.0';
 
   var TAG_PLACEHOLDER = {
     highlightPreTag: '__ais-highlight__',
@@ -15888,7 +15921,7 @@
   function recursiveEscape(input) {
     if (isPlainObject$1(input) && typeof input.value !== 'string') {
       return Object.keys(input).reduce(function (acc, key) {
-        return _objectSpread({}, acc, _defineProperty({}, key, recursiveEscape(input[key])));
+        return _objectSpread2({}, acc, _defineProperty({}, key, recursiveEscape(input[key])));
       }, {});
     }
 
@@ -15896,7 +15929,7 @@
       return input.map(recursiveEscape);
     }
 
-    return _objectSpread({}, input, {
+    return _objectSpread2({}, input, {
       value: replaceTagsAndEscape(input.value)
     });
   }
@@ -15921,7 +15954,7 @@
   }
   function escapeFacets(facetHits) {
     return facetHits.map(function (h) {
-      return _objectSpread({}, h, {
+      return _objectSpread2({}, h, {
         highlighted: replaceTagsAndEscape(h.highlighted)
       });
     });
@@ -16021,7 +16054,7 @@
       highlight: function highlight$1(options, render) {
         try {
           var highlightOptions = JSON.parse(options);
-          return render(highlight(_objectSpread({}, highlightOptions, {
+          return render(highlight(_objectSpread2({}, highlightOptions, {
             hit: this
           })));
         } catch (error) {
@@ -16031,7 +16064,7 @@
       snippet: function snippet$1(options, render) {
         try {
           var snippetOptions = JSON.parse(options);
-          return render(snippet(_objectSpread({}, snippetOptions, {
+          return render(snippet(_objectSpread2({}, snippetOptions, {
             hit: this
           })));
         } catch (error) {
@@ -16123,7 +16156,7 @@
       _this.insightsClient = insightsClient;
       _this.helper = null;
       _this.indexName = indexName;
-      _this.searchParameters = _objectSpread({}, searchParameters, {
+      _this.searchParameters = _objectSpread2({}, searchParameters, {
         index: indexName
       });
       _this.widgets = [];
@@ -16139,7 +16172,7 @@
         _this._searchFunction = searchFunction;
       }
 
-      if (routing === true) _this.routing = ROUTING_DEFAULT_OPTIONS;else if (isPlainObject$1(routing)) _this.routing = _objectSpread({}, ROUTING_DEFAULT_OPTIONS, routing);
+      if (routing === true) _this.routing = ROUTING_DEFAULT_OPTIONS;else if (isPlainObject$1(routing)) _this.routing = _objectSpread2({}, ROUTING_DEFAULT_OPTIONS, {}, routing);
       return _this;
     }
     /**
@@ -16193,7 +16226,7 @@
         if (lastWidget) this.widgets.push(lastWidget); // Init the widget directly if instantsearch has been already started
 
         if (this.started && Boolean(widgets.length)) {
-          this.searchParameters = this.widgets.reduce(enhanceConfiguration, _objectSpread({}, this.helper.state));
+          this.searchParameters = this.widgets.reduce(enhanceConfiguration, _objectSpread2({}, this.helper.state));
           this.helper.setState(this.searchParameters);
           widgets.forEach(function (widget) {
             if (widget.init) {
@@ -16255,7 +16288,7 @@
           // in a case two widgets were using the same configuration but we removed one
 
           if (nextState) {
-            _this3.searchParameters = _this3.widgets.reduce(enhanceConfiguration, _objectSpread({}, nextState));
+            _this3.searchParameters = _this3.widgets.reduce(enhanceConfiguration, _objectSpread2({}, nextState));
 
             _this3.helper.setState(_this3.searchParameters);
           }
@@ -16303,7 +16336,7 @@
         }
 
         if (this.routing) {
-          var routingManager = new RoutingManager(_objectSpread({}, this.routing, {
+          var routingManager = new RoutingManager(_objectSpread2({}, this.routing, {
             instantSearchInstance: this
           }));
           this._onHistoryChange = routingManager.onHistoryChange.bind(routingManager);
@@ -16456,7 +16489,42 @@
 
 
     var partialConfiguration = widgetDefinition.getConfiguration(configuration);
-    return mergeDeep(configuration, partialConfiguration);
+
+    if (!partialConfiguration) {
+      return configuration;
+    }
+
+    if (!partialConfiguration.hierarchicalFacets) {
+      return mergeDeep(configuration, partialConfiguration);
+    }
+
+    var hierarchicalFacets = partialConfiguration.hierarchicalFacets,
+        partialWithoutHierarchcialFacets = _objectWithoutProperties(partialConfiguration, ["hierarchicalFacets"]); // The `mergeDeep` function uses a `uniq` function under the hood, but the
+    // implementation does not support arrays of objects (we also had the issue
+    // with the Lodash version). The `hierarchicalFacets` attribute is an array
+    // of objects, which means that this attribute is never deduplicated. It
+    // becomes problematic when widgets are frequently added/removed, since the
+    // function `enhanceConfiguration` is called at each operation.
+    // https://github.com/algolia/instantsearch.js/issues/3278
+
+
+    var configurationWithHierarchicalFacets = _objectSpread2({}, configuration, {
+      hierarchicalFacets: hierarchicalFacets.reduce(function (facets, facet) {
+        var index = findIndex$1(facets, function (_) {
+          return _.name === facet.name;
+        });
+
+        if (index === -1) {
+          return facets.concat(facet);
+        }
+
+        var nextFacets = facets.slice();
+        nextFacets.splice(index, 1, facet);
+        return nextFacets;
+      }, configuration.hierarchicalFacets || [])
+    });
+
+    return mergeDeep(configurationWithHierarchicalFacets, partialWithoutHierarchcialFacets);
   }
 
   var withUsage$1 = createDocumentationMessageGenerator({
@@ -16521,7 +16589,8 @@
    * );
    */
 
-  function connectClearRefinements(renderFn, unmountFn) {
+  function connectClearRefinements(renderFn) {
+    var unmountFn = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : noop$1;
     checkRendering(renderFn, withUsage$1());
     return function () {
       var widgetParams = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
@@ -16725,7 +16794,8 @@
    * );
    */
 
-  function connectCurrentRefinements(renderFn, unmountFn) {
+  function connectCurrentRefinements(renderFn) {
+    var unmountFn = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : noop$1;
     checkRendering(renderFn, withUsage$2());
     return function () {
       var widgetParams = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
@@ -16956,7 +17026,8 @@
    * @return {function(CustomHierarchicalMenuWidgetOptions)} Re-usable widget factory for a custom **HierarchicalMenu** widget.
    */
 
-  function connectHierarchicalMenu(renderFn, unmountFn) {
+  function connectHierarchicalMenu(renderFn) {
+    var unmountFn = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : noop$1;
     checkRendering(renderFn, withUsage$3());
     return function () {
       var widgetParams = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
@@ -17020,9 +17091,13 @@
               var name = _ref.name;
               return name === hierarchicalFacetName;
             });
+            var isAttributesEqual = isFacetSet && isEqual$1(isFacetSet.attributes, attributes);
+            var isSeparatorEqual = isFacetSet && isFacetSet.separator === separator;
+            var isRootPathEqual = isFacetSet && isFacetSet.rootPath === rootPath;
+            var isHierarchicalOptionsEqual = isAttributesEqual && isSeparatorEqual && isRootPathEqual;
 
-            if (isFacetSet && !(isEqual$1(isFacetSet.attributes, attributes) && isFacetSet.separator === separator)) {
-              _warning(isEqual$1(isFacetSet.attributes, attributes) && isFacetSet.separator === separator, 'Using Breadcrumb and HierarchicalMenu on the same facet with different options overrides the configuration of the HierarchicalMenu.');
+            if (isFacetSet && !isHierarchicalOptionsEqual) {
+              _warning(false, 'Using Breadcrumb and HierarchicalMenu on the same facet with different options overrides the configuration of the HierarchicalMenu.');
               return {};
             }
           }
@@ -17078,7 +17153,7 @@
               subValue.data = _this2._prepareFacetValues(subValue.data, state);
             }
 
-            return _objectSpread({}, subValue, {
+            return _objectSpread2({}, subValue, {
               label: label,
               value: value
             });
@@ -17147,8 +17222,8 @@
             return uiState;
           }
 
-          return _objectSpread({}, uiState, {
-            hierarchicalMenu: _objectSpread({}, uiState.hierarchicalMenu, _defineProperty({}, hierarchicalFacetName, path))
+          return _objectSpread2({}, uiState, {
+            hierarchicalMenu: _objectSpread2({}, uiState.hierarchicalMenu, _defineProperty({}, hierarchicalFacetName, path))
           });
         },
         getWidgetSearchParameters: function getWidgetSearchParameters(searchParameters, _ref6) {
@@ -17208,7 +17283,8 @@
    * );
    */
 
-  function connectHits(renderFn, unmountFn) {
+  function connectHits(renderFn) {
+    var unmountFn = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : noop$1;
     checkRendering(renderFn, withUsage$4());
     return function () {
       var widgetParams = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
@@ -17344,7 +17420,7 @@
         hits: hits,
         objectIDs: payload.objectIDs
       });
-      aa(method, _objectSpread({}, inferredPayload, payload));
+      aa(method, _objectSpread2({}, inferredPayload, {}, payload));
     };
   };
 
@@ -17359,7 +17435,7 @@
         /* providing the insightsClient is optional */
         ) {
             var insights = wrapInsightsClient(instantSearchInstance.insightsClient, results, hits);
-            return renderFn(_objectSpread({}, renderOptions, {
+            return renderFn(_objectSpread2({}, renderOptions, {
               insights: insights
             }), isFirstRender);
           }
@@ -19087,7 +19163,8 @@
    * );
    */
 
-  function connectHitsPerPage(renderFn, unmountFn) {
+  function connectHitsPerPage(renderFn) {
+    var unmountFn = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : noop$1;
     checkRendering(renderFn, withUsage$5());
     return function () {
       var widgetParams = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
@@ -19173,7 +19250,7 @@
         _normalizeItems: function _normalizeItems(_ref3) {
           var hitsPerPage = _ref3.hitsPerPage;
           return items.map(function (item) {
-            return _objectSpread({}, item, {
+            return _objectSpread2({}, item, {
               isRefined: Number(item.value) === Number(hitsPerPage)
             });
           });
@@ -19189,7 +19266,7 @@
             return uiState;
           }
 
-          return _objectSpread({}, uiState, {
+          return _objectSpread2({}, uiState, {
             hitsPerPage: hitsPerPage
           });
         },
@@ -19293,7 +19370,7 @@
         return function () {
           // Using the helper's `overrideStateWithoutTriggeringChangeEvent` method
           // avoid updating the browser URL when the user displays the previous page.
-          helper.overrideStateWithoutTriggeringChangeEvent(_objectSpread({}, helper.state, {
+          helper.overrideStateWithoutTriggeringChangeEvent(_objectSpread2({}, helper.state, {
             page: firstReceivedPage - 1
           })).search();
         };
@@ -19393,7 +19470,7 @@
             return uiState;
           }
 
-          return _objectSpread({}, uiState, {
+          return _objectSpread2({}, uiState, {
             page: page + 1
           });
         },
@@ -19505,7 +19582,8 @@
    * );
    */
 
-  function connectMenu(renderFn, unmountFn) {
+  function connectMenu(renderFn) {
+    var unmountFn = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : noop$1;
     checkRendering(renderFn, withUsage$7());
     return function () {
       var widgetParams = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
@@ -19610,7 +19688,7 @@
                 value = _ref4.path,
                 item = _objectWithoutProperties(_ref4, ["name", "path"]);
 
-            return _objectSpread({}, item, {
+            return _objectSpread2({}, item, {
               label: label,
               value: value
             });
@@ -19659,8 +19737,8 @@
             return uiState;
           }
 
-          return _objectSpread({}, uiState, {
-            menu: _objectSpread({}, uiState.menu, _defineProperty({}, attribute, refinedItem))
+          return _objectSpread2({}, uiState, {
+            menu: _objectSpread2({}, uiState.menu, _defineProperty({}, attribute, refinedItem))
           });
         },
         getWidgetSearchParameters: function getWidgetSearchParameters(searchParameters, _ref7) {
@@ -19780,7 +19858,8 @@
    * );
    */
 
-  function connectNumericMenu(renderFn, unmountFn) {
+  function connectNumericMenu(renderFn) {
+    var unmountFn = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : noop$1;
     checkRendering(renderFn, withUsage$8());
     return function () {
       var widgetParams = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
@@ -19868,8 +19947,8 @@
           var equal = currentRefinements['='] && currentRefinements['='][0];
 
           if (equal || equal === 0) {
-            return _objectSpread({}, uiState, {
-              numericMenu: _objectSpread({}, uiState.numericMenu, _defineProperty({}, attribute, "".concat(currentRefinements['='])))
+            return _objectSpread2({}, uiState, {
+              numericMenu: _objectSpread2({}, uiState.numericMenu, _defineProperty({}, attribute, "".concat(currentRefinements['='])))
             });
           }
 
@@ -19878,8 +19957,8 @@
 
           if (lowerBound !== '' || upperBound !== '') {
             if (uiState.numericMenu && uiState.numericMenu[attribute] === "".concat(lowerBound, ":").concat(upperBound)) return uiState;
-            return _objectSpread({}, uiState, {
-              numericMenu: _objectSpread({}, uiState.numericMenu, _defineProperty({}, attribute, "".concat(lowerBound, ":").concat(upperBound)))
+            return _objectSpread2({}, uiState, {
+              numericMenu: _objectSpread2({}, uiState.numericMenu, _defineProperty({}, attribute, "".concat(lowerBound, ":").concat(upperBound)))
             });
           }
 
@@ -20145,7 +20224,8 @@
    * );
    */
 
-  function connectPagination(renderFn, unmountFn) {
+  function connectPagination(renderFn) {
+    var unmountFn = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : noop$1;
     checkRendering(renderFn, withUsage$9());
     return function () {
       var widgetParams = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
@@ -20218,7 +20298,7 @@
           var searchParameters = _ref4.searchParameters;
           var page = searchParameters.page;
           if (page === 0 || page + 1 === uiState.page) return uiState;
-          return _objectSpread({}, uiState, {
+          return _objectSpread2({}, uiState, {
             page: page + 1
           });
         },
@@ -20271,7 +20351,8 @@
    * @return {function(CustomRangeWidgetOptions)} Re-usable widget factory for a custom **Range** widget.
    */
 
-  function connectRange(renderFn, unmountFn) {
+  function connectRange(renderFn) {
+    var unmountFn = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : noop$1;
     checkRendering(renderFn, withUsage$a());
     return function () {
       var widgetParams = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
@@ -20452,7 +20533,7 @@
             refine: this._refine(helper, {}),
             format: rangeFormatter,
             range: currentRange,
-            widgetParams: _objectSpread({}, widgetParams, {
+            widgetParams: _objectSpread2({}, widgetParams, {
               precision: precision
             }),
             start: start,
@@ -20477,7 +20558,7 @@
             refine: this._refine(helper, currentRange),
             format: rangeFormatter,
             range: currentRange,
-            widgetParams: _objectSpread({}, widgetParams, {
+            widgetParams: _objectSpread2({}, widgetParams, {
               precision: precision
             }),
             start: start,
@@ -20503,8 +20584,8 @@
             return uiState;
           }
 
-          return _objectSpread({}, uiState, {
-            range: _objectSpread({}, uiState.range, _defineProperty({}, attribute, "".concat(min, ":").concat(max)))
+          return _objectSpread2({}, uiState, {
+            range: _objectSpread2({}, uiState.range, _defineProperty({}, attribute, "".concat(min, ":").concat(max)))
           });
         },
         getWidgetSearchParameters: function getWidgetSearchParameters(searchParameters, _ref15) {
@@ -20650,7 +20731,8 @@
    * );
    */
 
-  function connectRefinementList(renderFn, unmountFn) {
+  function connectRefinementList(renderFn) {
+    var unmountFn = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : noop$1;
     checkRendering(renderFn, withUsage$b());
     return function () {
       var widgetParams = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
@@ -20688,12 +20770,21 @@
         var label = _ref.name,
             item = _objectWithoutProperties(_ref, ["name"]);
 
-        return _objectSpread({}, item, {
+        return _objectSpread2({}, item, {
           label: label,
           value: label,
           highlighted: label
         });
       };
+
+      var _getLimit = function getLimit(isShowingMore) {
+        return isShowingMore ? showMoreLimit : limit;
+      };
+
+      var lastResultsFromMainSearch = [];
+      var hasExhaustiveItems = true;
+      var searchForFacetValues;
+      var triggerRefine;
 
       var _render = function render(_ref2) {
         var items = _ref2.items,
@@ -20705,7 +20796,6 @@
             isFirstSearch = _ref2.isFirstSearch,
             isShowingMore = _ref2.isShowingMore,
             toggleShowMore = _ref2.toggleShowMore,
-            hasExhaustiveItems = _ref2.hasExhaustiveItems,
             instantSearchInstance = _ref2.instantSearchInstance;
 
         // Compute a specific createURL method able to link to any facet value state change
@@ -20715,7 +20805,10 @@
         // function
 
 
-        var searchFacetValues = helperSpecializedSearchFacetValues && helperSpecializedSearchFacetValues(state, createURL, helperSpecializedSearchFacetValues, refine, instantSearchInstance);
+        var searchFacetValues = helperSpecializedSearchFacetValues && helperSpecializedSearchFacetValues(state, createURL, helperSpecializedSearchFacetValues, refine, instantSearchInstance, isShowingMore);
+        var canShowLess = isShowingMore && lastResultsFromMainSearch.length > limit;
+        var canShowMore = showMore && !isFromSearch && !hasExhaustiveItems;
+        var canToggleShowMore = canShowLess || canShowMore;
         renderFn({
           createURL: _createURL,
           items: items,
@@ -20726,18 +20819,16 @@
           canRefine: isFromSearch || items.length > 0,
           widgetParams: widgetParams,
           isShowingMore: isShowingMore,
-          canToggleShowMore: showMore && (isShowingMore || !hasExhaustiveItems),
+          canToggleShowMore: canToggleShowMore,
           toggleShowMore: toggleShowMore,
           hasExhaustiveItems: hasExhaustiveItems
         }, isFirstSearch);
       };
+      /* eslint-disable max-params */
 
-      var lastResultsFromMainSearch;
-      var searchForFacetValues;
-      var refine;
 
-      var createSearchForFacetValues = function createSearchForFacetValues(helper) {
-        return function (state, createURL, helperSpecializedSearchFacetValues, toggleRefinement, instantSearchInstance) {
+      var createSearchForFacetValues = function createSearchForFacetValues(helper, toggleShowMore) {
+        return function (state, createURL, helperSpecializedSearchFacetValues, toggleRefinement, instantSearchInstance, isShowingMore) {
           return function (query) {
             if (query === '' && lastResultsFromMainSearch) {
               // render with previous data from the helper.
@@ -20750,7 +20841,9 @@
                 isFromSearch: false,
                 isFirstSearch: false,
                 instantSearchInstance: instantSearchInstance,
-                hasExhaustiveItems: false // SFFV should not be used with show more
+                toggleShowMore: toggleShowMore,
+                // and yet it will be
+                isShowingMore: isShowingMore // so we need to restore in the state of show more as well
 
               });
             } else {
@@ -20758,13 +20851,13 @@
                 highlightPreTag: escapeFacetValues ? TAG_PLACEHOLDER.highlightPreTag : TAG_REPLACEMENT.highlightPreTag,
                 highlightPostTag: escapeFacetValues ? TAG_PLACEHOLDER.highlightPostTag : TAG_REPLACEMENT.highlightPostTag
               };
-              helper.searchForFacetValues(attribute, query, limit, tags).then(function (results) {
+              helper.searchForFacetValues(attribute, query, _getLimit(isShowingMore), tags).then(function (results) {
                 var facetValues = escapeFacetValues ? escapeFacets(results.facetHits) : results.facetHits;
                 var normalizedFacetValues = transformItems(facetValues.map(function (_ref3) {
                   var value = _ref3.value,
                       item = _objectWithoutProperties(_ref3, ["value"]);
 
-                  return _objectSpread({}, item, {
+                  return _objectSpread2({}, item, {
                     value: value,
                     label: value
                   });
@@ -20779,14 +20872,15 @@
                   isFromSearch: true,
                   isFirstSearch: false,
                   instantSearchInstance: instantSearchInstance,
-                  hasExhaustiveItems: false // SFFV should not be used with show more
-
+                  isShowingMore: isShowingMore
                 });
               });
             }
           };
         };
       };
+      /* eslint-enable max-params */
+
 
       return {
         isShowingMore: false,
@@ -20806,7 +20900,7 @@
           };
         },
         getLimit: function getLimit() {
-          return this.isShowingMore ? showMoreLimit : limit;
+          return _getLimit(this.isShowingMore);
         },
         getConfiguration: function getConfiguration() {
           var configuration = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
@@ -20823,24 +20917,23 @@
               instantSearchInstance = _ref4.instantSearchInstance;
           this.cachedToggleShowMore = this.cachedToggleShowMore.bind(this);
 
-          refine = function refine(facetValue) {
+          triggerRefine = function triggerRefine(facetValue) {
             return helper.toggleRefinement(attribute, facetValue).search();
           };
 
-          searchForFacetValues = createSearchForFacetValues(helper);
+          searchForFacetValues = createSearchForFacetValues(helper, this.cachedToggleShowMore);
 
           _render({
             items: [],
             state: helper.state,
             createURL: createURL,
             helperSpecializedSearchFacetValues: searchForFacetValues,
-            refine: refine,
+            refine: triggerRefine,
             isFromSearch: false,
             isFirstSearch: true,
             instantSearchInstance: instantSearchInstance,
             isShowingMore: this.isShowingMore,
-            toggleShowMore: this.cachedToggleShowMore,
-            hasExhaustiveItems: true
+            toggleShowMore: this.cachedToggleShowMore
           });
         },
         render: function render(renderOptions) {
@@ -20860,7 +20953,7 @@
           // Because this is used for making the search of facets unable or not, it is important
           // to be conservative here.
 
-          var hasExhaustiveItems = maxValuesPerFacetConfig > currentLimit ? facetValues.length <= currentLimit : facetValues.length < currentLimit;
+          hasExhaustiveItems = maxValuesPerFacetConfig > currentLimit ? facetValues.length <= currentLimit : facetValues.length < currentLimit;
           lastResultsFromMainSearch = items;
           this.toggleShowMore = this.createToggleShowMore(renderOptions);
 
@@ -20869,13 +20962,12 @@
             state: state,
             createURL: createURL,
             helperSpecializedSearchFacetValues: searchForFacetValues,
-            refine: refine,
+            refine: triggerRefine,
             isFromSearch: false,
             isFirstSearch: false,
             instantSearchInstance: instantSearchInstance,
             isShowingMore: this.isShowingMore,
-            toggleShowMore: this.cachedToggleShowMore,
-            hasExhaustiveItems: hasExhaustiveItems
+            toggleShowMore: this.cachedToggleShowMore
           });
         },
         dispose: function dispose(_ref5) {
@@ -20896,8 +20988,8 @@
             return uiState;
           }
 
-          return _objectSpread({}, uiState, {
-            refinementList: _objectSpread({}, uiState.refinementList, _defineProperty({}, attribute, values))
+          return _objectSpread2({}, uiState, {
+            refinementList: _objectSpread2({}, uiState.refinementList, _defineProperty({}, attribute, values))
           });
         },
         getWidgetSearchParameters: function getWidgetSearchParameters(searchParameters, _ref7) {
@@ -20972,7 +21064,8 @@
    * );
    */
 
-  function connectSearchBox(renderFn, unmountFn) {
+  function connectSearchBox(renderFn) {
+    var unmountFn = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : noop$1;
     checkRendering(renderFn, withUsage$c());
     return function () {
       var widgetParams = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
@@ -21050,7 +21143,7 @@
             return uiState;
           }
 
-          return _objectSpread({}, uiState, {
+          return _objectSpread2({}, uiState, {
             query: query
           });
         },
@@ -21144,7 +21237,8 @@
    * );
    */
 
-  function connectSortBy(renderFn, unmountFn) {
+  function connectSortBy(renderFn) {
+    var unmountFn = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : noop$1;
     checkRendering(renderFn, withUsage$d());
     return function () {
       var widgetParams = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
@@ -21209,7 +21303,7 @@
             return uiState;
           }
 
-          return _objectSpread({}, uiState, {
+          return _objectSpread2({}, uiState, {
             sortBy: searchParameters.getQueryParameter('index')
           });
         },
@@ -21310,7 +21404,8 @@
    * );
    */
 
-  function connectRatingMenu(renderFn, unmountFn) {
+  function connectRatingMenu(renderFn) {
+    var unmountFn = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : noop$1;
     checkRendering(renderFn, withUsage$e());
     return function () {
       var widgetParams = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
@@ -21420,8 +21515,8 @@
           var refinedStar = this._getRefinedStar(searchParameters);
 
           if (refinedStar === undefined || uiState && uiState.ratingMenu && uiState.ratingMenu[attribute] === refinedStar) return uiState;
-          return _objectSpread({}, uiState, {
-            ratingMenu: _objectSpread({}, uiState.ratingMenu, _defineProperty({}, attribute, refinedStar))
+          return _objectSpread2({}, uiState, {
+            ratingMenu: _objectSpread2({}, uiState.ratingMenu, _defineProperty({}, attribute, refinedStar))
           });
         },
         getWidgetSearchParameters: function getWidgetSearchParameters(searchParameters, _ref5) {
@@ -21510,7 +21605,8 @@
    * );
    */
 
-  function connectStats(renderFn, unmountFn) {
+  function connectStats(renderFn) {
+    var unmountFn = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : noop$1;
     checkRendering(renderFn, withUsage$f());
     return function () {
       var widgetParams = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
@@ -21630,7 +21726,8 @@
    * );
    */
 
-  function connectToggleRefinement(renderFn, unmountFn) {
+  function connectToggleRefinement(renderFn) {
+    var unmountFn = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : noop$1;
     checkRendering(renderFn, withUsage$g());
     return function () {
       var widgetParams = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
@@ -21788,8 +21885,8 @@
             return uiState;
           }
 
-          return _objectSpread({}, uiState, {
-            toggle: _objectSpread({}, uiState.toggle, _defineProperty({}, attribute, isRefined))
+          return _objectSpread2({}, uiState, {
+            toggle: _objectSpread2({}, uiState.toggle, _defineProperty({}, attribute, isRefined))
           });
         },
         getWidgetSearchParameters: function getWidgetSearchParameters(searchParameters, _ref9) {
@@ -21846,7 +21943,8 @@
    * @return {function(CustomBreadcrumbWidgetOptions)} Re-usable widget factory for a custom **Breadcrumb** widget.
    */
 
-  function connectBreadcrumb(renderFn, unmountFn) {
+  function connectBreadcrumb(renderFn) {
+    var unmountFn = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : noop$1;
     checkRendering(renderFn, withUsage$h());
     return function () {
       var widgetParams = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
@@ -21876,7 +21974,7 @@
             });
 
             if (isFacetSet) {
-              _warning(isEqual$1(isFacetSet.attributes, attributes) && isFacetSet.separator === separator, 'Using Breadcrumb and HierarchicalMenu on the same facet with different options overrides the configuration of the HierarchicalMenu.');
+              _warning(isEqual$1(isFacetSet.attributes, attributes) && isFacetSet.separator === separator && isFacetSet.rootPath === rootPath, 'Using Breadcrumb and HierarchicalMenu on the same facet with different options overrides the configuration of the HierarchicalMenu.');
               return {};
             }
           }
@@ -22076,7 +22174,8 @@
    * );
    */
 
-  var connectGeoSearch = function connectGeoSearch(renderFn, unmountFn) {
+  var connectGeoSearch = function connectGeoSearch(renderFn) {
+    var unmountFn = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : noop$1;
     checkRendering(renderFn, withUsage$i());
     return function () {
       var widgetParams = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
@@ -22244,7 +22343,7 @@
             return uiState;
           }
 
-          return _objectSpread({}, uiState, {
+          return _objectSpread2({}, uiState, {
             geoSearch: {
               boundingBox: boundingBox
             }
@@ -22288,7 +22387,8 @@
    * @return {function} Re-usable widget factory for a custom **PoweredBy** widget.
    */
 
-  function connectPoweredBy(renderFn, unmountFn) {
+  function connectPoweredBy(renderFn) {
+    var unmountFn = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : noop$1;
     checkRendering(renderFn, withUsage$j());
     var defaultUrl = 'https://www.algolia.com/?' + 'utm_source=instantsearch.js&' + 'utm_medium=website&' + "utm_content=".concat(typeof window !== 'undefined' && window.location ? window.location.hostname : '', "&") + 'utm_campaign=poweredby';
     return function () {
@@ -22369,7 +22469,7 @@
             // merge new `searchParameters` with the ones set from other widgets
             var actualState = _this.removeSearchParameters(helper.state);
 
-            var nextSearchParameters = enhanceConfiguration(_objectSpread({}, actualState), {
+            var nextSearchParameters = enhanceConfiguration(_objectSpread2({}, actualState), {
               getConfiguration: function getConfiguration() {
                 return searchParameters;
               }
@@ -22440,7 +22540,8 @@
    * @return {function(CustomAutocompleteWidgetOptions)} Re-usable widget factory for a custom **Autocomplete** widget.
    */
 
-  function connectAutocomplete(renderFn, unmountFn) {
+  function connectAutocomplete(renderFn) {
+    var unmountFn = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : noop$1;
     checkRendering(renderFn, withUsage$l());
     return function () {
       var widgetParams = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
@@ -22618,7 +22719,7 @@
     var ruleContexts = transformRuleContexts(nextRuleContexts).slice(0, 10);
 
     if (!isEqual$1(previousRuleContexts, ruleContexts)) {
-      helper.overrideStateWithoutTriggeringChangeEvent(_objectSpread({}, sharedHelperState, {
+      helper.overrideStateWithoutTriggeringChangeEvent(_objectSpread2({}, sharedHelperState, {
         ruleContexts: ruleContexts
       }));
     }
@@ -22749,7 +22850,7 @@
 
     var setState = function setState() {
       var newState = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-      state = _objectSpread({}, state, newState);
+      state = _objectSpread2({}, state, {}, newState);
       onStateChange();
     };
 
@@ -22955,7 +23056,7 @@
             return uiState;
           }
 
-          return _objectSpread({}, uiState, {
+          return _objectSpread2({}, uiState, {
             query: query
           });
         },
@@ -23591,7 +23692,7 @@
       var treeElement = document.createElement('div');
       treeElement.className = cssClasses.tree;
       rootElement.appendChild(treeElement);
-      renderState.mapInstance = new googleReference.maps.Map(mapElement, _objectSpread({
+      renderState.mapInstance = new googleReference.maps.Map(mapElement, _objectSpread2({
         mapTypeControl: false,
         fullscreenControl: false,
         streetViewControl: false,
@@ -23990,19 +24091,19 @@
       }), userCssClasses.reset)
     };
 
-    var templates = _objectSpread({}, defaultTemplates$1, userTemplates);
+    var templates = _objectSpread2({}, defaultTemplates$1, {}, userTemplates);
 
-    var builtInMarker = _objectSpread({}, defaultBuiltInMarker, userBuiltInMarker);
+    var builtInMarker = _objectSpread2({}, defaultBuiltInMarker, {}, userBuiltInMarker);
 
     var isCustomHTMLMarker = Boolean(userCustomHTMLMarker) || Boolean(userTemplates.HTMLMarker);
 
-    var customHTMLMarker = isCustomHTMLMarker && _objectSpread({}, defaultCustomHTMLMarker, userCustomHTMLMarker);
+    var customHTMLMarker = isCustomHTMLMarker && _objectSpread2({}, defaultCustomHTMLMarker, {}, userCustomHTMLMarker);
 
     var createBuiltInMarker = function createBuiltInMarker(_ref2) {
       var item = _ref2.item,
           rest = _objectWithoutProperties(_ref2, ["item"]);
 
-      return new googleReference.maps.Marker(_objectSpread({}, builtInMarker.createOptions(item), rest, {
+      return new googleReference.maps.Marker(_objectSpread2({}, builtInMarker.createOptions(item), {}, rest, {
         __id: item.objectID,
         position: item._geoloc
       }));
@@ -24014,7 +24115,7 @@
       var item = _ref3.item,
           rest = _objectWithoutProperties(_ref3, ["item"]);
 
-      return new HTMLMarker(_objectSpread({}, customHTMLMarker.createOptions(item), rest, {
+      return new HTMLMarker(_objectSpread2({}, customHTMLMarker.createOptions(item), {}, rest, {
         __id: item.objectID,
         position: item._geoloc,
         className: classnames(suit$4({
@@ -24038,7 +24139,7 @@
         containerNode.removeChild(containerNode.firstChild);
       }
     });
-    return makeGeoSearch(_objectSpread({}, widgetParams, {
+    return makeGeoSearch(_objectSpread2({}, widgetParams, {
       renderState: {},
       container: containerNode,
       googleReference: googleReference,
@@ -24343,7 +24444,7 @@
 
         var url = this.props.createURL(facetValue.value);
 
-        var templateData = _objectSpread({}, facetValue, {
+        var templateData = _objectSpread2({}, facetValue, {
           url: url,
           attribute: this.props.attribute,
           cssClasses: this.props.cssClasses
@@ -24456,6 +24557,7 @@
           rootTagName: "button",
           rootProps: {
             className: showMoreButtonClassName,
+            disabled: !this.props.canToggleShowMore,
             onClick: this.props.toggleShowMore
           },
           data: {
@@ -24784,7 +24886,7 @@
           className: cssClasses.item
         },
         key: hit.objectID,
-        data: _objectSpread({}, hit, {
+        data: _objectSpread2({}, hit, {
           __hitIndex: position
         })
       }));
@@ -25130,7 +25232,7 @@
           className: cssClasses.item
         },
         key: hit.objectID,
-        data: _objectSpread({}, hit, {
+        data: _objectSpread2({}, hit, {
           __hitIndex: position
         })
       }));
@@ -25352,7 +25454,7 @@
       }
 
       var facetValues = items.map(function (facetValue) {
-        return _objectSpread({}, facetValue, {
+        return _objectSpread2({}, facetValue, {
           url: createURL(facetValue.name)
         });
       });
@@ -25522,7 +25624,7 @@
    */
 
   function transformTemplates(templates) {
-    var allTemplates = _objectSpread({}, templates, {
+    var allTemplates = _objectSpread2({}, templates, {
       submit: templates.searchableSubmit,
       reset: templates.searchableReset,
       loadingIndicator: templates.searchableLoadingIndicator
@@ -25575,7 +25677,7 @@
         searchPlaceholder: searchablePlaceholder,
         searchIsAlwaysActive: searchableIsAlwaysActive,
         isFromSearch: isFromSearch,
-        showMore: showMore,
+        showMore: showMore && !isFromSearch && items.length > 0,
         toggleShowMore: toggleShowMore,
         isShowingMore: isShowingMore,
         hasExhaustiveItems: hasExhaustiveItems,
@@ -25704,7 +25806,7 @@
 
     var escapeFacetValues = searchable ? Boolean(searchableEscapeFacetValues) : false;
     var containerNode = getContainerNode(container);
-    var templates = transformTemplates(_objectSpread({}, defaultTemplates$6, userTemplates));
+    var templates = transformTemplates(_objectSpread2({}, defaultTemplates$6, {}, userTemplates));
     var cssClasses = {
       root: classnames(suit$a(), userCssClasses.root),
       noRefinementRoot: classnames(suit$a({
@@ -26007,7 +26109,7 @@
 
         if (!isDisabled) {
           tagName = 'a';
-          attributes = _objectSpread({}, attributes, {
+          attributes = _objectSpread2({}, attributes, {
             'aria-label': ariaLabel,
             href: url,
             onClick: this.handleClick
@@ -26389,7 +26491,7 @@
       }), userCssClasses.link)
     };
 
-    var templates = _objectSpread({}, defaultTemplates$8, userTemplates);
+    var templates = _objectSpread2({}, defaultTemplates$8, {}, userTemplates);
 
     var specializedRenderer = renderer$a({
       containerNode: containerNode,
@@ -26640,7 +26742,7 @@
 
     var containerNode = getContainerNode(container);
 
-    var templates = _objectSpread({
+    var templates = _objectSpread2({
       separatorText: 'to',
       submitText: 'Go'
     }, userTemplates);
@@ -26680,7 +26782,9 @@
       templates: templates,
       renderState: {}
     });
-    var makeWidget = connectRange(specializedRenderer);
+    var makeWidget = connectRange(specializedRenderer, function () {
+      return unmountComponentAtNode(containerNode);
+    });
     return makeWidget({
       attribute: attribute,
       min: min,
@@ -26855,7 +26959,7 @@
       containerNode: containerNode,
       cssClasses: cssClasses,
       placeholder: placeholder,
-      templates: _objectSpread({}, defaultTemplates$9, templates),
+      templates: _objectSpread2({}, defaultTemplates$9, {}, templates),
       autofocus: autofocus,
       searchAsYouType: searchAsYouType,
       showReset: showReset,
@@ -27903,7 +28007,7 @@
     var value = Array.isArray(children) ? children[0] : children;
     var pitValue = Math.round(parseInt(value, 10) * 100) / 100;
     return index.createElement("div", {
-      style: _objectSpread({}, style, {
+      style: _objectSpread2({}, style, {
         marginLeft: positionValue === 100 ? '-2px' : 0
       }),
       className: classnames('rheostat-marker', 'rheostat-marker-horizontal', {
@@ -28903,7 +29007,7 @@
       }
 
       var serializedParams = [];
-      var serializedRefinements = serializeRefinements(_objectSpread({}, analyticsState.state.disjunctiveFacetsRefinements, analyticsState.state.facetsRefinements, analyticsState.state.hierarchicalFacetsRefinements));
+      var serializedRefinements = serializeRefinements(_objectSpread2({}, analyticsState.state.disjunctiveFacetsRefinements, {}, analyticsState.state.facetsRefinements, {}, analyticsState.state.hierarchicalFacetsRefinements));
       var serializedNumericRefinements = serializeNumericRefinements(analyticsState.state.numericRefinements);
 
       if (serializedRefinements !== '') {
@@ -29415,7 +29519,9 @@
       renderState: {},
       templates: templates
     });
-    var makeWidget = connectMenu(specializedRenderer);
+    var makeWidget = connectMenu(specializedRenderer, function () {
+      return unmountComponentAtNode(containerNode);
+    });
     return makeWidget({
       attribute: attribute,
       limit: limit,
@@ -29813,10 +29919,10 @@
           collapsible: collapsible,
           collapsed: false
         });
-        var widget = widgetFactory(_objectSpread({}, widgetOptions, {
+        var widget = widgetFactory(_objectSpread2({}, widgetOptions, {
           container: bodyContainerNode
         }));
-        return _objectSpread({}, widget, {
+        return _objectSpread2({}, widget, {
           dispose: function dispose() {
             unmountComponentAtNode(getContainerNode(container));
 
@@ -29981,7 +30087,7 @@
     return makeWidget({
       container: containerNode,
       cssClasses: cssClasses,
-      templates: _objectSpread({}, defaultTemplates$f, templates),
+      templates: _objectSpread2({}, defaultTemplates$f, {}, templates),
       searchAsYouSpeak: searchAsYouSpeak
     });
   };
@@ -30046,7 +30152,7 @@
       }
     };
 
-    var templates = _objectSpread({}, defaultTemplates, userTemplates);
+    var templates = _objectSpread2({}, defaultTemplates, {}, userTemplates);
 
     var containerNode = getContainerNode(container);
     var makeQueryRuleCustomData = connectQueryRules(renderer$n, function () {
