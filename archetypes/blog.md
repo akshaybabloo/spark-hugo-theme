@@ -10,7 +10,7 @@ ads: false
 # htmlScripts: []
 author:
   prefix: ""
-  fistName: ""
+  firstName: ""
   lastName: ""
   honorarySuffix: ""
   jobTitle: ""
