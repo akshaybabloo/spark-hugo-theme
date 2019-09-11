@@ -54,6 +54,7 @@ By default, a dark and responsive Hugo theme. Typography used is Space Mono, mon
 - SEO
   - Optimised for search engine
   - Custom schemas
+- Uses FiraCode with font ligatures for code block
 
 ## 2. Quick Start
 
