@@ -27,9 +27,6 @@
     const search = instantsearch({
         indexName: '{{.Site.Params.algoliaIndexName}}',
         searchClient: algoliasearch('{{.Site.Params.algoliaAppId}}', '{{.Site.Params.algoliaApiKey}}'),
-        searchParameters: {
-            hitsPerPage: 5
-        },
         searchFunction: function (helper) {
             if (helper.state.query === '') {
                 if (document.getElementById("hits") != null) {

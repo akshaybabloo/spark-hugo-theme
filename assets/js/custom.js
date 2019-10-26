@@ -1,5 +1,8 @@
 if (document.getElementById("searchBox") != null) {
-    search.addWidget(
+    search.addWidgets([
+        instantsearch.widgets.configure({
+            hitsPerPage: 5
+        }),
         instantsearch.widgets.searchBox({
             container: '#searchBox',
             placeholder: 'Search...',
@@ -13,11 +16,14 @@ if (document.getElementById("searchBox") != null) {
             showLoadingIndicator: true,
             searchAsYouType: true
         })
-    );
+    ]);
 }
 
 if (document.getElementById("hits") != null) {
-    search.addWidget(
+    search.addWidgets([
+        instantsearch.widgets.configure({
+            hitsPerPage: 5
+        }),
         instantsearch.widgets.hits({
             container: '#hits',
             templates: {
@@ -25,11 +31,14 @@ if (document.getElementById("hits") != null) {
                 item: '<a class="gol-links" href="{{{uri}}}">{{{title}}}</a>'
             }
         })
-    );
+    ]);
 }
 
 if (document.getElementById("searchBox-sideNav") != null) {
-    search.addWidget(
+    search.addWidgets([
+        instantsearch.widgets.configure({
+            hitsPerPage: 5
+        }),
         instantsearch.widgets.searchBox({
             container: '#searchBox-sideNav',
             placeholder: 'Search...',
@@ -44,11 +53,14 @@ if (document.getElementById("searchBox-sideNav") != null) {
             showLoadingIndicator: true,
             searchAsYouType: true
         })
-    );
+    ]);
 }
 
 if (document.getElementById("hits-sidenav") != null) {
-    search.addWidget(
+    search.addWidgets([
+        instantsearch.widgets.configure({
+            hitsPerPage: 5
+        }),
         instantsearch.widgets.hits({
             container: '#hits-sidenav',
             templates: {
@@ -56,7 +68,7 @@ if (document.getElementById("hits-sidenav") != null) {
                 item: '<a class="gol-links" href="{{{uri}}}">{{{title}}}</a>'
             }
         })
-    );
+    ]);
 }
 
 
