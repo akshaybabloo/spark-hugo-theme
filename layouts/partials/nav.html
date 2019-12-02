@@ -46,13 +46,12 @@
 
         <ul class="uk-nav uk-nav-default">
             <li>
-                <a onclick="ga('send', 'event', 'OffcanvasMenu', 'click', 'Home')" href="{{ .Site.BaseURL }}" class="uk-link-text">
-                    <span class="uk-icon uk-margin-small-right" uk-icon="icon: home"></span>
+                <a onclick="ga('send', 'event', 'OffcanvasMenu', 'click', 'Home')" href="{{ .Site.BaseURL }}" class="uk-link-text uk-text-large">
                     Home
                 </a>
             </li>
             {{ range .Site.Menus.main }}
-                <li><a onclick="ga('send', 'event', 'OffcanvasMenu', 'click', '{{ .Name }}')" href="{{ .URL }}" class="uk-link-text">{{ .Name }}</a></li>
+                <li><a onclick="ga('send', 'event', 'OffcanvasMenu', 'click', '{{ .Name }}')" href="{{ .URL }}" class="uk-link-text uk-text-large">{{ .Name }}</a></li>
             {{ end }}
         </ul>
 

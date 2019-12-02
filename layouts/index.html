@@ -89,9 +89,9 @@
         <ul class="uk-nav uk-nav-default">
             {{ range .Site.Menus.main }}
                 <li><a onclick="ga('send', 'event', 'OffcanvasMenu', 'click', '{{ .Name }}')"
-                       href="{{ .URL }}">{{ .Name }}</a></li>
+                       href="{{ .URL }}" class="uk-link-text uk-text-large">{{ .Name }}</a></li>
             {{ end }}
-            <li><a class="uk-navbar-toggle" href="#modal-full" uk-search-icon uk-toggle></a></li>
+            <li><a class="uk-navbar-toggle uk-text-large" href="#modal-full" uk-search-icon uk-toggle></a></li>
         </ul>
 
     </div>
