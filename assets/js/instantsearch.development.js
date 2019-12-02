@@ -1,9 +1,9 @@
-/*! InstantSearch.js 4.0.0 | © Algolia, Inc. and contributors; MIT License | https://github.com/algolia/instantsearch.js */
+/*! InstantSearch.js 4.0.1 | © Algolia, Inc. and contributors; MIT License | https://github.com/algolia/instantsearch.js */
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
   typeof define === 'function' && define.amd ? define(factory) :
   (global = global || self, global.instantsearch = factory());
-}(this, function () { 'use strict';
+}(this, (function () { 'use strict';
 
   function _typeof(obj) {
     if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") {
@@ -93,13 +93,13 @@
       var source = arguments[i] != null ? arguments[i] : {};
 
       if (i % 2) {
-        ownKeys(source, true).forEach(function (key) {
+        ownKeys(Object(source), true).forEach(function (key) {
           _defineProperty(target, key, source[key]);
         });
       } else if (Object.getOwnPropertyDescriptors) {
         Object.defineProperties(target, Object.getOwnPropertyDescriptors(source));
       } else {
-        ownKeys(source).forEach(function (key) {
+        ownKeys(Object(source)).forEach(function (key) {
           Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key));
         });
       }
@@ -3941,7 +3941,7 @@
 
   var requestBuilder_1 = requestBuilder;
 
-  var version = '0.0.0-5a0352a';
+  var version = '3.0.0';
 
   /**
    * Event triggered when a parameter is set or updated
@@ -5528,14 +5528,6 @@
   }
   /**
    * Prepares an object to be passed to the Template widget
-   * @param {object} unknownBecauseES6 an object with the following attributes:
-   *  - defaultTemplate
-   *  - templates
-   *  - templatesConfig
-   * @return {object} the configuration with the attributes:
-   *  - defaultTemplate
-   *  - templates
-   *  - useCustomCompileOptions
    */
 
 
@@ -6946,7 +6938,7 @@
     var _value = _slicedToArray(value, 1),
         _value$ = _value[0];
 
-    _value$ = _value$ === void 0 ? [] : _value$;
+    _value$ = _value$ === void 0 ? [undefined, undefined, undefined, undefined] : _value$;
 
     var _value$2 = _slicedToArray(_value$, 4),
         neLat = _value$2[0],
@@ -7025,7 +7017,7 @@
   };
 
   var withUsage = createDocumentationMessageGenerator({
-    name: 'index'
+    name: 'index-widget'
   });
 
   function isIndexWidget(widget) {
@@ -8534,7 +8526,7 @@
     return _construct(BrowserHistory, args);
   }
 
-  var version$1 = '4.0.0';
+  var version$1 = '4.0.1';
 
   var TAG_PLACEHOLDER = {
     highlightPreTag: '__ais-highlight__',
@@ -13804,6 +13796,7 @@
 
 
   var connectors = /*#__PURE__*/Object.freeze({
+    __proto__: null,
     connectClearRefinements: connectClearRefinements,
     connectCurrentRefinements: connectCurrentRefinements,
     connectHierarchicalMenu: connectHierarchicalMenu,
@@ -15114,7 +15107,8 @@
       _this = _possibleConstructorReturn(this, (_getPrototypeOf2 = _getPrototypeOf(SearchBox)).call.apply(_getPrototypeOf2, [this].concat(args)));
 
       _defineProperty(_assertThisInitialized(_this), "state", {
-        query: _this.props.searchAsYouType ? '' : _this.props.query
+        query: _this.props.query,
+        focused: false
       });
 
       _defineProperty(_assertThisInitialized(_this), "onInput", function (event) {
@@ -15126,11 +15120,11 @@
 
         if (searchAsYouType) {
           refine(query);
-        } else {
-          _this.setState({
-            query: query
-          });
         }
+
+        _this.setState({
+          query: query
+        });
 
         onChange(event);
       });
@@ -15155,7 +15149,6 @@
 
       _defineProperty(_assertThisInitialized(_this), "onReset", function (event) {
         var _this$props3 = _this.props,
-            searchAsYouType = _this$props3.searchAsYouType,
             refine = _this$props3.refine,
             onReset = _this$props3.onReset;
         var query = '';
@@ -15164,13 +15157,23 @@
 
         refine(query);
 
-        if (!searchAsYouType) {
-          _this.setState({
-            query: query
-          });
-        }
+        _this.setState({
+          query: query
+        });
 
         onReset(event);
+      });
+
+      _defineProperty(_assertThisInitialized(_this), "onBlur", function () {
+        _this.setState({
+          focused: false
+        });
+      });
+
+      _defineProperty(_assertThisInitialized(_this), "onFocus", function () {
+        _this.setState({
+          focused: true
+        });
       });
 
       return _this;
@@ -15192,6 +15195,20 @@
         });
       }
     }, {
+      key: "componentWillReceiveProps",
+      value: function componentWillReceiveProps(nextProps) {
+        /**
+         * when the user is typing, we don't want to replace the query typed
+         * by the user (state.query) with the query exposed by the connector (props.query)
+         * see: https://github.com/algolia/instantsearch.js/issues/4141
+         */
+        if (!this.state.focused && nextProps.query !== this.state.query) {
+          this.setState({
+            query: nextProps.query
+          });
+        }
+      }
+    }, {
       key: "render",
       value: function render() {
         var _this2 = this;
@@ -15204,9 +15221,7 @@
             showReset = _this$props4.showReset,
             showLoadingIndicator = _this$props4.showLoadingIndicator,
             templates = _this$props4.templates,
-            isSearchStalled = _this$props4.isSearchStalled,
-            searchAsYouType = _this$props4.searchAsYouType;
-        var query = searchAsYouType ? this.props.query : this.state.query;
+            isSearchStalled = _this$props4.isSearchStalled;
         return h("div", {
           className: cssClasses.root
         }, h("form", {
@@ -15220,7 +15235,7 @@
           ref: function ref(inputRef) {
             return _this2.input = inputRef;
           },
-          value: query,
+          value: this.state.query,
           disabled: this.props.disabled,
           className: cssClasses.input,
           type: "search",
@@ -15231,7 +15246,9 @@
           autoCapitalize: "off",
           spellCheck: false,
           maxLength: 512,
-          onInput: this.onInput
+          onInput: this.onInput,
+          onBlur: this.onBlur,
+          onFocus: this.onFocus
         }), h(Template, {
           templateKey: "submit",
           rootTagName: "button",
@@ -15252,7 +15269,7 @@
             className: cssClasses.reset,
             type: 'reset',
             title: 'Clear the search query.',
-            hidden: !(showReset && query.trim() && !isSearchStalled)
+            hidden: !(showReset && this.state.query.trim() && !isSearchStalled)
           },
           templates: templates,
           data: {
@@ -19772,79 +19789,47 @@
     });
   }
 
-  var MenuSelect =
-  /*#__PURE__*/
-  function (_Component) {
-    _inherits(MenuSelect, _Component);
+  function MenuSelect(_ref) {
+    var cssClasses = _ref.cssClasses,
+        templateProps = _ref.templateProps,
+        items = _ref.items,
+        refine = _ref.refine;
 
-    function MenuSelect() {
-      var _getPrototypeOf2;
+    var _ref2 = find$1(items, function (item) {
+      return item.isRefined;
+    }) || {
+      value: ''
+    },
+        selectedValue = _ref2.value;
 
-      var _this;
-
-      _classCallCheck(this, MenuSelect);
-
-      for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
-        args[_key] = arguments[_key];
+    return h("div", {
+      className: classnames(cssClasses.root, _defineProperty({}, cssClasses.noRefinementRoot, items.length === 0))
+    }, h("select", {
+      className: cssClasses.select,
+      value: selectedValue,
+      onChange: function onChange(event) {
+        refine(event.target.value);
       }
-
-      _this = _possibleConstructorReturn(this, (_getPrototypeOf2 = _getPrototypeOf(MenuSelect)).call.apply(_getPrototypeOf2, [this].concat(args)));
-
-      _defineProperty(_assertThisInitialized(_this), "handleSelectChange", function (_ref) {
-        var value = _ref.target.value;
-
-        _this.props.refine(value);
-      });
-
-      return _this;
-    }
-
-    _createClass(MenuSelect, [{
-      key: "render",
-      value: function render() {
-        var _this$props = this.props,
-            cssClasses = _this$props.cssClasses,
-            templateProps = _this$props.templateProps,
-            items = _this$props.items;
-
-        var _ref2 = find$1(items, function (item) {
-          return item.isRefined;
-        }) || {
-          value: ''
+    }, h(Template, _extends({}, templateProps, {
+      templateKey: "defaultOption",
+      rootTagName: "option",
+      rootProps: {
+        value: '',
+        className: cssClasses.option
+      }
+    })), items.map(function (item) {
+      return h(Template, _extends({}, templateProps, {
+        templateKey: "item",
+        rootTagName: "option",
+        rootProps: {
+          value: item.value,
+          className: cssClasses.option
         },
-            selectedValue = _ref2.value;
-
-        var rootClassNames = classnames(cssClasses.root, _defineProperty({}, cssClasses.noRefinementRoot, items.length === 0));
-        return h("div", {
-          className: rootClassNames
-        }, h("select", {
-          className: cssClasses.select,
-          value: selectedValue,
-          onChange: this.handleSelectChange
-        }, h(Template, _extends({}, templateProps, {
-          templateKey: "defaultOption",
-          rootTagName: "option",
-          rootProps: {
-            value: '',
-            className: cssClasses.option
-          }
-        })), items.map(function (item) {
-          return h(Template, _extends({}, templateProps, {
-            templateKey: "item",
-            rootTagName: "option",
-            rootProps: {
-              value: item.value,
-              className: cssClasses.option
-            },
-            key: item.value,
-            data: item
-          }));
-        })));
-      }
-    }]);
-
-    return MenuSelect;
-  }(m);
+        key: item.value,
+        data: item
+      }));
+    })));
+  }
 
   var defaultTemplates$e = {
     item: '{{label}} ({{#helpers.formatNumber}}{{count}}{{/helpers.formatNumber}})',
@@ -20738,6 +20723,7 @@
 
 
   var widgets = /*#__PURE__*/Object.freeze({
+    __proto__: null,
     clearRefinements: clearRefinements$1,
     configure: configure,
     currentRefinements: currentRefinements,
@@ -20772,6 +20758,7 @@
 
 
   var routers = /*#__PURE__*/Object.freeze({
+    __proto__: null,
     history: historyRouter
   });
 
@@ -20797,6 +20784,7 @@
 
 
   var stateMappings = /*#__PURE__*/Object.freeze({
+    __proto__: null,
     simple: simpleStateMapping,
     singleIndex: singleIndexStateMapping
   });
@@ -20833,5 +20821,5 @@
 
   return instantsearch;
 
-}));
+})));
 //# sourceMappingURL=instantsearch.development.js.map
