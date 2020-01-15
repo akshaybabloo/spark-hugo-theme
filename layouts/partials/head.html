@@ -77,7 +77,7 @@
 {{ template "_internal/schema.html" . }}
 {{ template "_internal/twitter_cards.html" . }}
 
-<link href="https://fonts.googleapis.com/css?family=Roboto+Mono" rel="stylesheet">
+<link href="{{ .Site.Params.scss.globalFontFamilyURL | safeHTMLAttr }}" rel="stylesheet">
 
 {{ if .Site.Params.convertAssetsToInline }}
     {{ $uikitCss := resources.Get "css/uikit.css" }}
