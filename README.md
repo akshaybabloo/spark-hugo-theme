@@ -117,6 +117,7 @@ enableRobotsTXT = true
     algoliaIndexName = "gollahalli-website"
     thumbnailUrl = "/img/akshay.jpg"
     acknowledge = false
+    convertAssetsToInline = true
     [params.scss]
         primary = "#c9cacc"
         secondary = "#c9cacc"

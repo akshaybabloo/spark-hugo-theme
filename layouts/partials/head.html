@@ -79,15 +79,25 @@
 
 <link href="https://fonts.googleapis.com/css?family=Roboto+Mono" rel="stylesheet">
 
-{{ with resources.Get "css/uikit.css" }}
+{{ if .Site.Params.convertAssetsToInline }}
+    {{ $uikitCss := resources.Get "css/uikit.css" }}
     <style>
-        {{ .Content | safeCSS }}
+        {{ $uikitCss.Content | safeCSS }}
     </style>
-{{end}}
 
-{{ $sassTemplate := resources.Get "scss/custom.scss" }}
-{{ $style := $sassTemplate | resources.ExecuteAsTemplate "main.scss" . | resources.ToCSS }}
-<style>
-  {{ $style.Content | safeCSS }}
-</style>
+    {{ $sassTemplate := resources.Get "scss/custom.scss" }}
+    {{ $style := $sassTemplate | resources.ExecuteAsTemplate "main.scss" . | resources.ToCSS }}
+    <style>
+        {{ $style.Content | safeCSS }}
+    </style>
+{{ else }}
+    {{ $uikitCss := resources.Get "css/uikit.css" | resources.Minify }}
+    <link rel="stylesheet" href="{{ $uikitCss.Permalink }}">
+
+    {{ $sassTemplate := resources.Get "scss/custom.scss" }}
+    {{ $style := $sassTemplate | resources.ExecuteAsTemplate "main.scss" . | resources.ToCSS | resources.Minify }}
+    <link rel="stylesheet" href="{{ $style.Permalink }}">
+{{ end }}
+
+
 

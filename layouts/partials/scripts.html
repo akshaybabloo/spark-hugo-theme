@@ -1,26 +1,36 @@
-{{ with resources.Get "js/uikit.js" }}
+{{ if .Site.Params.convertAssetsToInline }}
+    {{ $uikitJs := resources.Get "js/uikit.js" }}
     <script>
-        {{ .Content | safeJS }}
+        {{ $uikitJs.Content | safeJS }}
     </script>
-{{end}}
 
-{{ with resources.Get "js/uikit-icons.js" }}
+    {{ $uikitIcons := resources.Get "js/uikit-icons.js" }}
     <script>
-        {{ .Content | safeJS }}
+        {{ $uikitIcons.Content | safeJS }}
     </script>
-{{end}}
 
-{{ with resources.Get "js/algoliasearchLite.js" }}
+    {{ $algoliasearchLite := resources.Get "js/algoliasearchLite.js" }}
     <script>
-        {{ .Content | safeJS }}
+        {{ $algoliasearchLite.Content | safeJS }}
     </script>
-{{end}}
 
-{{ with resources.Get "js/instantsearch.development.js" }}
+    {{ $instantsearch := resources.Get "js/instantsearch.development.js" }}
     <script>
-        {{ .Content | safeJS }}
+        {{ $instantsearch.Content | safeJS }}
     </script>
-{{end}}
+{{ else }}
+    {{ $uikitJs := resources.Get "js/uikit.js" | resources.Minify }}
+    <script src="{{ $uikitJs.Permalink }}"></script>
+
+    {{ $uikitIcons := resources.Get "js/uikit-icons.js" | resources.Minify }}
+    <script src="{{ $uikitIcons.Permalink }}"></script>
+
+    {{ $algoliasearchLite := resources.Get "js/algoliasearchLite.js" | resources.Minify }}
+    <script src="{{ $algoliasearchLite.Permalink }}"></script>
+
+    {{ $instantsearch := resources.Get "js/instantsearch.development.js" | resources.Minify }}
+    <script src="{{ $instantsearch.Permalink }}"></script>
+{{ end }}
 
 <script>
 
@@ -41,10 +51,16 @@
         }
     });
 
-    {{ with resources.Get "js/custom.js" }}
-        {{ .Content | safeJS }}
-    {{end}}
+    {{ if .Site.Params.convertAssetsToInline }}
+    {{ $customJs := resources.Get "js/custom.js" }}
+    {{ $customJs.Content | safeJS }}
+    {{ end }}
 </script>
+
+{{ if not .Site.Params.convertAssetsToInline }}
+    {{ $customJs := resources.Get "js/custom.js" | resources.Minify }}
+    <script src="{{ $customJs.Permalink }}"></script>
+{{ end }}
 
 {{ range .Params.htmlScripts }}
     <script src="{{ . }}" async></script>
