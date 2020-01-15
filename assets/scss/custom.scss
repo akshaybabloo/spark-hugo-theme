@@ -3,6 +3,7 @@ $secondary: {{ .Site.Params.scss.secondary }};
 $background-color: {{ .Site.Params.scss.backgroundColor }};
 $background-color-light: {{ .Site.Params.scss.backgroundColorLight }};
 $text-color: {{ .Site.Params.scss.textColor }};
+$text-color-dark: black;
 $sub-text-color: {{ .Site.Params.scss.subTextColor }};
 $global-font-family: {{ .Site.Params.scss.globalFontFamily }} !important;
 $label-background-color: {{ .Site.Params.scss.labelBackgroundColor }};
@@ -210,4 +211,18 @@ time {
 pre code{
     font-family: "Fira Code", monospace !important;
     font-variant-ligatures: common-ligatures;
+}
+
+// Algolia search
+
+.ais-Hits-item a:not(.uk-icon) {
+    color: $text-color-dark !important;
+    text-decoration: none;
+    //border-bottom: 2px solid $text-color-dark !important;
+}
+
+.ais-Hits-item a:hover:not(.uk-icon),
+.ais-Hits-item a:focus:not(.uk-icon) {
+    text-decoration: none;
+    border-bottom: 2px solid $text-color-dark !important;
 }
