@@ -1,4 +1,4 @@
-/*! InstantSearch.js 4.0.1 | © Algolia, Inc. and contributors; MIT License | https://github.com/algolia/instantsearch.js */
+/*! InstantSearch.js 4.1.1 | © Algolia, Inc. and contributors; MIT License | https://github.com/algolia/instantsearch.js */
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
   typeof define === 'function' && define.amd ? define(factory) :
@@ -6577,9 +6577,13 @@
     return value;
   }
 
+  function getObjectType(object) {
+    return Object.prototype.toString.call(object).slice(8, -1);
+  }
+
   function checkRendering(rendering, usage) {
     if (rendering === undefined || typeof rendering !== 'function') {
-      throw new Error("The render function is not valid (got type \"".concat(_typeof(rendering), "\").\n\n").concat(usage));
+      throw new Error("The render function is not valid (received type ".concat(getObjectType(rendering), ").\n\n").concat(usage));
     }
   }
 
@@ -7279,20 +7283,62 @@
             };
 
             var stateToWidgetsMap = {
-              query: ['ais.searchBox', 'ais.autocomplete', 'ais.voiceSearch'],
-              refinementList: ['ais.refinementList'],
-              menu: ['ais.menu'],
-              hierarchicalMenu: ['ais.hierarchicalMenu'],
-              numericMenu: ['ais.numericMenu'],
-              ratingMenu: ['ais.ratingMenu'],
-              range: ['ais.range'],
-              toggle: ['ais.toggleRefinement'],
-              geoSearch: ['ais.geoSearch'],
-              sortBy: ['ais.sortBy'],
-              page: ['ais.pagination', 'ais.infiniteHits'],
-              hitsPerPage: ['ais.hitsPerPage'],
-              configure: ['ais.configure'],
-              places: ['ais.places']
+              query: {
+                connectors: ['connectSearchBox'],
+                widgets: ['ais.searchBox', 'ais.autocomplete', 'ais.voiceSearch']
+              },
+              refinementList: {
+                connectors: ['connectRefinementList'],
+                widgets: ['ais.refinementList']
+              },
+              menu: {
+                connectors: ['connectMenu'],
+                widgets: ['ais.menu']
+              },
+              hierarchicalMenu: {
+                connectors: ['connectHierarchicalMenu'],
+                widgets: ['ais.hierarchicalMenu']
+              },
+              numericMenu: {
+                connectors: ['connectNumericMenu'],
+                widgets: ['ais.numericMenu']
+              },
+              ratingMenu: {
+                connectors: ['connectRatingMenu'],
+                widgets: ['ais.ratingMenu']
+              },
+              range: {
+                connectors: ['connectRange'],
+                widgets: ['ais.rangeInput', 'ais.rangeSlider']
+              },
+              toggle: {
+                connectors: ['connectToggleRefinement'],
+                widgets: ['ais.toggleRefinement']
+              },
+              geoSearch: {
+                connectors: ['connectGeoSearch'],
+                widgets: ['ais.geoSearch']
+              },
+              sortBy: {
+                connectors: ['connectSortBy'],
+                widgets: ['ais.sortBy']
+              },
+              page: {
+                connectors: ['connectPagination'],
+                widgets: ['ais.pagination', 'ais.infiniteHits']
+              },
+              hitsPerPage: {
+                connectors: ['connectHitsPerPage'],
+                widgets: ['ais.hitsPerPage']
+              },
+              configure: {
+                connectors: ['connectConfigure'],
+                widgets: ['ais.configure']
+              },
+              places: {
+                connectors: [],
+                widgets: ['ais.places']
+              }
             };
 
             var mountedWidgets = _this2.getWidgets().map(function (widget) {
@@ -7300,14 +7346,17 @@
             }).filter(Boolean);
 
             var missingWidgets = Object.keys(localUiState).reduce(function (acc, parameter) {
-              var requiredWidgets = stateToWidgetsMap[parameter];
+              var requiredWidgets = stateToWidgetsMap[parameter] && stateToWidgetsMap[parameter].widgets;
 
               if (requiredWidgets && !requiredWidgets.some(function (requiredWidget) {
                 return mountedWidgets.includes(requiredWidget);
               })) {
-                acc.push([parameter, stateToWidgetsMap[parameter].map(function (widgetIdentifier) {
-                  return widgetIdentifier.split('ais.')[1];
-                })]);
+                acc.push([parameter, {
+                  connectors: stateToWidgetsMap[parameter].connectors,
+                  widgets: stateToWidgetsMap[parameter].widgets.map(function (widgetIdentifier) {
+                    return widgetIdentifier.split('ais.')[1];
+                  })
+                }]);
               }
 
               return acc;
@@ -7317,32 +7366,47 @@
 
               var _ref4 = _slicedToArray(_ref3, 2),
                   stateParameter = _ref4[0],
-                  widgets = _ref4[1];
+                  widgets = _ref4[1].widgets;
 
               return "- `".concat(stateParameter, "` needs one of these widgets: ").concat((_ref5 = []).concat.apply(_ref5, _toConsumableArray(widgets.map(function (name) {
                 return getWidgetNames(name);
               }))).map(function (name) {
                 return "\"".concat(name, "\"");
               }).join(', '));
-            }).join('\n'), "\n\nIf you do not wish to display widgets but still want to support their search parameters, you can mount \"virtual widgets\" that don't render anything:\n\n```\n").concat(missingWidgets.map(function (_ref6) {
+            }).join('\n'), "\n\nIf you do not wish to display widgets but still want to support their search parameters, you can mount \"virtual widgets\" that don't render anything:\n\n```\n").concat(missingWidgets.filter(function (_ref6) {
               var _ref7 = _slicedToArray(_ref6, 2),
                   _stateParameter = _ref7[0],
-                  widgets = _ref7[1];
+                  connectors = _ref7[1].connectors;
 
-              var capitalizedWidget = capitalize(widgets[0]);
-              return "const virtual".concat(capitalizedWidget, " = connect").concat(capitalizedWidget, "(() => null);");
-            }).join('\n'), "\n\nsearch.addWidgets([\n  ").concat(missingWidgets.map(function (_ref8) {
+              return connectors.length > 0;
+            }).map(function (_ref8) {
               var _ref9 = _slicedToArray(_ref8, 2),
                   _stateParameter = _ref9[0],
-                  widgets = _ref9[1];
+                  _ref9$ = _ref9[1],
+                  connectors = _ref9$.connectors,
+                  widgets = _ref9$.widgets;
+
+              var capitalizedWidget = capitalize(widgets[0]);
+              var connectorName = connectors[0];
+              return "const virtual".concat(capitalizedWidget, " = ").concat(connectorName, "(() => null);");
+            }).join('\n'), "\n\nsearch.addWidgets([\n  ").concat(missingWidgets.filter(function (_ref10) {
+              var _ref11 = _slicedToArray(_ref10, 2),
+                  _stateParameter = _ref11[0],
+                  connectors = _ref11[1].connectors;
+
+              return connectors.length > 0;
+            }).map(function (_ref12) {
+              var _ref13 = _slicedToArray(_ref12, 2),
+                  _stateParameter = _ref13[0],
+                  widgets = _ref13[1].widgets;
 
               var capitalizedWidget = capitalize(widgets[0]);
               return "virtual".concat(capitalizedWidget, "({ /* ... */ })");
             }).join(',\n  '), "\n]);\n```\n\nIf you're using custom widgets that do set these query parameters, we recommend using connectors instead.\n\nSee https://www.algolia.com/doc/guides/building-search-ui/widgets/customize-an-existing-widget/js/#customize-the-complete-ui-of-the-widgets")) ;
           }
         });
-        derivedHelper.on('result', function (_ref10) {
-          var results = _ref10.results;
+        derivedHelper.on('result', function (_ref14) {
+          var results = _ref14.results;
           // The index does not render the results it schedules a new render
           // to let all the other indices emit their own results. It allows us to
           // run the render process in one pass.
@@ -7372,8 +7436,8 @@
         // configuration of the widget is pushed in the URL. That's what we want to avoid.
         // https://github.com/algolia/instantsearch.js/pull/994/commits/4a672ae3fd78809e213de0368549ef12e9dc9454
 
-        helper.on('change', function (_ref11) {
-          var state = _ref11.state;
+        helper.on('change', function (_ref15) {
+          var state = _ref15.state;
           localUiState = getLocalWidgetsState(localWidgets, {
             searchParameters: state,
             helper: helper
@@ -7381,10 +7445,10 @@
           instantSearchInstance.onStateChange();
         });
       },
-      render: function render(_ref12) {
+      render: function render(_ref16) {
         var _this3 = this;
 
-        var instantSearchInstance = _ref12.instantSearchInstance;
+        var instantSearchInstance = _ref16.instantSearchInstance;
         localWidgets.forEach(function (widget) {
           // At this point, all the variables used below are set. Both `helper`
           // and `derivedHelper` have been created at the `init` step. The attribute
@@ -7438,94 +7502,193 @@
     };
   };
 
-  var walk = function walk(current, callback) {
-    callback(current);
-    current.getWidgets().filter(function (widget) {
-      return widget.$$type === 'ais.index';
-    }).forEach(function (innerIndex) {
-      walk(innerIndex, callback);
-    });
+  var version$1 = '4.1.1';
+
+  var TAG_PLACEHOLDER = {
+    highlightPreTag: '__ais-highlight__',
+    highlightPostTag: '__/ais-highlight__'
+  };
+  var TAG_REPLACEMENT = {
+    highlightPreTag: '<mark>',
+    highlightPostTag: '</mark>'
   };
 
-  var RoutingManager =
-  /*#__PURE__*/
-  function () {
-    function RoutingManager(_ref) {
-      var router = _ref.router,
-          stateMapping = _ref.stateMapping,
-          instantSearchInstance = _ref.instantSearchInstance;
+  function replaceTagsAndEscape(value) {
+    return escape$1(value).replace(new RegExp(TAG_PLACEHOLDER.highlightPreTag, 'g'), TAG_REPLACEMENT.highlightPreTag).replace(new RegExp(TAG_PLACEHOLDER.highlightPostTag, 'g'), TAG_REPLACEMENT.highlightPostTag);
+  }
 
-      _classCallCheck(this, RoutingManager);
-
-      _defineProperty(this, "instantSearchInstance", void 0);
-
-      _defineProperty(this, "router", void 0);
-
-      _defineProperty(this, "stateMapping", void 0);
-
-      this.router = router;
-      this.stateMapping = stateMapping;
-      this.instantSearchInstance = instantSearchInstance;
-      this.createURL = this.createURL.bind(this);
+  function recursiveEscape(input) {
+    if (isPlainObject(input) && typeof input.value !== 'string') {
+      return Object.keys(input).reduce(function (acc, key) {
+        return _objectSpread2({}, acc, _defineProperty({}, key, recursiveEscape(input[key])));
+      }, {});
     }
 
-    _createClass(RoutingManager, [{
-      key: "read",
-      value: function read() {
-        var route = this.router.read();
-        return this.stateMapping.routeToState(route);
-      }
-    }, {
-      key: "write",
-      value: function write(_ref2) {
-        var state = _ref2.state;
-        var route = this.stateMapping.stateToRoute(state);
-        this.router.write(route);
-      }
-    }, {
-      key: "subscribe",
-      value: function subscribe() {
-        var _this = this;
+    if (Array.isArray(input)) {
+      return input.map(recursiveEscape);
+    }
 
-        this.router.onUpdate(function (route) {
-          var uiState = _this.stateMapping.routeToState(route);
+    return _objectSpread2({}, input, {
+      value: replaceTagsAndEscape(input.value)
+    });
+  }
 
-          walk(_this.instantSearchInstance.mainIndex, function (current) {
-            var widgets = current.getWidgets();
-            var indexUiState = uiState[current.getIndexId()] || {};
-            var searchParameters = widgets.reduce(function (parameters, widget) {
-              if (!widget.getWidgetSearchParameters) {
-                return parameters;
-              }
+  function escapeHits(hits) {
+    if (hits.__escaped === undefined) {
+      hits = hits.map(function (hit) {
+        if (hit._highlightResult) {
+          hit._highlightResult = recursiveEscape(hit._highlightResult);
+        }
 
-              return widget.getWidgetSearchParameters(parameters, {
-                uiState: indexUiState
-              });
-            }, current.getHelper().state);
-            current.getHelper().overrideStateWithoutTriggeringChangeEvent(searchParameters);
+        if (hit._snippetResult) {
+          hit._snippetResult = recursiveEscape(hit._snippetResult);
+        }
 
-            _this.instantSearchInstance.scheduleSearch();
-          });
-        });
+        return hit;
+      });
+      hits.__escaped = true;
+    }
+
+    return hits;
+  }
+  function escapeFacets(facetHits) {
+    return facetHits.map(function (h) {
+      return _objectSpread2({}, h, {
+        highlighted: replaceTagsAndEscape(h.highlighted)
+      });
+    });
+  }
+
+  var NAMESPACE = 'ais';
+  var component = function component(componentName) {
+    return function () {
+      var _ref = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
+          descendantName = _ref.descendantName,
+          modifierName = _ref.modifierName;
+
+      var descendent = descendantName ? "-".concat(descendantName) : '';
+      var modifier = modifierName ? "--".concat(modifierName) : '';
+      return "".concat(NAMESPACE, "-").concat(componentName).concat(descendent).concat(modifier);
+    };
+  };
+
+  var suit = component('Highlight');
+  function highlight(_ref) {
+    var attribute = _ref.attribute,
+        _ref$highlightedTagNa = _ref.highlightedTagName,
+        highlightedTagName = _ref$highlightedTagNa === void 0 ? 'mark' : _ref$highlightedTagNa,
+        hit = _ref.hit;
+    var attributeValue = getPropertyByPath(hit, "_highlightResult.".concat(attribute, ".value")) || '';
+    var className = suit({
+      descendantName: 'highlighted'
+    });
+    return attributeValue.replace(new RegExp(TAG_REPLACEMENT.highlightPreTag, 'g'), "<".concat(highlightedTagName, " class=\"").concat(className, "\">")).replace(new RegExp(TAG_REPLACEMENT.highlightPostTag, 'g'), "</".concat(highlightedTagName, ">"));
+  }
+
+  var suit$1 = component('Snippet');
+  function snippet(_ref) {
+    var attribute = _ref.attribute,
+        _ref$highlightedTagNa = _ref.highlightedTagName,
+        highlightedTagName = _ref$highlightedTagNa === void 0 ? 'mark' : _ref$highlightedTagNa,
+        hit = _ref.hit;
+    var attributeValue = getPropertyByPath(hit, "_snippetResult.".concat(attribute, ".value")) || '';
+    var className = suit$1({
+      descendantName: 'highlighted'
+    });
+    return attributeValue.replace(new RegExp(TAG_REPLACEMENT.highlightPreTag, 'g'), "<".concat(highlightedTagName, " class=\"").concat(className, "\">")).replace(new RegExp(TAG_REPLACEMENT.highlightPostTag, 'g'), "</".concat(highlightedTagName, ">"));
+  }
+
+  function readDataAttributes(domElement) {
+    var method = domElement.getAttribute('data-insights-method');
+    var serializedPayload = domElement.getAttribute('data-insights-payload');
+
+    if (typeof serializedPayload !== 'string') {
+      throw new Error('The insights helper expects `data-insights-payload` to be a base64-encoded JSON string.');
+    }
+
+    try {
+      var payload = JSON.parse(atob(serializedPayload));
+      return {
+        method: method,
+        payload: payload
+      };
+    } catch (error) {
+      throw new Error('The insights helper was unable to parse `data-insights-payload`.');
+    }
+  }
+  function hasDataAttributes(domElement) {
+    return domElement.hasAttribute('data-insights-method');
+  }
+  function writeDataAttributes(_ref) {
+    var method = _ref.method,
+        payload = _ref.payload;
+
+    if (_typeof(payload) !== 'object') {
+      throw new Error("The insights helper expects the payload to be an object.");
+    }
+
+    var serializedPayload;
+
+    try {
+      serializedPayload = btoa(JSON.stringify(payload));
+    } catch (error) {
+      throw new Error("Could not JSON serialize the payload object.");
+    }
+
+    return "data-insights-method=\"".concat(method, "\" data-insights-payload=\"").concat(serializedPayload, "\"");
+  }
+  function insights(method, payload) {
+    return writeDataAttributes({
+      method: method,
+      payload: payload
+    });
+  }
+
+  function hoganHelpers(_ref) {
+    var numberLocale = _ref.numberLocale;
+    return {
+      formatNumber: function formatNumber(value, render) {
+        return Number(render(value)).toLocaleString(numberLocale);
+      },
+      highlight: function highlight$1(options, render) {
+        try {
+          var highlightOptions = JSON.parse(options);
+          return render(highlight(_objectSpread2({}, highlightOptions, {
+            hit: this
+          })));
+        } catch (error) {
+          throw new Error("\nThe highlight helper expects a JSON object of the format:\n{ \"attribute\": \"name\", \"highlightedTagName\": \"mark\" }");
+        }
+      },
+      snippet: function snippet$1(options, render) {
+        try {
+          var snippetOptions = JSON.parse(options);
+          return render(snippet(_objectSpread2({}, snippetOptions, {
+            hit: this
+          })));
+        } catch (error) {
+          throw new Error("\nThe snippet helper expects a JSON object of the format:\n{ \"attribute\": \"name\", \"highlightedTagName\": \"mark\" }");
+        }
+      },
+      insights: function insights$1(options, render) {
+        try {
+          var _JSON$parse = JSON.parse(options),
+              method = _JSON$parse.method,
+              payload = _JSON$parse.payload;
+
+          return render(insights(method, _objectSpread2({
+            objectIDs: [this.objectID]
+          }, payload)));
+        } catch (error) {
+          throw new Error("\nThe insights helper expects a JSON object of the format:\n{ \"method\": \"method-name\", \"payload\": { \"eventName\": \"name of the event\" } }");
+        }
       }
-    }, {
-      key: "dispose",
-      value: function dispose() {
-        this.router.dispose();
-      }
-    }, {
-      key: "createURL",
-      value: function createURL(nextState) {
-        var uiState = Object.keys(nextState).reduce(function (acc, indexId) {
-          return _objectSpread2({}, acc, _defineProperty({}, indexId, nextState[indexId]));
-        }, this.instantSearchInstance.mainIndex.getWidgetState({}));
-        var route = this.stateMapping.stateToRoute(uiState);
-        return this.router.createURL(route);
-      }
-    }]);
+    };
+  }
 
-    return RoutingManager;
-  }();
+  function hasDetectedInsightsClient() {
+    return typeof window !== 'undefined' && Boolean(window.AlgoliaAnalyticsObject);
+  }
 
   function getIndexStateWithoutConfigure(uiState) {
     var configure = uiState.configure,
@@ -8526,176 +8689,66 @@
     return _construct(BrowserHistory, args);
   }
 
-  var version$1 = '4.0.1';
-
-  var TAG_PLACEHOLDER = {
-    highlightPreTag: '__ais-highlight__',
-    highlightPostTag: '__/ais-highlight__'
-  };
-  var TAG_REPLACEMENT = {
-    highlightPreTag: '<mark>',
-    highlightPostTag: '</mark>'
+  var walk = function walk(current, callback) {
+    callback(current);
+    current.getWidgets().filter(function (widget) {
+      return widget.$$type === 'ais.index';
+    }).forEach(function (innerIndex) {
+      walk(innerIndex, callback);
+    });
   };
 
-  function replaceTagsAndEscape(value) {
-    return escape$1(value).replace(new RegExp(TAG_PLACEHOLDER.highlightPreTag, 'g'), TAG_REPLACEMENT.highlightPreTag).replace(new RegExp(TAG_PLACEHOLDER.highlightPostTag, 'g'), TAG_REPLACEMENT.highlightPostTag);
-  }
+  var createRouter = function createRouter() {
+    var props = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+    var _props$router = props.router,
+        router = _props$router === void 0 ? historyRouter() : _props$router,
+        _props$stateMapping = props.stateMapping,
+        stateMapping = _props$stateMapping === void 0 ? simpleStateMapping() : _props$stateMapping;
+    return function (_ref) {
+      var instantSearchInstance = _ref.instantSearchInstance;
 
-  function recursiveEscape(input) {
-    if (isPlainObject(input) && typeof input.value !== 'string') {
-      return Object.keys(input).reduce(function (acc, key) {
-        return _objectSpread2({}, acc, _defineProperty({}, key, recursiveEscape(input[key])));
-      }, {});
-    }
-
-    if (Array.isArray(input)) {
-      return input.map(recursiveEscape);
-    }
-
-    return _objectSpread2({}, input, {
-      value: replaceTagsAndEscape(input.value)
-    });
-  }
-
-  function escapeHits(hits) {
-    if (hits.__escaped === undefined) {
-      hits = hits.map(function (hit) {
-        if (hit._highlightResult) {
-          hit._highlightResult = recursiveEscape(hit._highlightResult);
-        }
-
-        if (hit._snippetResult) {
-          hit._snippetResult = recursiveEscape(hit._snippetResult);
-        }
-
-        return hit;
-      });
-      hits.__escaped = true;
-    }
-
-    return hits;
-  }
-  function escapeFacets(facetHits) {
-    return facetHits.map(function (h) {
-      return _objectSpread2({}, h, {
-        highlighted: replaceTagsAndEscape(h.highlighted)
-      });
-    });
-  }
-
-  var NAMESPACE = 'ais';
-  var component = function component(componentName) {
-    return function () {
-      var _ref = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
-          descendantName = _ref.descendantName,
-          modifierName = _ref.modifierName;
-
-      var descendent = descendantName ? "-".concat(descendantName) : '';
-      var modifier = modifierName ? "--".concat(modifierName) : '';
-      return "".concat(NAMESPACE, "-").concat(componentName).concat(descendent).concat(modifier);
-    };
-  };
-
-  var suit = component('Highlight');
-  function highlight(_ref) {
-    var attribute = _ref.attribute,
-        _ref$highlightedTagNa = _ref.highlightedTagName,
-        highlightedTagName = _ref$highlightedTagNa === void 0 ? 'mark' : _ref$highlightedTagNa,
-        hit = _ref.hit;
-    var attributeValue = getPropertyByPath(hit, "_highlightResult.".concat(attribute, ".value")) || '';
-    var className = suit({
-      descendantName: 'highlighted'
-    });
-    return attributeValue.replace(new RegExp(TAG_REPLACEMENT.highlightPreTag, 'g'), "<".concat(highlightedTagName, " class=\"").concat(className, "\">")).replace(new RegExp(TAG_REPLACEMENT.highlightPostTag, 'g'), "</".concat(highlightedTagName, ">"));
-  }
-
-  var suit$1 = component('Snippet');
-  function snippet(_ref) {
-    var attribute = _ref.attribute,
-        _ref$highlightedTagNa = _ref.highlightedTagName,
-        highlightedTagName = _ref$highlightedTagNa === void 0 ? 'mark' : _ref$highlightedTagNa,
-        hit = _ref.hit;
-    var attributeValue = getPropertyByPath(hit, "_snippetResult.".concat(attribute, ".value")) || '';
-    var className = suit$1({
-      descendantName: 'highlighted'
-    });
-    return attributeValue.replace(new RegExp(TAG_REPLACEMENT.highlightPreTag, 'g'), "<".concat(highlightedTagName, " class=\"").concat(className, "\">")).replace(new RegExp(TAG_REPLACEMENT.highlightPostTag, 'g'), "</".concat(highlightedTagName, ">"));
-  }
-
-  function readDataAttributes(domElement) {
-    var method = domElement.getAttribute('data-insights-method');
-    var serializedPayload = domElement.getAttribute('data-insights-payload');
-
-    if (typeof serializedPayload !== 'string') {
-      throw new Error('The insights helper expects `data-insights-payload` to be a base64-encoded JSON string.');
-    }
-
-    try {
-      var payload = JSON.parse(atob(serializedPayload));
-      return {
-        method: method,
-        payload: payload
-      };
-    } catch (error) {
-      throw new Error('The insights helper was unable to parse `data-insights-payload`.');
-    }
-  }
-  function hasDataAttributes(domElement) {
-    return domElement.hasAttribute('data-insights-method');
-  }
-  function writeDataAttributes(_ref) {
-    var method = _ref.method,
-        payload = _ref.payload;
-
-    if (_typeof(payload) !== 'object') {
-      throw new Error("The insights helper expects the payload to be an object.");
-    }
-
-    var serializedPayload;
-
-    try {
-      serializedPayload = btoa(JSON.stringify(payload));
-    } catch (error) {
-      throw new Error("Could not JSON serialize the payload object.");
-    }
-
-    return "data-insights-method=\"".concat(method, "\" data-insights-payload=\"").concat(serializedPayload, "\"");
-  }
-  function insights(method, payload) {
-    return writeDataAttributes({
-      method: method,
-      payload: payload
-    });
-  }
-
-  function hoganHelpers(_ref) {
-    var numberLocale = _ref.numberLocale;
-    return {
-      formatNumber: function formatNumber(value, render) {
-        return Number(render(value)).toLocaleString(numberLocale);
-      },
-      highlight: function highlight$1(options, render) {
-        try {
-          var highlightOptions = JSON.parse(options);
-          return render(highlight(_objectSpread2({}, highlightOptions, {
-            hit: this
-          })));
-        } catch (error) {
-          throw new Error("\nThe highlight helper expects a JSON object of the format:\n{ \"attribute\": \"name\", \"highlightedTagName\": \"mark\" }");
-        }
-      },
-      snippet: function snippet$1(options, render) {
-        try {
-          var snippetOptions = JSON.parse(options);
-          return render(snippet(_objectSpread2({}, snippetOptions, {
-            hit: this
-          })));
-        } catch (error) {
-          throw new Error("\nThe snippet helper expects a JSON object of the format:\n{ \"attribute\": \"name\", \"highlightedTagName\": \"mark\" }");
-        }
+      function topLevelCreateURL(nextState) {
+        var uiState = Object.keys(nextState).reduce(function (acc, indexId) {
+          return _objectSpread2({}, acc, _defineProperty({}, indexId, nextState[indexId]));
+        }, instantSearchInstance.mainIndex.getWidgetState({}));
+        var route = stateMapping.stateToRoute(uiState);
+        return router.createURL(route);
       }
+
+      instantSearchInstance._createURL = topLevelCreateURL;
+      instantSearchInstance._initialUiState = _objectSpread2({}, instantSearchInstance._initialUiState, {}, stateMapping.routeToState(router.read()));
+      return {
+        onStateChange: function onStateChange(_ref2) {
+          var state = _ref2.state;
+          var route = stateMapping.stateToRoute(state);
+          router.write(route);
+        },
+        subscribe: function subscribe() {
+          router.onUpdate(function (route) {
+            var uiState = stateMapping.routeToState(route);
+            walk(instantSearchInstance.mainIndex, function (current) {
+              var widgets = current.getWidgets();
+              var indexUiState = uiState[current.getIndexId()] || {};
+              var searchParameters = widgets.reduce(function (parameters, widget) {
+                if (!widget.getWidgetSearchParameters) {
+                  return parameters;
+                }
+
+                return widget.getWidgetSearchParameters(parameters, {
+                  uiState: indexUiState
+                });
+              }, current.getHelper().state);
+              current.getHelper().overrideStateWithoutTriggeringChangeEvent(searchParameters);
+              instantSearchInstance.scheduleSearch();
+            });
+          });
+        },
+        unsubscribe: function unsubscribe() {
+          router.dispose();
+        }
+      };
     };
-  }
+  };
 
   var withUsage$1 = createDocumentationMessageGenerator({
     name: 'instantsearch'
@@ -8704,6 +8757,10 @@
   function defaultCreateURL$1() {
     return '#';
   }
+  /**
+   * Global options for an InstantSearch instance.
+   */
+
 
   /**
    * The actual implementation of the InstantSearch. This is
@@ -8752,7 +8809,7 @@
 
       _defineProperty(_assertThisInitialized(_this), "_mainHelperSearch", void 0);
 
-      _defineProperty(_assertThisInitialized(_this), "_routingManager", void 0);
+      _defineProperty(_assertThisInitialized(_this), "middleware", []);
 
       _defineProperty(_assertThisInitialized(_this), "scheduleSearch", defer(function () {
         _this.mainHelper.search();
@@ -8775,11 +8832,11 @@
       _defineProperty(_assertThisInitialized(_this), "onStateChange", function () {
         var nextUiState = _this.mainIndex.getWidgetState({});
 
-        if (_this._routingManager) {
-          _this._routingManager.write({
+        _this.middleware.forEach(function (m) {
+          m.onStateChange({
             state: nextUiState
           });
-        }
+        });
       });
 
       var _options$indexName = options.indexName,
@@ -8805,10 +8862,6 @@
         throw new Error(withUsage$1('The `searchClient` option is required.'));
       }
 
-      if (typeof options.urlSync !== 'undefined') {
-        throw new Error(withUsage$1('The `urlSync` option was removed in InstantSearch.js 3. You may want to use the `routing` option.'));
-      }
-
       if (typeof searchClient.search !== 'function') {
         throw new Error("The `searchClient` must implement a `search` method.\n\nSee: https://www.algolia.com/doc/guides/building-search-ui/going-further/backend-search/in-depth/backend-instantsearch/js/");
       }
@@ -8816,6 +8869,8 @@
       if (typeof searchClient.addAlgoliaAgent === 'function') {
         searchClient.addAlgoliaAgent("instantsearch.js (".concat(version$1, ")"));
       }
+
+       _warning(Boolean(insightsClient) || !hasDetectedInsightsClient(), withUsage$1("InstantSearch detected the Insights client in the global scope.\nTo connect InstantSearch to the Insights client, make sure to specify the `insightsClient` option:\n\nconst search = instantsearch({\n  /* ... */\n  insightsClient: window.aa,\n});")) ;
 
       if (insightsClient && typeof insightsClient !== 'function') {
         throw new Error(withUsage$1('The `insightsClient` option should be a function.'));
@@ -8849,38 +8904,59 @@
         _this._searchFunction = searchFunction;
       }
 
-      var defaultRoutingOptions = {
-        stateMapping: simpleStateMapping(),
-        router: historyRouter()
-      };
-      var routingOptions = null;
+      if (routing) {
+        var routerOptions = typeof routing === 'boolean' ? undefined : routing;
 
-      if (routing === true) {
-        routingOptions = defaultRoutingOptions;
-      } else if (isPlainObject(routing)) {
-        routingOptions = _objectSpread2({}, defaultRoutingOptions, {}, routing);
-      }
-
-      if (routingOptions) {
-        _this._routingManager = new RoutingManager(_objectSpread2({}, routingOptions, {
-          instantSearchInstance: _assertThisInitialized(_this)
-        }));
-        _this._createURL = _this._routingManager.createURL;
-        _this._initialUiState = _objectSpread2({}, initialUiState, {}, _this._routingManager.read());
+        _this.EXPERIMENTAL_use(createRouter(routerOptions));
       }
 
       return _this;
     }
     /**
-     * Adds a widget to the search instance.
-     * A widget can be added either before or after InstantSearch has started.
-     * @param widget The widget to add to InstantSearch.
+     * Hooks a middleware into the InstantSearch lifecycle.
      *
-     * @deprecated This method will still be supported in 4.x releases, but not further. It is replaced by `addWidgets([widget])`.
+     * This method is considered as experimental and is subject to change in
+     * minor versions.
      */
 
 
     _createClass(InstantSearch, [{
+      key: "EXPERIMENTAL_use",
+      value: function EXPERIMENTAL_use() {
+        var _this2 = this;
+
+        for (var _len = arguments.length, middleware = new Array(_len), _key = 0; _key < _len; _key++) {
+          middleware[_key] = arguments[_key];
+        }
+
+        var newMiddlewareList = middleware.map(function (fn) {
+          var newMiddleware = fn({
+            instantSearchInstance: _this2
+          });
+
+          _this2.middleware.push(newMiddleware);
+
+          return newMiddleware;
+        }); // If the instance has already started, we directly subscribe the
+        // middleware so they're notified of changes.
+
+        if (this.started) {
+          newMiddlewareList.forEach(function (m) {
+            m.subscribe();
+          });
+        }
+
+        return this;
+      }
+      /**
+       * Adds a widget to the search instance.
+       * A widget can be added either before or after InstantSearch has started.
+       * @param widget The widget to add to InstantSearch.
+       *
+       * @deprecated This method will still be supported in 4.x releases, but not further. It is replaced by `addWidgets([widget])`.
+       */
+
+    }, {
       key: "addWidget",
       value: function addWidget(widget) {
          _warning(false, 'addWidget will still be supported in 4.x releases, but not further. It is replaced by `addWidgets([widget])`') ;
@@ -8955,7 +9031,7 @@
     }, {
       key: "start",
       value: function start() {
-        var _this2 = this;
+        var _this3 = this;
 
         if (this.started) {
           throw new Error(withUsage$1('The `start` method has already been called once.'));
@@ -8985,14 +9061,14 @@
           this._mainHelperSearch = mainHelper.search.bind(mainHelper);
 
           mainHelper.search = function () {
-            var mainIndexHelper = _this2.mainIndex.getHelper();
+            var mainIndexHelper = _this3.mainIndex.getHelper();
 
             var searchFunctionHelper = algoliasearchHelper_1(fakeClient, mainIndexHelper.state.index, mainIndexHelper.state);
             searchFunctionHelper.once('search', function (_ref) {
               var state = _ref.state;
               mainIndexHelper.overrideStateWithoutTriggeringChangeEvent(state);
 
-              _this2._mainHelperSearch();
+              _this3._mainHelperSearch();
             }); // Forward state changes from `searchFunctionHelper` to `mainIndexHelper`
 
             searchFunctionHelper.on('change', function (_ref2) {
@@ -9000,7 +9076,7 @@
               mainIndexHelper.setState(state);
             });
 
-            _this2._searchFunction(searchFunctionHelper);
+            _this3._searchFunction(searchFunctionHelper);
 
             return mainHelper;
           };
@@ -9011,21 +9087,19 @@
         mainHelper.on('error', function (_ref3) {
           var error = _ref3.error;
 
-          _this2.emit('error', {
+          _this3.emit('error', {
             error: error
           });
         });
         this.mainHelper = mainHelper;
+        this.middleware.forEach(function (m) {
+          m.subscribe();
+        });
         this.mainIndex.init({
           instantSearchInstance: this,
           parent: null,
           uiState: this._initialUiState
         });
-
-        if (this._routingManager) {
-          this._routingManager.subscribe();
-        }
-
         mainHelper.search(); // Keep the previous reference for legacy purpose, some pattern use
         // the direct Helper access `search.helper` (e.g multi-index).
 
@@ -9059,21 +9133,20 @@
         this.mainHelper.removeAllListeners();
         this.mainHelper = null;
         this.helper = null;
-
-        if (this._routingManager) {
-          this._routingManager.dispose();
-        }
+        this.middleware.forEach(function (m) {
+          m.unsubscribe();
+        });
       }
     }, {
       key: "scheduleStalledRender",
       value: function scheduleStalledRender() {
-        var _this3 = this;
+        var _this4 = this;
 
         if (!this._searchStalledTimer) {
           this._searchStalledTimer = setTimeout(function () {
-            _this3._isSearchStalled = true;
+            _this4._isSearchStalled = true;
 
-            _this3.scheduleRender();
+            _this4.scheduleRender();
           }, this._stalledSearchDelay);
         }
       }
@@ -9871,7 +9944,7 @@
     var queryID = queryIDs[0];
 
     if (typeof queryID !== 'string') {
-      throw new Error('Could not infer `queryID`. Ensure InstantSearch is configured with `clickAnalytics: true`');
+      throw new Error("Could not infer `queryID`. Ensure InstantSearch `clickAnalytics: true` was added with the Configure widget.\n\nSee: https://alg.li/lNiZZ7");
     }
 
     return queryID;
@@ -9918,6 +9991,13 @@
 
   var wrapInsightsClient = function wrapInsightsClient(aa, results, hits) {
     return function (method, payload) {
+      if (!aa) {
+        var withInstantSearchUsage = createDocumentationMessageGenerator({
+          name: 'instantsearch'
+        });
+        throw new Error(withInstantSearchUsage('The `insightsClient` option has not been provided to `instantsearch`.'));
+      }
+
       if (!Array.isArray(payload.objectIDs)) {
         throw new TypeError('Expected `objectIDs` to be an array.');
       }
@@ -9939,14 +10019,12 @@
             hits = renderOptions.hits,
             instantSearchInstance = renderOptions.instantSearchInstance;
 
-        if (results && hits && instantSearchInstance && instantSearchInstance.insightsClient
-        /* providing the insightsClient is optional */
-        ) {
-            var insights = wrapInsightsClient(instantSearchInstance.insightsClient, results, hits);
-            return renderFn(_objectSpread2({}, renderOptions, {
-              insights: insights
-            }), isFirstRender);
-          }
+        if (results && hits && instantSearchInstance) {
+          var insights = wrapInsightsClient(instantSearchInstance.insightsClient, results, hits);
+          return renderFn(_objectSpread2({}, renderOptions, {
+            insights: insights
+          }), isFirstRender);
+        }
 
         return renderFn(renderOptions, isFirstRender);
       };
@@ -9961,18 +10039,27 @@
 
   /** @jsx h */
 
+  var findInsightsTarget = function findInsightsTarget(startElement, endElement) {
+    var element = startElement;
+
+    while (element && !hasDataAttributes(element)) {
+      if (element === endElement) {
+        return null;
+      }
+
+      element = element.parentElement;
+    }
+
+    return element;
+  };
+
   var insightsListener = function insightsListener(BaseComponent) {
     function WithInsightsListener(props) {
       var handleClick = function handleClick(event) {
-        if (!hasDataAttributes(event.target)) {
-          return;
-        }
+        var insightsTarget = findInsightsTarget(event.target, event.currentTarget);
+        if (!insightsTarget) return;
 
-        if (!props.insights) {
-          throw new Error('The `insightsClient` option has not been provided to `instantsearch`.');
-        }
-
-        var _readDataAttributes = readDataAttributes(event.target),
+        var _readDataAttributes = readDataAttributes(insightsTarget),
             method = _readDataAttributes.method,
             payload = _readDataAttributes.payload;
 
@@ -12894,7 +12981,6 @@
    *
    * Currently, the feature is not compatible with multiple values in the _geoloc attribute.
    *
-   * @type {Connector}
    * @param {function(GeoSearchRenderingOptions, boolean)} renderFn Rendering function for the custom **GeoSearch** widget.
    * @param {function} unmountFn Unmount function called when the widget is disposed.
    * @return {function(CustomGeoSearchWidgetOptions)} Re-usable widget factory for a custom **GeoSearch** widget.
@@ -13253,13 +13339,91 @@
   };
 
   var withUsage$m = createDocumentationMessageGenerator({
+    name: 'configure-related-items',
+    connector: true
+  });
+
+  function createOptionalFilter(_ref) {
+    var attributeName = _ref.attributeName,
+        attributeValue = _ref.attributeValue,
+        attributeScore = _ref.attributeScore;
+    return "".concat(attributeName, ":").concat(attributeValue, "<score=").concat(attributeScore || 1, ">");
+  }
+
+  var connectConfigureRelatedItems = function connectConfigureRelatedItems(renderFn, unmountFn) {
+    return function (widgetParams) {
+      var _ref2 = widgetParams || {},
+          hit = _ref2.hit,
+          matchingPatterns = _ref2.matchingPatterns,
+          _ref2$transformSearch = _ref2.transformSearchParameters,
+          transformSearchParameters = _ref2$transformSearch === void 0 ? function (x) {
+        return x;
+      } : _ref2$transformSearch;
+
+      if (!hit) {
+        throw new Error(withUsage$m('The `hit` option is required.'));
+      }
+
+      if (!matchingPatterns) {
+        throw new Error(withUsage$m('The `matchingPatterns` option is required.'));
+      }
+
+      var optionalFilters = Object.keys(matchingPatterns).reduce(function (acc, attributeName) {
+        var attribute = matchingPatterns[attributeName];
+        var attributeValue = hit[attributeName];
+        var attributeScore = attribute.score;
+
+        if (Array.isArray(attributeValue)) {
+          return [].concat(_toConsumableArray(acc), [attributeValue.map(function (attributeSubValue) {
+            return createOptionalFilter({
+              attributeName: attributeName,
+              attributeValue: attributeSubValue,
+              attributeScore: attributeScore
+            });
+          })]);
+        }
+
+        if (typeof attributeValue === 'string') {
+          return [].concat(_toConsumableArray(acc), [createOptionalFilter({
+            attributeName: attributeName,
+            attributeValue: attributeValue,
+            attributeScore: attributeScore
+          })]);
+        }
+
+         _warning(false, "\nThe `matchingPatterns` option returned a value of type ".concat(getObjectType(attributeValue), " for the \"").concat(attributeName, "\" key. This value was not sent to Algolia because `optionalFilters` only supports strings and array of strings.\n\nYou can remove the \"").concat(attributeName, "\" key from the `matchingPatterns` option.\n\nSee https://www.algolia.com/doc/api-reference/api-parameters/optionalFilters/\n            ")) ;
+        return acc;
+      }, []);
+
+      var searchParameters = _objectSpread2({}, transformSearchParameters(new algoliasearchHelper_1.SearchParameters({
+        // @ts-ignore @TODO algoliasearch-helper@3.0.1 will contain the type
+        // `sumOrFiltersScores`.
+        // See https://github.com/algolia/algoliasearch-helper-js/pull/753
+        sumOrFiltersScores: true,
+        facetFilters: ["objectID:-".concat(hit.objectID)],
+        // @ts-ignore @TODO algoliasearch-helper@3.0.1 will contain the type
+        // `optionalFilters`.
+        // See https://github.com/algolia/algoliasearch-helper-js/pull/754
+        optionalFilters: optionalFilters
+      })));
+
+      var makeConfigure = connectConfigure(renderFn, unmountFn);
+      return _objectSpread2({}, makeConfigure({
+        searchParameters: searchParameters
+      }), {
+        $$type: 'ais.configureRelatedItems'
+      });
+    };
+  };
+
+  var withUsage$n = createDocumentationMessageGenerator({
     name: 'autocomplete',
     connector: true
   });
 
   var connectAutocomplete = function connectAutocomplete(renderFn) {
     var unmountFn = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : noop;
-    checkRendering(renderFn, withUsage$m());
+    checkRendering(renderFn, withUsage$n());
     return function (widgetParams) {
       var _ref = widgetParams || {},
           _ref$escapeHTML = _ref.escapeHTML,
@@ -13352,7 +13516,7 @@
     };
   };
 
-  var withUsage$n = createDocumentationMessageGenerator({
+  var withUsage$o = createDocumentationMessageGenerator({
     name: 'query-rules',
     connector: true
   });
@@ -13417,7 +13581,7 @@
 
   var connectQueryRules = function connectQueryRules(render) {
     var unmount = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : noop;
-    checkRendering(render, withUsage$n());
+    checkRendering(render, withUsage$o());
     return function (widgetParams) {
       var _ref2 = widgetParams || {},
           _ref2$trackedFilters = _ref2.trackedFilters,
@@ -13433,7 +13597,7 @@
 
       Object.keys(trackedFilters).forEach(function (facetName) {
         if (typeof trackedFilters[facetName] !== 'function') {
-          throw new Error(withUsage$n("'The \"".concat(facetName, "\" filter value in the `trackedFilters` option expects a function.")));
+          throw new Error(withUsage$o("'The \"".concat(facetName, "\" filter value in the `trackedFilters` option expects a function.")));
         }
       });
       var hasTrackedFilters = Object.keys(trackedFilters).length > 0; // We store the initial rule contexts applied before creating the widget
@@ -13657,14 +13821,14 @@
     };
   }
 
-  var withUsage$o = createDocumentationMessageGenerator({
+  var withUsage$p = createDocumentationMessageGenerator({
     name: 'voice-search',
     connector: true
   });
 
   var connectVoiceSearch = function connectVoiceSearch(renderFn) {
     var unmountFn = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : noop;
-    checkRendering(renderFn, withUsage$o());
+    checkRendering(renderFn, withUsage$p());
     return function (widgetParams) {
       var _render = function render(_ref) {
         var isFirstRendering = _ref.isFirstRendering,
@@ -13819,6 +13983,7 @@
     connectGeoSearch: connectGeoSearch,
     connectPoweredBy: connectPoweredBy,
     connectConfigure: connectConfigure,
+    EXPERIMENTAL_connectConfigureRelatedItems: connectConfigureRelatedItems,
     connectAutocomplete: connectAutocomplete,
     connectQueryRules: connectQueryRules,
     connectVoiceSearch: connectVoiceSearch
@@ -14202,7 +14367,7 @@
   };
 
   /** @jsx h */
-  var withUsage$p = createDocumentationMessageGenerator({
+  var withUsage$q = createDocumentationMessageGenerator({
     name: 'clear-refinements'
   });
   var suit$2 = component('ClearRefinements');
@@ -14289,7 +14454,7 @@
         userCssClasses = _ref3$cssClasses === void 0 ? {} : _ref3$cssClasses;
 
     if (!container) {
-      throw new Error(withUsage$p('The `container` option is required.'));
+      throw new Error(withUsage$q('The `container` option is required.'));
     }
 
     var containerNode = getContainerNode(container);
@@ -14326,6 +14491,11 @@
     return makeWidget({
       searchParameters: widgetParams
     });
+  };
+
+  var configureRelatedItems = function configureRelatedItems(widgetParams) {
+    var makeWidget = connectConfigureRelatedItems();
+    return makeWidget(widgetParams);
   };
 
   /** @jsx h */
@@ -14379,7 +14549,7 @@
   };
 
   /** @jsx h */
-  var withUsage$q = createDocumentationMessageGenerator({
+  var withUsage$r = createDocumentationMessageGenerator({
     name: 'current-refinements'
   });
   var suit$3 = component('CurrentRefinements');
@@ -14409,7 +14579,7 @@
         transformItems = _ref2.transformItems;
 
     if (!container) {
-      throw new Error(withUsage$q('The `container` option is required.'));
+      throw new Error(withUsage$r('The `container` option is required.'));
     }
 
     var containerNode = getContainerNode(container);
@@ -14831,7 +15001,7 @@
     return HTMLMarker;
   };
 
-  var withUsage$r = createDocumentationMessageGenerator({
+  var withUsage$s = createDocumentationMessageGenerator({
     name: 'geo-search'
   });
   var suit$4 = component('GeoSearch');
@@ -14962,11 +15132,11 @@
     };
 
     if (!container) {
-      throw new Error(withUsage$r('The `container` option is required.'));
+      throw new Error(withUsage$s('The `container` option is required.'));
     }
 
     if (!googleReference) {
-      throw new Error(withUsage$r('The `googleReference` option is required.'));
+      throw new Error(withUsage$s('The `googleReference` option is required.'));
     }
 
     var containerNode = getContainerNode(container);
@@ -15532,7 +15702,7 @@
   };
 
   /** @jsx h */
-  var withUsage$s = createDocumentationMessageGenerator({
+  var withUsage$t = createDocumentationMessageGenerator({
     name: 'hierarchical-menu'
   });
   var suit$5 = component('HierarchicalMenu');
@@ -15707,7 +15877,7 @@
         userCssClasses = _ref3$cssClasses === void 0 ? {} : _ref3$cssClasses;
 
     if (!container) {
-      throw new Error(withUsage$s('The `container` option is required.'));
+      throw new Error(withUsage$t('The `container` option is required.'));
     }
 
     var containerNode = getContainerNode(container);
@@ -15824,7 +15994,7 @@
   };
 
   /** @jsx h */
-  var withUsage$t = createDocumentationMessageGenerator({
+  var withUsage$u = createDocumentationMessageGenerator({
     name: 'hits'
   });
   var suit$6 = component('Hits');
@@ -15917,7 +16087,7 @@
         userCssClasses = _ref3$cssClasses === void 0 ? {} : _ref3$cssClasses;
 
     if (!container) {
-      throw new Error(withUsage$t('The `container` option is required.'));
+      throw new Error(withUsage$u('The `container` option is required.'));
     }
 
     var containerNode = getContainerNode(container);
@@ -15971,7 +16141,7 @@
   }
 
   /** @jsx h */
-  var withUsage$u = createDocumentationMessageGenerator({
+  var withUsage$v = createDocumentationMessageGenerator({
     name: 'hits-per-page'
   });
   var suit$7 = component('HitsPerPage');
@@ -16055,7 +16225,7 @@
         transformItems = _ref5.transformItems;
 
     if (!container) {
-      throw new Error(withUsage$u('The `container` option is required.'));
+      throw new Error(withUsage$v('The `container` option is required.'));
     }
 
     var containerNode = getContainerNode(container);
@@ -16147,7 +16317,7 @@
   };
 
   /** @jsx h */
-  var withUsage$v = createDocumentationMessageGenerator({
+  var withUsage$w = createDocumentationMessageGenerator({
     name: 'infinite-hits'
   });
   var suit$8 = component('InfiniteHits');
@@ -16205,7 +16375,7 @@
         showPrevious = _ref3.showPrevious;
 
     if (!container) {
-      throw new Error(withUsage$v('The `container` option is required.'));
+      throw new Error(withUsage$w('The `container` option is required.'));
     }
 
     var containerNode = getContainerNode(container);
@@ -16258,7 +16428,7 @@
     showMoreText: "\n    {{#isShowingMore}}\n      Show less\n    {{/isShowingMore}}\n    {{^isShowingMore}}\n      Show more\n    {{/isShowingMore}}\n  "
   };
 
-  var withUsage$w = createDocumentationMessageGenerator({
+  var withUsage$x = createDocumentationMessageGenerator({
     name: 'menu'
   });
   var suit$9 = component('Menu');
@@ -16378,7 +16548,7 @@
         transformItems = _ref3.transformItems;
 
     if (!container) {
-      throw new Error(withUsage$w('The `container` option is required.'));
+      throw new Error(withUsage$x('The `container` option is required.'));
     }
 
     var containerNode = getContainerNode(container);
@@ -16443,7 +16613,7 @@
     searchableLoadingIndicator: "\n  <svg class=\"{{cssClasses.loadingIcon}}\" width=\"16\" height=\"16\" viewBox=\"0 0 38 38\" xmlns=\"http://www.w3.org/2000/svg\" stroke=\"#444\">\n    <g fill=\"none\" fillRule=\"evenodd\">\n      <g transform=\"translate(1 1)\" strokeWidth=\"2\">\n        <circle strokeOpacity=\".5\" cx=\"18\" cy=\"18\" r=\"18\" />\n        <path d=\"M36 18c0-9.94-8.06-18-18-18\">\n          <animateTransform\n            attributeName=\"transform\"\n            type=\"rotate\"\n            from=\"0 18 18\"\n            to=\"360 18 18\"\n            dur=\"1s\"\n            repeatCount=\"indefinite\"\n          />\n        </path>\n      </g>\n    </g>\n  </svg>\n    "
   };
 
-  var withUsage$x = createDocumentationMessageGenerator({
+  var withUsage$y = createDocumentationMessageGenerator({
     name: 'refinement-list'
   });
   var suit$a = component('RefinementList');
@@ -16635,7 +16805,7 @@
         transformItems = _ref3.transformItems;
 
     if (!container) {
-      throw new Error(withUsage$x('The `container` option is required.'));
+      throw new Error(withUsage$y('The `container` option is required.'));
     }
 
     var escapeFacetValues = searchable ? Boolean(searchableEscapeFacetValues) : false;
@@ -16740,7 +16910,7 @@
   };
 
   /** @jsx h */
-  var withUsage$y = createDocumentationMessageGenerator({
+  var withUsage$z = createDocumentationMessageGenerator({
     name: 'numeric-menu'
   });
   var suit$b = component('NumericMenu');
@@ -16853,7 +17023,7 @@
         transformItems = _ref3.transformItems;
 
     if (!container) {
-      throw new Error(withUsage$y('The `container` option is required.'));
+      throw new Error(withUsage$z('The `container` option is required.'));
     }
 
     var containerNode = getContainerNode(container);
@@ -17103,7 +17273,7 @@
     nbPages: 0
   };
 
-  var withUsage$z = createDocumentationMessageGenerator({
+  var withUsage$A = createDocumentationMessageGenerator({
     name: 'pagination'
   });
   var suit$c = component('Pagination');
@@ -17251,7 +17421,7 @@
         userScrollTo = _ref3$scrollTo === void 0 ? 'body' : _ref3$scrollTo;
 
     if (!container) {
-      throw new Error(withUsage$z('The `container` option is required.'));
+      throw new Error(withUsage$A('The `container` option is required.'));
     }
 
     var containerNode = getContainerNode(container);
@@ -17427,7 +17597,7 @@
     return RangeInput;
   }(m);
 
-  var withUsage$A = createDocumentationMessageGenerator({
+  var withUsage$B = createDocumentationMessageGenerator({
     name: 'range-input'
   });
   var suit$d = component('RangeInput');
@@ -17547,7 +17717,7 @@
         userTemplates = _ref3$templates === void 0 ? {} : _ref3$templates;
 
     if (!container) {
-      throw new Error(withUsage$A('The `container` option is required.'));
+      throw new Error(withUsage$B('The `container` option is required.'));
     }
 
     var containerNode = getContainerNode(container);
@@ -17595,11 +17765,13 @@
     var makeWidget = connectRange(specializedRenderer, function () {
       return I(null, containerNode);
     });
-    return makeWidget({
+    return _objectSpread2({}, makeWidget({
       attribute: attribute,
       min: min,
       max: max,
       precision: precision
+    }), {
+      $$type: 'ais.rangeInput'
     });
   }
 
@@ -17610,7 +17782,7 @@
     loadingIndicator: "\n<svg class=\"{{cssClasses.loadingIcon}}\" width=\"16\" height=\"16\" viewBox=\"0 0 38 38\" xmlns=\"http://www.w3.org/2000/svg\" stroke=\"#444\">\n  <g fill=\"none\" fillRule=\"evenodd\">\n    <g transform=\"translate(1 1)\" strokeWidth=\"2\">\n      <circle strokeOpacity=\".5\" cx=\"18\" cy=\"18\" r=\"18\" />\n      <path d=\"M36 18c0-9.94-8.06-18-18-18\">\n        <animateTransform\n          attributeName=\"transform\"\n          type=\"rotate\"\n          from=\"0 18 18\"\n          to=\"360 18 18\"\n          dur=\"1s\"\n          repeatCount=\"indefinite\"\n        />\n      </path>\n    </g>\n  </g>\n</svg>\n  "
   };
 
-  var withUsage$B = createDocumentationMessageGenerator({
+  var withUsage$C = createDocumentationMessageGenerator({
     name: 'search-box'
   });
   var suit$e = component('SearchBox');
@@ -17725,7 +17897,7 @@
         templates = _ref3.templates;
 
     if (!container) {
-      throw new Error(withUsage$B('The `container` option is required.'));
+      throw new Error(withUsage$C('The `container` option is required.'));
     }
 
     var containerNode = getContainerNode(container);
@@ -18619,7 +18791,7 @@
     return Slider;
   }(m);
 
-  var withUsage$C = createDocumentationMessageGenerator({
+  var withUsage$D = createDocumentationMessageGenerator({
     name: 'range-slider'
   });
   var suit$f = component('RangeSlider');
@@ -18742,7 +18914,7 @@
         tooltips = _ref3$tooltips === void 0 ? true : _ref3$tooltips;
 
     if (!container) {
-      throw new Error(withUsage$C('The `container` option is required.'));
+      throw new Error(withUsage$D('The `container` option is required.'));
     }
 
     var containerNode = getContainerNode(container);
@@ -18763,16 +18935,18 @@
     var makeWidget = connectRange(specializedRenderer, function () {
       return I(null, containerNode);
     });
-    return makeWidget({
+    return _objectSpread2({}, makeWidget({
       attribute: attribute,
       min: min,
       max: max,
       precision: precision
+    }), {
+      $$type: 'ais.rangeSlider'
     });
   }
 
   /** @jsx h */
-  var withUsage$D = createDocumentationMessageGenerator({
+  var withUsage$E = createDocumentationMessageGenerator({
     name: 'sort-by'
   });
   var suit$g = component('SortBy');
@@ -18853,7 +19027,7 @@
         transformItems = _ref3.transformItems;
 
     if (!container) {
-      throw new Error(withUsage$D('The `container` option is required.'));
+      throw new Error(withUsage$E('The `container` option is required.'));
     }
 
     var containerNode = getContainerNode(container);
@@ -18884,7 +19058,7 @@
   };
 
   /** @jsx h */
-  var withUsage$E = createDocumentationMessageGenerator({
+  var withUsage$F = createDocumentationMessageGenerator({
     name: 'rating-menu'
   });
   var suit$h = component('RatingMenu');
@@ -19013,7 +19187,7 @@
         templates = _ref5$templates === void 0 ? defaultTemplates$a : _ref5$templates;
 
     if (!container) {
-      throw new Error(withUsage$E('The `container` option is required.'));
+      throw new Error(withUsage$F('The `container` option is required.'));
     }
 
     var containerNode = getContainerNode(container);
@@ -19109,7 +19283,7 @@
   };
 
   /** @jsx h */
-  var withUsage$F = createDocumentationMessageGenerator({
+  var withUsage$G = createDocumentationMessageGenerator({
     name: 'stats'
   });
   var suit$i = component('Stats');
@@ -19209,7 +19383,7 @@
         templates = _ref3$templates === void 0 ? defaultTemplates$b : _ref3$templates;
 
     if (!container) {
-      throw new Error(withUsage$F('The `container` option is required.'));
+      throw new Error(withUsage$G('The `container` option is required.'));
     }
 
     var containerNode = getContainerNode(container);
@@ -19262,7 +19436,7 @@
   };
 
   /** @jsx h */
-  var withUsage$G = createDocumentationMessageGenerator({
+  var withUsage$H = createDocumentationMessageGenerator({
     name: 'toggle-refinement'
   });
   var suit$j = component('ToggleRefinement');
@@ -19374,7 +19548,7 @@
         off = _ref3.off;
 
     if (!container) {
-      throw new Error(withUsage$G('The `container` option is required.'));
+      throw new Error(withUsage$H('The `container` option is required.'));
     }
 
     var containerNode = getContainerNode(container);
@@ -19406,7 +19580,7 @@
     });
   }
 
-  var withUsage$H = createDocumentationMessageGenerator({
+  var withUsage$I = createDocumentationMessageGenerator({
     name: 'analytics'
   });
 
@@ -19423,7 +19597,7 @@
         pushPagination = _ref$pushPagination === void 0 ? false : _ref$pushPagination;
 
     if (!pushFunction) {
-      throw new Error(withUsage$H('The `pushFunction` option is required.'));
+      throw new Error(withUsage$I('The `pushFunction` option is required.'));
     }
 
     var cachedState = null;
@@ -19613,7 +19787,7 @@
   };
 
   /** @jsx h */
-  var withUsage$I = createDocumentationMessageGenerator({
+  var withUsage$J = createDocumentationMessageGenerator({
     name: 'breadcrumb'
   });
   var suit$k = component('Breadcrumb');
@@ -19746,7 +19920,7 @@
         userCssClasses = _ref3$cssClasses === void 0 ? {} : _ref3$cssClasses;
 
     if (!container) {
-      throw new Error(withUsage$I('The `container` option is required.'));
+      throw new Error(withUsage$J('The `container` option is required.'));
     }
 
     var containerNode = getContainerNode(container);
@@ -19837,7 +20011,7 @@
   };
 
   /** @jsx h */
-  var withUsage$J = createDocumentationMessageGenerator({
+  var withUsage$K = createDocumentationMessageGenerator({
     name: 'menu-select'
   });
   var suit$l = component('MenuSelect');
@@ -19930,7 +20104,7 @@
         transformItems = _ref3.transformItems;
 
     if (!container) {
-      throw new Error(withUsage$J('The `container` option is required.'));
+      throw new Error(withUsage$K('The `container` option is required.'));
     }
 
     var containerNode = getContainerNode(container);
@@ -20011,7 +20185,7 @@
 
   /** @jsx h */
   var suit$m = component('PoweredBy');
-  var withUsage$K = createDocumentationMessageGenerator({
+  var withUsage$L = createDocumentationMessageGenerator({
     name: 'powered-by'
   });
 
@@ -20073,7 +20247,7 @@
         theme = _ref3$theme === void 0 ? 'light' : _ref3$theme;
 
     if (!container) {
-      throw new Error(withUsage$K('The `container` option is required.'));
+      throw new Error(withUsage$L('The `container` option is required.'));
     }
 
     var containerNode = getContainerNode(container);
@@ -20100,107 +20274,78 @@
     });
   }
 
-  var Panel =
-  /*#__PURE__*/
-  function (_Component) {
-    _inherits(Panel, _Component);
+  var t$1,r$1,u$1=[],i$1=n.__r;n.__r=function(n){i$1&&i$1(n),t$1=0,(r$1=n.__c).__H&&(r$1.__H.t=A$1(r$1.__H.t));};var f$1=n.diffed;n.diffed=function(n){f$1&&f$1(n);var t=n.__c;if(t){var r=t.__H;r&&(r.u=(r.u.some(function(n){n.ref&&(n.ref.current=n.createHandle());}),[]),r.i=A$1(r.i));}};var o$1=n.unmount;function e$1(t){n.__h&&n.__h(r$1);var u=r$1.__H||(r$1.__H={o:[],t:[],i:[],u:[]});return t>=u.o.length&&u.o.push({}),u.o[t]}function c$1(n){return a$1(q,n)}function a$1(n,u,i){var f=e$1(t$1++);return f.__c||(f.__c=r$1,f.v=[i?i(u):q(void 0,u),function(t){var r=n(f.v[0],t);f.v[0]!==r&&(f.v[0]=r,f.__c.setState({}));}]),f.v}function v$1(n,u){var i=e$1(t$1++);h$1(i.m,u)&&(i.v=n,i.m=u,r$1.__H.t.push(i),T$1(r$1));}function d$1(n){return l(function(){return {current:n}},[])}function l(n,r){var u=e$1(t$1++);return h$1(u.m,r)?(u.m=r,u.p=n,u.v=n()):u.v}n.unmount=function(n){o$1&&o$1(n);var t=n.__c;if(t){var r=t.__H;r&&r.o.forEach(function(n){return n.l&&n.l()});}};var T$1=function(){};function g$1(){u$1.some(function(n){n.s=!1,n.__P&&(n.__H.t=A$1(n.__H.t));}),u$1=[];}if("undefined"!=typeof window){var w$1=n.requestAnimationFrame;T$1=function(t){(!t.s&&(t.s=!0)&&1===u$1.push(t)||w$1!==n.requestAnimationFrame)&&(w$1=n.requestAnimationFrame,(n.requestAnimationFrame||function(n){var t=function(){clearTimeout(r),cancelAnimationFrame(u),setTimeout(n);},r=setTimeout(t,100),u=requestAnimationFrame(t);})(g$1));};}function A$1(n){return n.forEach(E),n.forEach(F),[]}function E(n){n.l&&n.l();}function F(n){var t=n.v();"function"==typeof t&&(n.l=t);}function h$1(n,t){return !n||t.some(function(t,r){return t!==n[r]})}function q(n,t){return "function"==typeof t?t(n):t}
 
-    function Panel() {
-      var _getPrototypeOf2;
+  function Panel(props) {
+    var _cx;
 
-      var _this;
+    var _useState = c$1(props.isCollapsed),
+        _useState2 = _slicedToArray(_useState, 2),
+        isCollapsed = _useState2[0],
+        setIsCollapsed = _useState2[1];
 
-      _classCallCheck(this, Panel);
+    var _useState3 = c$1(false),
+        _useState4 = _slicedToArray(_useState3, 2),
+        isControlled = _useState4[0],
+        setIsControlled = _useState4[1];
 
-      for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
-        args[_key] = arguments[_key];
+    var bodyRef = d$1(null);
+    v$1(function () {
+      if (!bodyRef.current) {
+        return undefined;
       }
 
-      _this = _possibleConstructorReturn(this, (_getPrototypeOf2 = _getPrototypeOf(Panel)).call.apply(_getPrototypeOf2, [this].concat(args)));
+      bodyRef.current.appendChild(props.bodyElement);
+      return function () {
+        bodyRef.current.removeChild(props.bodyElement);
+      };
+    }, [bodyRef, props.bodyElement]);
 
-      _defineProperty(_assertThisInitialized(_this), "state", {
-        collapsed: _this.props.collapsed,
-        controlled: false
-      });
-
-      return _this;
+    if (!isControlled && props.isCollapsed !== isCollapsed) {
+      setIsCollapsed(props.isCollapsed);
     }
 
-    _createClass(Panel, [{
-      key: "componentDidMount",
-      value: function componentDidMount() {
-        this.bodyRef.appendChild(this.props.bodyElement);
+    return h("div", {
+      className: classnames(props.cssClasses.root, (_cx = {}, _defineProperty(_cx, props.cssClasses.noRefinementRoot, props.hidden), _defineProperty(_cx, props.cssClasses.collapsibleRoot, props.collapsible), _defineProperty(_cx, props.cssClasses.collapsedRoot, isCollapsed), _cx)),
+      hidden: props.hidden
+    }, props.templates.header && h("div", {
+      className: props.cssClasses.header
+    }, h(Template, {
+      templates: props.templates,
+      templateKey: "header",
+      rootTagName: "span",
+      data: props.data
+    }), props.collapsible && h("button", {
+      className: props.cssClasses.collapseButton,
+      "aria-expanded": !isCollapsed,
+      onClick: function onClick(event) {
+        event.preventDefault();
+        setIsControlled(true);
+        setIsCollapsed(function (prevIsCollapsed) {
+          return !prevIsCollapsed;
+        });
       }
-    }, {
-      key: "render",
-      value: function render() {
-        var _cx,
-            _this2 = this;
-
-        var _this$props = this.props,
-            cssClasses = _this$props.cssClasses,
-            hidden = _this$props.hidden,
-            collapsible = _this$props.collapsible,
-            templateProps = _this$props.templateProps,
-            data = _this$props.data;
-        return h("div", {
-          className: classnames(cssClasses.root, (_cx = {}, _defineProperty(_cx, cssClasses.noRefinementRoot, hidden), _defineProperty(_cx, cssClasses.collapsibleRoot, collapsible), _defineProperty(_cx, cssClasses.collapsedRoot, this.state.collapsed), _cx)),
-          hidden: hidden
-        }, templateProps.templates.header && h("div", {
-          className: cssClasses.header
-        }, h(Template, _extends({}, templateProps, {
-          templateKey: "header",
-          rootTagName: "span",
-          data: data
-        })), collapsible && h("button", {
-          className: cssClasses.collapseButton,
-          "aria-expanded": !this.state.collapsed,
-          onClick: function onClick(event) {
-            event.preventDefault();
-
-            _this2.setState(function (previousState) {
-              return {
-                controlled: true,
-                collapsed: !previousState.collapsed
-              };
-            });
-          }
-        }, h(Template, _extends({}, templateProps, {
-          templateKey: "collapseButtonText",
-          rootTagName: "span",
-          data: {
-            collapsed: this.state.collapsed
-          }
-        })))), h("div", {
-          className: cssClasses.body,
-          ref: function ref(node) {
-            return _this2.bodyRef = node;
-          }
-        }), templateProps.templates.footer && h(Template, _extends({}, templateProps, {
-          templateKey: "footer",
-          rootProps: {
-            className: cssClasses.footer
-          },
-          data: data
-        })));
+    }, h(Template, {
+      templates: props.templates,
+      templateKey: "collapseButtonText",
+      rootTagName: "span",
+      data: {
+        collapsed: isCollapsed
       }
-    }], [{
-      key: "getDerivedStateFromProps",
-      value: function getDerivedStateFromProps(nextProps, prevState) {
-        if (!prevState.controlled && nextProps.collapsed !== prevState.collapsed) {
-          return {
-            collapsed: nextProps.collapsed
-          };
-        }
+    }))), h("div", {
+      className: props.cssClasses.body,
+      ref: bodyRef
+    }), props.templates.footer && h(Template, {
+      templates: props.templates,
+      templateKey: "footer",
+      rootProps: {
+        className: props.cssClasses.footer
+      },
+      data: props.data
+    }));
+  }
 
-        return null;
-      }
-    }]);
-
-    return Panel;
-  }(m);
-
-  var withUsage$L = createDocumentationMessageGenerator({
+  var withUsage$M = createDocumentationMessageGenerator({
     name: 'panel'
   });
   var suit$n = component('Panel');
@@ -20209,7 +20354,7 @@
     var containerNode = _ref.containerNode,
         bodyContainerNode = _ref.bodyContainerNode,
         cssClasses = _ref.cssClasses,
-        templateProps = _ref.templateProps;
+        templates = _ref.templates;
     return function (_ref2) {
       var options = _ref2.options,
           hidden = _ref2.hidden,
@@ -20219,77 +20364,31 @@
         cssClasses: cssClasses,
         hidden: hidden,
         collapsible: collapsible,
-        collapsed: collapsed,
-        templateProps: templateProps,
+        isCollapsed: collapsed,
+        templates: templates,
         data: options,
         bodyElement: bodyContainerNode
       }), containerNode);
     };
   };
-  /**
-   * @typedef {Object} PanelWidgetCSSClasses
-   * @property  {string|string[]} [root] CSS classes added to the root element of the widget.
-   * @property  {string|string[]} [noRefinementRoot] CSS classes added to the root element of the widget when there's no refinements.
-   * @property  {string|string[]} [collapsibleRoot] CSS classes added to the root element when collapsible.
-   * @property  {string|string[]} [collapsedRoot] CSS classes added to the root element when collapsed.
-   * @property  {string|string[]} [collapseButton] CSS classes added to the collapse button element.
-   * @property  {string|string[]} [collapseIcon] CSS classes added to the collapse icon of the button.
-   * @property  {string|string[]} [header] CSS class to add to the header.
-   * @property  {string|string[]} [footer] CSS class to add to the SVG footer.
-   */
 
   /**
-   * @typedef {Object} PanelTemplates
-   * @property {string|function} [header = ''] Template to use for the header.
-   * @property {string|function} [footer = ''] Template to use for the footer.
-   * @property {string|function} [collapseButtonText] Template to use for collapse button. It is given the collapsed state.
+   * The panel widget wraps other widgets in a consistent panel design.
+   * It also reacts, indicates and sets CSS classes when widgets are no longer relevant for refining.
    */
-
-  /**
-   * @typedef {Object} PanelWidgetOptions
-   * @property {function} [hidden] This function is called on each render to determine from the render options if the panel have to be hidden or not. If the value is `true` the CSS class `noRefinementRoot` is applied and the wrapper is hidden.
-   * @property {PanelTemplates} [templates] Templates to use for the widgets.
-   * @property {PanelWidgetCSSClasses} [cssClasses] CSS classes to add.
-   */
-
-  /**
-   * The panel widget wraps other widgets in a consistent panel design. It also reacts, indicates and sets CSS classes when widgets are no more relevant for refining.
-   *
-   * @type {WidgetFactory}
-   * @devNovel Panel
-   * @category metadata
-   * @param {PanelWidgetOptions} $0 Panel widget options.
-   * @return {function} A new panel widget instance
-   * @example
-   * const refinementListWithPanel = instantsearch.widgets.panel({
-   *   templates: {
-   *     header: 'Brand',
-   *   },
-   * })(instantsearch.widgets.refinementList);
-   *
-   * search.addWidgets([
-   *   refinementListWithPanel({
-   *     container: '#refinement-list',
-   *     attribute: 'brand',
-   *   })
-   * ]);
-   */
-
-
-  function panel() {
-    var _ref3 = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
-        _ref3$templates = _ref3.templates,
-        templates = _ref3$templates === void 0 ? {} : _ref3$templates,
-        _ref3$hidden = _ref3.hidden,
-        hidden = _ref3$hidden === void 0 ? function () {
+  var panel = function panel() {
+    var widgetParams = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+    var _widgetParams$templat = widgetParams.templates,
+        templates = _widgetParams$templat === void 0 ? {} : _widgetParams$templat,
+        _widgetParams$hidden = widgetParams.hidden,
+        hidden = _widgetParams$hidden === void 0 ? function () {
       return false;
-    } : _ref3$hidden,
-        collapsed = _ref3.collapsed,
-        _ref3$cssClasses = _ref3.cssClasses,
-        userCssClasses = _ref3$cssClasses === void 0 ? {} : _ref3$cssClasses;
-
-     _warning(typeof hidden === 'function', "The `hidden` option in the \"panel\" widget expects a function returning a boolean (received \"".concat(_typeof(hidden), "\" type).")) ;
-     _warning(typeof collapsed === 'undefined' || typeof collapsed === 'function', "The `collapsed` option in the \"panel\" widget expects a function returning a boolean (received \"".concat(_typeof(collapsed), "\" type).")) ;
+    } : _widgetParams$hidden,
+        collapsed = widgetParams.collapsed,
+        _widgetParams$cssClas = widgetParams.cssClasses,
+        userCssClasses = _widgetParams$cssClas === void 0 ? {} : _widgetParams$cssClas;
+     _warning(typeof hidden === 'function', "The `hidden` option in the \"panel\" widget expects a function returning a boolean (received type ".concat(getObjectType(hidden), ").")) ;
+     _warning(typeof collapsed === 'undefined' || typeof collapsed === 'function', "The `collapsed` option in the \"panel\" widget expects a function returning a boolean (received type ".concat(getObjectType(collapsed), ").")) ;
     var bodyContainerNode = document.createElement('div');
     var collapsible = Boolean(collapsed);
     var collapsedFn = typeof collapsed === 'function' ? collapsed : function () {
@@ -20328,26 +20427,22 @@
         var container = widgetOptions.container;
 
         if (!container) {
-          throw new Error(withUsage$L("The `container` option is required in the widget within the panel."));
+          throw new Error(withUsage$M("The `container` option is required in the widget within the panel."));
         }
 
         var defaultTemplates = {
           header: '',
           footer: '',
-          collapseButtonText: function collapseButtonText(_ref4) {
-            var isCollapsed = _ref4.collapsed;
+          collapseButtonText: function collapseButtonText(_ref3) {
+            var isCollapsed = _ref3.collapsed;
             return "<svg\n          class=\"".concat(cssClasses.collapseIcon, "\"\n          width=\"1em\"\n          height=\"1em\"\n          viewBox=\"0 0 500 500\"\n        >\n        <path d=\"").concat(isCollapsed ? 'M100 250l300-150v300z' : 'M250 400l150-300H100z', "\" fill=\"currentColor\" />\n        </svg>");
           }
         };
-        var templateProps = prepareTemplateProps({
-          defaultTemplates: defaultTemplates,
-          templates: templates
-        });
         var renderPanel = renderer$l({
           containerNode: getContainerNode(container),
           bodyContainerNode: bodyContainerNode,
           cssClasses: cssClasses,
-          templateProps: templateProps
+          templates: _objectSpread2({}, defaultTemplates, {}, templates)
         });
         renderPanel({
           options: {},
@@ -20396,7 +20491,7 @@
         });
       };
     };
-  }
+  };
 
   /** @jsx h */
 
@@ -20473,7 +20568,7 @@
     status: "<p>{{transcript}}</p>"
   };
 
-  var withUsage$M = createDocumentationMessageGenerator({
+  var withUsage$N = createDocumentationMessageGenerator({
     name: 'voice-search'
   });
   var suit$o = component('VoiceSearch');
@@ -20509,7 +20604,7 @@
         additionalQueryParameters = _ref2.additionalQueryParameters;
 
     if (!container) {
-      throw new Error(withUsage$M('The `container` option is required.'));
+      throw new Error(withUsage$N('The `container` option is required.'));
     }
 
     var containerNode = getContainerNode(container);
@@ -20553,7 +20648,7 @@
     });
   };
 
-  var withUsage$N = createDocumentationMessageGenerator({
+  var withUsage$O = createDocumentationMessageGenerator({
     name: 'query-rule-custom-data'
   });
   var suit$p = component('QueryRuleCustomData');
@@ -20584,7 +20679,7 @@
     } : _ref2$transformItems;
 
     if (!container) {
-      throw new Error(withUsage$N('The `container` option is required.'));
+      throw new Error(withUsage$O('The `container` option is required.'));
     }
 
     var cssClasses = {
@@ -20603,15 +20698,17 @@
     var makeQueryRuleCustomData = connectQueryRules(renderer$n, function () {
       I(null, containerNode);
     });
-    return makeQueryRuleCustomData({
+    return _objectSpread2({}, makeQueryRuleCustomData({
       container: containerNode,
       cssClasses: cssClasses,
       templates: templates,
       transformItems: transformItems
+    }), {
+      $$type: 'ais.queryRuleCustomData'
     });
   };
 
-  var withUsage$O = createDocumentationMessageGenerator({
+  var withUsage$P = createDocumentationMessageGenerator({
     name: 'query-rule-context'
   });
 
@@ -20621,12 +20718,14 @@
         transformRuleContexts = _ref.transformRuleContexts;
 
     if (!trackedFilters) {
-      throw new Error(withUsage$O('The `trackedFilters` option is required.'));
+      throw new Error(withUsage$P('The `trackedFilters` option is required.'));
     }
 
-    return connectQueryRules(noop)({
+    return _objectSpread2({}, connectQueryRules(noop)({
       trackedFilters: trackedFilters,
       transformRuleContexts: transformRuleContexts
+    }), {
+      $$type: 'ais.queryRuleContext'
     });
   };
 
@@ -20726,6 +20825,7 @@
     __proto__: null,
     clearRefinements: clearRefinements$1,
     configure: configure,
+    EXPERIMENTAL_configureRelatedItems: configureRelatedItems,
     currentRefinements: currentRefinements,
     geoSearch: geoSearch,
     hierarchicalMenu: hierarchicalMenu,
