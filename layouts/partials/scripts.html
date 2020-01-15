@@ -40,12 +40,11 @@
         searchFunction: function (helper) {
             if (helper.state.query === '') {
                 if (document.getElementById("hits") != null) {
-                    document.querySelector('#hits').innerHTML = 'Type to search...';
-                }
-                if (document.getElementById("searchBox") != null) {
-                    document.querySelector('#searchBox').placeholder = 'Type to search...';
+                    document.querySelector('#hits').innerHTML = '<p id="searchHelper">Type to search...</p>';
                 }
                 return;
+            } else {
+                document.querySelector('#searchHelper').classList.toggle('uk-hidden');
             }
             helper.search();
         }
