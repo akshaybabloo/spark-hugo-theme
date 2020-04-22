@@ -237,3 +237,66 @@ pre code {
     }
   }
 }
+
+// Highlight
+
+.highlight {
+  table {
+    pre {
+      border: 0 !important;
+      border-radius: 0 !important;
+      margin-bottom: 0 !important;
+    }
+  }
+
+  pre {
+    border: 0 !important;
+    border-radius: 0 !important;
+    margin-bottom: 0 !important;
+  }
+
+  code {
+    span {
+      padding-right: 0 !important;
+    }
+  }
+}
+
+// Blog right bar
+
+.gol-sidebar-right {
+  width: 300px;
+
+  ul {
+    position: relative;
+    list-style: none;
+    margin-left: 0;
+    padding-left: 1.2em;
+  }
+
+  ul li:before {
+    content: "-";
+    position: absolute;
+    left: 0;
+  }
+}
+
+#TableOfContents {
+  .uk-active {
+    a {
+      font-weight: bold;
+      text-decoration: underline;
+    }
+  }
+}
+
+// Alert
+
+.uk-alert-danger {
+  background-color: rgba(197, 9, 26, 0.40) !important;
+  color: rgb(238, 172, 178) !important;
+
+  a {
+    color: rgb(238, 172, 178) !important;
+  }
+}
