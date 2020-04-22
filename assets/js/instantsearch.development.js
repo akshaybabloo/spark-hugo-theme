@@ -1,4 +1,4 @@
-/*! InstantSearch.js 4.1.1 | © Algolia, Inc. and contributors; MIT License | https://github.com/algolia/instantsearch.js */
+/*! InstantSearch.js 4.4.0 | © Algolia, Inc. and contributors; MIT License | https://github.com/algolia/instantsearch.js */
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
   typeof define === 'function' && define.amd ? define(factory) :
@@ -530,7 +530,7 @@
         }
         return {};
       } else if (typeof attribute === 'string') {
-        return omit(refinementList, attribute);
+        return omit(refinementList, [attribute]);
       } else if (typeof attribute === 'function') {
         var hasChanged = false;
 
@@ -1232,7 +1232,7 @@
         if (!objectHasKeys_1(this.numericRefinements[attribute])) {
           return this.numericRefinements;
         }
-        return omit(this.numericRefinements, attribute);
+        return omit(this.numericRefinements, [attribute]);
       } else if (typeof attribute === 'function') {
         var hasChanged = false;
         var numericRefinements = this.numericRefinements;
@@ -3941,7 +3941,7 @@
 
   var requestBuilder_1 = requestBuilder;
 
-  var version = '3.0.0';
+  var version = '3.1.1';
 
   /**
    * Event triggered when a parameter is set or updated
@@ -6587,6 +6587,145 @@
     }
   }
 
+  // Some connectors are responsible for multiple widgets so we need
+  // to map them.
+  function getWidgetNames(connectorName) {
+    switch (connectorName) {
+      case 'range':
+        return ['rangeInput', 'rangeSlider'];
+
+      case 'menu':
+        return ['menu', 'menuSelect'];
+
+      default:
+        return [connectorName];
+    }
+  }
+
+  var stateToWidgetsMap = {
+    query: {
+      connectors: ['connectSearchBox'],
+      widgets: ['ais.searchBox', 'ais.autocomplete', 'ais.voiceSearch']
+    },
+    refinementList: {
+      connectors: ['connectRefinementList'],
+      widgets: ['ais.refinementList']
+    },
+    menu: {
+      connectors: ['connectMenu'],
+      widgets: ['ais.menu']
+    },
+    hierarchicalMenu: {
+      connectors: ['connectHierarchicalMenu'],
+      widgets: ['ais.hierarchicalMenu']
+    },
+    numericMenu: {
+      connectors: ['connectNumericMenu'],
+      widgets: ['ais.numericMenu']
+    },
+    ratingMenu: {
+      connectors: ['connectRatingMenu'],
+      widgets: ['ais.ratingMenu']
+    },
+    range: {
+      connectors: ['connectRange'],
+      widgets: ['ais.rangeInput', 'ais.rangeSlider']
+    },
+    toggle: {
+      connectors: ['connectToggleRefinement'],
+      widgets: ['ais.toggleRefinement']
+    },
+    geoSearch: {
+      connectors: ['connectGeoSearch'],
+      widgets: ['ais.geoSearch']
+    },
+    sortBy: {
+      connectors: ['connectSortBy'],
+      widgets: ['ais.sortBy']
+    },
+    page: {
+      connectors: ['connectPagination'],
+      widgets: ['ais.pagination', 'ais.infiniteHits']
+    },
+    hitsPerPage: {
+      connectors: ['connectHitsPerPage'],
+      widgets: ['ais.hitsPerPage']
+    },
+    configure: {
+      connectors: ['connectConfigure'],
+      widgets: ['ais.configure']
+    },
+    places: {
+      connectors: [],
+      widgets: ['ais.places']
+    }
+  };
+  function checkIndexUiState(_ref) {
+    var index = _ref.index,
+        indexUiState = _ref.indexUiState;
+    var mountedWidgets = index.getWidgets().map(function (widget) {
+      return widget.$$type;
+    }).filter(Boolean);
+    var missingWidgets = Object.keys(indexUiState).reduce(function (acc, parameter) {
+      var requiredWidgets = stateToWidgetsMap[parameter] && stateToWidgetsMap[parameter].widgets;
+
+      if (requiredWidgets && !requiredWidgets.some(function (requiredWidget) {
+        return mountedWidgets.includes(requiredWidget);
+      })) {
+        acc.push([parameter, {
+          connectors: stateToWidgetsMap[parameter].connectors,
+          widgets: stateToWidgetsMap[parameter].widgets.map(function (widgetIdentifier) {
+            return widgetIdentifier.split('ais.')[1];
+          })
+        }]);
+      }
+
+      return acc;
+    }, []);
+     _warning(missingWidgets.length === 0, "The UI state for the index \"".concat(index.getIndexId(), "\" is not consistent with the widgets mounted.\n\nThis can happen when the UI state is specified via `initialUiState`, `routing` or `setUiState` but that the widgets responsible for this state were not added. This results in those query parameters not being sent to the API.\n\nTo fully reflect the state, some widgets need to be added to the index \"").concat(index.getIndexId(), "\":\n\n").concat(missingWidgets.map(function (_ref2) {
+      var _ref4;
+
+      var _ref3 = _slicedToArray(_ref2, 2),
+          stateParameter = _ref3[0],
+          widgets = _ref3[1].widgets;
+
+      return "- `".concat(stateParameter, "` needs one of these widgets: ").concat((_ref4 = []).concat.apply(_ref4, _toConsumableArray(widgets.map(function (name) {
+        return getWidgetNames(name);
+      }))).map(function (name) {
+        return "\"".concat(name, "\"");
+      }).join(', '));
+    }).join('\n'), "\n\nIf you do not wish to display widgets but still want to support their search parameters, you can mount \"virtual widgets\" that don't render anything:\n\n```\n").concat(missingWidgets.filter(function (_ref5) {
+      var _ref6 = _slicedToArray(_ref5, 2),
+          _stateParameter = _ref6[0],
+          connectors = _ref6[1].connectors;
+
+      return connectors.length > 0;
+    }).map(function (_ref7) {
+      var _ref8 = _slicedToArray(_ref7, 2),
+          _stateParameter = _ref8[0],
+          _ref8$ = _ref8[1],
+          connectors = _ref8$.connectors,
+          widgets = _ref8$.widgets;
+
+      var capitalizedWidget = capitalize(widgets[0]);
+      var connectorName = connectors[0];
+      return "const virtual".concat(capitalizedWidget, " = ").concat(connectorName, "(() => null);");
+    }).join('\n'), "\n\nsearch.addWidgets([\n  ").concat(missingWidgets.filter(function (_ref9) {
+      var _ref10 = _slicedToArray(_ref9, 2),
+          _stateParameter = _ref10[0],
+          connectors = _ref10[1].connectors;
+
+      return connectors.length > 0;
+    }).map(function (_ref11) {
+      var _ref12 = _slicedToArray(_ref11, 2),
+          _stateParameter = _ref12[0],
+          widgets = _ref12[1].widgets;
+
+      var capitalizedWidget = capitalize(widgets[0]);
+      return "virtual".concat(capitalizedWidget, "({ /* ... */ })");
+    }).join(',\n  '), "\n]);\n```\n\nIf you're using custom widgets that do set these query parameters, we recommend using connectors instead.\n\nSee https://www.algolia.com/doc/guides/building-search-ui/widgets/customize-an-existing-widget/js/#customize-the-complete-ui-of-the-widgets")) ;
+  }
+
   function getPropertyByPath(object, path) {
     var parts = path.split('.');
     return parts.reduce(function (current, key) {
@@ -7023,7 +7162,6 @@
   var withUsage = createDocumentationMessageGenerator({
     name: 'index-widget'
   });
-
   function isIndexWidget(widget) {
     return widget.$$type === 'ais.index';
   }
@@ -7235,6 +7373,16 @@
         // aware of the `searchClient`).
 
         helper.search = function () {
+          if (instantSearchInstance.onStateChange) {
+            instantSearchInstance.onStateChange({
+              uiState: instantSearchInstance.mainIndex.getWidgetState({}),
+              setUiState: instantSearchInstance.setUiState.bind(instantSearchInstance)
+            }); // We don't trigger a search when controlled because it becomes the
+            // responsibility of `setUiState`.
+
+            return mainHelper;
+          }
+
           return mainHelper.search();
         }; // We use the same pattern for the `searchForFacetValues`.
 
@@ -7266,147 +7414,14 @@
           instantSearchInstance.scheduleStalledRender();
 
           {
-            // Some connectors are responsible for multiple widgets so we need
-            // to map them.
-            // eslint-disable-next-line no-inner-declarations
-            var getWidgetNames = function getWidgetNames(connectorName) {
-              switch (connectorName) {
-                case 'range':
-                  return ['rangeInput', 'rangeSlider'];
-
-                case 'menu':
-                  return ['menu', 'menuSelect'];
-
-                default:
-                  return [connectorName];
-              }
-            };
-
-            var stateToWidgetsMap = {
-              query: {
-                connectors: ['connectSearchBox'],
-                widgets: ['ais.searchBox', 'ais.autocomplete', 'ais.voiceSearch']
-              },
-              refinementList: {
-                connectors: ['connectRefinementList'],
-                widgets: ['ais.refinementList']
-              },
-              menu: {
-                connectors: ['connectMenu'],
-                widgets: ['ais.menu']
-              },
-              hierarchicalMenu: {
-                connectors: ['connectHierarchicalMenu'],
-                widgets: ['ais.hierarchicalMenu']
-              },
-              numericMenu: {
-                connectors: ['connectNumericMenu'],
-                widgets: ['ais.numericMenu']
-              },
-              ratingMenu: {
-                connectors: ['connectRatingMenu'],
-                widgets: ['ais.ratingMenu']
-              },
-              range: {
-                connectors: ['connectRange'],
-                widgets: ['ais.rangeInput', 'ais.rangeSlider']
-              },
-              toggle: {
-                connectors: ['connectToggleRefinement'],
-                widgets: ['ais.toggleRefinement']
-              },
-              geoSearch: {
-                connectors: ['connectGeoSearch'],
-                widgets: ['ais.geoSearch']
-              },
-              sortBy: {
-                connectors: ['connectSortBy'],
-                widgets: ['ais.sortBy']
-              },
-              page: {
-                connectors: ['connectPagination'],
-                widgets: ['ais.pagination', 'ais.infiniteHits']
-              },
-              hitsPerPage: {
-                connectors: ['connectHitsPerPage'],
-                widgets: ['ais.hitsPerPage']
-              },
-              configure: {
-                connectors: ['connectConfigure'],
-                widgets: ['ais.configure']
-              },
-              places: {
-                connectors: [],
-                widgets: ['ais.places']
-              }
-            };
-
-            var mountedWidgets = _this2.getWidgets().map(function (widget) {
-              return widget.$$type;
-            }).filter(Boolean);
-
-            var missingWidgets = Object.keys(localUiState).reduce(function (acc, parameter) {
-              var requiredWidgets = stateToWidgetsMap[parameter] && stateToWidgetsMap[parameter].widgets;
-
-              if (requiredWidgets && !requiredWidgets.some(function (requiredWidget) {
-                return mountedWidgets.includes(requiredWidget);
-              })) {
-                acc.push([parameter, {
-                  connectors: stateToWidgetsMap[parameter].connectors,
-                  widgets: stateToWidgetsMap[parameter].widgets.map(function (widgetIdentifier) {
-                    return widgetIdentifier.split('ais.')[1];
-                  })
-                }]);
-              }
-
-              return acc;
-            }, []);
-             _warning(missingWidgets.length === 0, "The UI state for the index \"".concat(_this2.getIndexId(), "\" is not consistent with the widgets mounted.\n\nThis can happen when the UI state is specified via `initialUiState` or `routing` but that the widgets responsible for this state were not added. This results in those query parameters not being sent to the API.\n\nTo fully reflect the state, some widgets need to be added to the index \"").concat(_this2.getIndexId(), "\":\n\n").concat(missingWidgets.map(function (_ref3) {
-              var _ref5;
-
-              var _ref4 = _slicedToArray(_ref3, 2),
-                  stateParameter = _ref4[0],
-                  widgets = _ref4[1].widgets;
-
-              return "- `".concat(stateParameter, "` needs one of these widgets: ").concat((_ref5 = []).concat.apply(_ref5, _toConsumableArray(widgets.map(function (name) {
-                return getWidgetNames(name);
-              }))).map(function (name) {
-                return "\"".concat(name, "\"");
-              }).join(', '));
-            }).join('\n'), "\n\nIf you do not wish to display widgets but still want to support their search parameters, you can mount \"virtual widgets\" that don't render anything:\n\n```\n").concat(missingWidgets.filter(function (_ref6) {
-              var _ref7 = _slicedToArray(_ref6, 2),
-                  _stateParameter = _ref7[0],
-                  connectors = _ref7[1].connectors;
-
-              return connectors.length > 0;
-            }).map(function (_ref8) {
-              var _ref9 = _slicedToArray(_ref8, 2),
-                  _stateParameter = _ref9[0],
-                  _ref9$ = _ref9[1],
-                  connectors = _ref9$.connectors,
-                  widgets = _ref9$.widgets;
-
-              var capitalizedWidget = capitalize(widgets[0]);
-              var connectorName = connectors[0];
-              return "const virtual".concat(capitalizedWidget, " = ").concat(connectorName, "(() => null);");
-            }).join('\n'), "\n\nsearch.addWidgets([\n  ").concat(missingWidgets.filter(function (_ref10) {
-              var _ref11 = _slicedToArray(_ref10, 2),
-                  _stateParameter = _ref11[0],
-                  connectors = _ref11[1].connectors;
-
-              return connectors.length > 0;
-            }).map(function (_ref12) {
-              var _ref13 = _slicedToArray(_ref12, 2),
-                  _stateParameter = _ref13[0],
-                  widgets = _ref13[1].widgets;
-
-              var capitalizedWidget = capitalize(widgets[0]);
-              return "virtual".concat(capitalizedWidget, "({ /* ... */ })");
-            }).join(',\n  '), "\n]);\n```\n\nIf you're using custom widgets that do set these query parameters, we recommend using connectors instead.\n\nSee https://www.algolia.com/doc/guides/building-search-ui/widgets/customize-an-existing-widget/js/#customize-the-complete-ui-of-the-widgets")) ;
+            checkIndexUiState({
+              index: _this2,
+              indexUiState: localUiState
+            });
           }
         });
-        derivedHelper.on('result', function (_ref14) {
-          var results = _ref14.results;
+        derivedHelper.on('result', function (_ref3) {
+          var results = _ref3.results;
           // The index does not render the results it schedules a new render
           // to let all the other indices emit their own results. It allows us to
           // run the render process in one pass.
@@ -7436,19 +7451,23 @@
         // configuration of the widget is pushed in the URL. That's what we want to avoid.
         // https://github.com/algolia/instantsearch.js/pull/994/commits/4a672ae3fd78809e213de0368549ef12e9dc9454
 
-        helper.on('change', function (_ref15) {
-          var state = _ref15.state;
+        helper.on('change', function (_ref4) {
+          var state = _ref4.state;
           localUiState = getLocalWidgetsState(localWidgets, {
             searchParameters: state,
             helper: helper
-          });
-          instantSearchInstance.onStateChange();
+          }); // We don't trigger an internal change when controlled because it
+          // becomes the responsibility of `setUiState`.
+
+          if (!instantSearchInstance.onStateChange) {
+            instantSearchInstance.onInternalStateChange();
+          }
         });
       },
-      render: function render(_ref16) {
+      render: function render(_ref5) {
         var _this3 = this;
 
-        var instantSearchInstance = _ref16.instantSearchInstance;
+        var instantSearchInstance = _ref5.instantSearchInstance;
         localWidgets.forEach(function (widget) {
           // At this point, all the variables used below are set. Both `helper`
           // and `derivedHelper` have been created at the `init` step. The attribute
@@ -7498,11 +7517,24 @@
         return localWidgets.filter(isIndexWidget).reduce(function (previousUiState, innerIndex) {
           return innerIndex.getWidgetState(previousUiState);
         }, _objectSpread2({}, uiState, _defineProperty({}, this.getIndexId(), localUiState)));
+      },
+      getWidgetSearchParameters: function getWidgetSearchParameters(searchParameters, _ref6) {
+        var uiState = _ref6.uiState;
+        return getLocalWidgetsSearchParameters(localWidgets, {
+          uiState: uiState,
+          initialSearchParameters: searchParameters
+        });
+      },
+      refreshUiState: function refreshUiState() {
+        localUiState = getLocalWidgetsState(localWidgets, {
+          searchParameters: this.getHelper().state,
+          helper: this.getHelper()
+        });
       }
     };
   };
 
-  var version$1 = '4.1.1';
+  var version$1 = '4.4.0';
 
   var TAG_PLACEHOLDER = {
     highlightPreTag: '__ais-highlight__',
@@ -7577,11 +7609,14 @@
     var attribute = _ref.attribute,
         _ref$highlightedTagNa = _ref.highlightedTagName,
         highlightedTagName = _ref$highlightedTagNa === void 0 ? 'mark' : _ref$highlightedTagNa,
-        hit = _ref.hit;
-    var attributeValue = getPropertyByPath(hit, "_highlightResult.".concat(attribute, ".value")) || '';
+        hit = _ref.hit,
+        _ref$cssClasses = _ref.cssClasses,
+        cssClasses = _ref$cssClasses === void 0 ? {} : _ref$cssClasses;
+    var attributeValue = getPropertyByPath(hit, "_highlightResult.".concat(attribute, ".value")) || ''; // cx is not used, since it would be bundled as a dependency for Vue & Angular
+
     var className = suit({
       descendantName: 'highlighted'
-    });
+    }) + (cssClasses.highlighted ? " ".concat(cssClasses.highlighted) : '');
     return attributeValue.replace(new RegExp(TAG_REPLACEMENT.highlightPreTag, 'g'), "<".concat(highlightedTagName, " class=\"").concat(className, "\">")).replace(new RegExp(TAG_REPLACEMENT.highlightPostTag, 'g'), "</".concat(highlightedTagName, ">"));
   }
 
@@ -7590,11 +7625,14 @@
     var attribute = _ref.attribute,
         _ref$highlightedTagNa = _ref.highlightedTagName,
         highlightedTagName = _ref$highlightedTagNa === void 0 ? 'mark' : _ref$highlightedTagNa,
-        hit = _ref.hit;
-    var attributeValue = getPropertyByPath(hit, "_snippetResult.".concat(attribute, ".value")) || '';
+        hit = _ref.hit,
+        _ref$cssClasses = _ref.cssClasses,
+        cssClasses = _ref$cssClasses === void 0 ? {} : _ref$cssClasses;
+    var attributeValue = getPropertyByPath(hit, "_snippetResult.".concat(attribute, ".value")) || ''; // cx is not used, since it would be bundled as a dependency for Vue & Angular
+
     var className = suit$1({
       descendantName: 'highlighted'
-    });
+    }) + (cssClasses.highlighted ? " ".concat(cssClasses.highlighted) : '');
     return attributeValue.replace(new RegExp(TAG_REPLACEMENT.highlightPreTag, 'g'), "<".concat(highlightedTagName, " class=\"").concat(className, "\">")).replace(new RegExp(TAG_REPLACEMENT.highlightPostTag, 'g'), "</".concat(highlightedTagName, ">"));
   }
 
@@ -8719,8 +8757,8 @@
       instantSearchInstance._initialUiState = _objectSpread2({}, instantSearchInstance._initialUiState, {}, stateMapping.routeToState(router.read()));
       return {
         onStateChange: function onStateChange(_ref2) {
-          var state = _ref2.state;
-          var route = stateMapping.stateToRoute(state);
+          var uiState = _ref2.uiState;
+          var route = stateMapping.stateToRoute(uiState);
           router.write(route);
         },
         subscribe: function subscribe() {
@@ -8785,6 +8823,8 @@
 
       _defineProperty(_assertThisInitialized(_this), "insightsClient", void 0);
 
+      _defineProperty(_assertThisInitialized(_this), "onStateChange", null);
+
       _defineProperty(_assertThisInitialized(_this), "helper", void 0);
 
       _defineProperty(_assertThisInitialized(_this), "mainHelper", void 0);
@@ -8829,12 +8869,45 @@
         _this.emit('render');
       }));
 
-      _defineProperty(_assertThisInitialized(_this), "onStateChange", function () {
+      _defineProperty(_assertThisInitialized(_this), "setUiState", function (uiState) {
+        if (!_this.mainHelper) {
+          throw new Error(withUsage$1('The `start` method needs to be called before `setUiState`.'));
+        }
+
+         _warning(false, "\n`setUiState` provides a powerful way to manage the UI state. This is considered experimental as the API might change in a next minor version.\n\nFeel free to give us feedback on GitHub: https://github.com/algolia/instantsearch.js/issues/new\n    ") ; // We refresh the index UI state to update the local UI state that the
+        // main index passes to the function form of `setUiState`.
+
+        _this.mainIndex.refreshUiState();
+
+        var nextUiState = typeof uiState === 'function' ? uiState(_this.mainIndex.getWidgetState({})) : uiState;
+
+        var setIndexHelperState = function setIndexHelperState(indexWidget) {
+          {
+            checkIndexUiState({
+              index: indexWidget,
+              indexUiState: nextUiState[indexWidget.getIndexId()]
+            });
+          }
+
+          indexWidget.getHelper().overrideStateWithoutTriggeringChangeEvent(indexWidget.getWidgetSearchParameters(indexWidget.getHelper().state, {
+            uiState: nextUiState[indexWidget.getIndexId()]
+          }));
+          indexWidget.getWidgets().filter(isIndexWidget).forEach(setIndexHelperState);
+        };
+
+        setIndexHelperState(_this.mainIndex);
+
+        _this.scheduleSearch();
+
+        _this.onInternalStateChange();
+      });
+
+      _defineProperty(_assertThisInitialized(_this), "onInternalStateChange", function () {
         var nextUiState = _this.mainIndex.getWidgetState({});
 
         _this.middleware.forEach(function (m) {
           m.onStateChange({
-            state: nextUiState
+            uiState: nextUiState
           });
         });
       });
@@ -8852,7 +8925,9 @@
           _options$searchClient = options.searchClient,
           searchClient = _options$searchClient === void 0 ? null : _options$searchClient,
           _options$insightsClie = options.insightsClient,
-          insightsClient = _options$insightsClie === void 0 ? null : _options$insightsClie;
+          insightsClient = _options$insightsClie === void 0 ? null : _options$insightsClie,
+          _options$onStateChang = options.onStateChange,
+          onStateChange = _options$onStateChang === void 0 ? null : _options$onStateChang;
 
       if (indexName === null) {
         throw new Error(withUsage$1('The `indexName` option is required.'));
@@ -8887,6 +8962,7 @@
       _this.mainIndex = index({
         indexName: indexName
       });
+      _this.onStateChange = onStateChange;
       _this.started = false;
       _this.templatesConfig = {
         helpers: hoganHelpers({
@@ -9604,8 +9680,6 @@
    * websites. From a UX point of view, we suggest not displaying more than two
    * levels deep.
    *
-   * There's a complete example available on how to write a custom **HierarchicalMenu**:
-   *  [hierarchicalMenu.js](https://github.com/algolia/instantsearch.js/blob/develop/storybook/app/jquery/widgets/hierarchicalMenu.js)
    * @type {Connector}
    * @param {function(HierarchicalMenuRenderingOptions)} renderFn Rendering function for the custom **HierarchicalMenu** widget.
    * @param {function} unmountFn Unmount function called when the widget is disposed.
@@ -10080,101 +10154,18 @@
     name: 'hits-per-page',
     connector: true
   });
-  /**
-   * @typedef {Object} HitsPerPageRenderingOptionsItem
-   * @property {number} value Number of hits to display per page.
-   * @property {string} label Label to display in the option.
-   * @property {boolean} isRefined Indicates if it's the current refined value.
-   */
 
-  /**
-   * @typedef {Object} HitsPerPageWidgetOptionsItem
-   * @property {number} value Number of hits to display per page.
-   * @property {string} label Label to display in the option.
-   * @property {boolean} default The default hits per page on first search.
-   */
-
-  /**
-   * @typedef {Object} HitsPerPageRenderingOptions
-   * @property {HitsPerPageRenderingOptionsItem[]} items Array of objects defining the different values and labels.
-   * @property {function(item.value)} createURL Creates the URL for a single item name in the list.
-   * @property {function(number)} refine Sets the number of hits per page and trigger a search.
-   * @property {boolean} hasNoResults `true` if the last search contains no result.
-   * @property {Object} widgetParams Original `HitsPerPageWidgetOptions` forwarded to `renderFn`.
-   */
-
-  /**
-   * @typedef {Object} HitsPerPageWidgetOptions
-   * @property {HitsPerPageWidgetOptionsItem[]} items Array of objects defining the different values and labels.
-   * @property {function(object[]):object[]} [transformItems] Function to transform the items passed to the templates.
-   */
-
-  /**
-   * **HitsPerPage** connector provides the logic to create custom widget that will
-   * allow a user to choose to display more or less results from Algolia.
-   *
-   * This connector provides a `refine()` function to change the hits per page configuration and trigger a new search.
-   * @type {Connector}
-   * @param {function(HitsPerPageRenderingOptions, boolean)} renderFn Rendering function for the custom **HitsPerPage** widget.
-   * @param {function} unmountFn Unmount function called when the widget is disposed.
-   * @return {function(HitsPerPageWidgetOptions)} Re-usable widget factory for a custom **HitsPerPage** widget.
-   * @example
-   * // custom `renderFn` to render the custom HitsPerPage widget
-   * function renderFn(HitsPerPageRenderingOptions, isFirstRendering) {
-   *   var containerNode = HitsPerPageRenderingOptions.widgetParams.containerNode
-   *   var items = HitsPerPageRenderingOptions.items
-   *   var refine = HitsPerPageRenderingOptions.refine
-   *
-   *   if (isFirstRendering) {
-   *     var markup = '<select></select>';
-   *     containerNode.append(markup);
-   *   }
-   *
-   *   const itemsHTML = items.map(({value, label, isRefined}) => `
-   *     <option
-   *       value="${value}"
-   *       ${isRefined ? 'selected' : ''}
-   *     >
-   *       ${label}
-   *     </option>
-   *   `);
-   *
-   *   containerNode
-   *     .find('select')
-   *     .html(itemsHTML);
-   *
-   *   containerNode
-   *     .find('select')
-   *     .off('change')
-   *     .on('change', e => { refine(e.target.value); });
-   * }
-   *
-   * // connect `renderFn` to HitsPerPage logic
-   * var customHitsPerPage = instantsearch.connectors.connectHitsPerPage(renderFn);
-   *
-   * // mount widget on the page
-   * search.addWidgets([
-   *   customHitsPerPage({
-   *     containerNode: $('#custom-hits-per-page-container'),
-   *     items: [
-   *       {value: 6, label: '6 per page', default: true},
-   *       {value: 12, label: '12 per page'},
-   *       {value: 24, label: '24 per page'},
-   *     ],
-   *   })
-   * ]);
-   */
-
-  function connectHitsPerPage(renderFn) {
+  var connectHitsPerPage = function connectHitsPerPage(renderFn) {
     var unmountFn = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : noop;
     checkRendering(renderFn, withUsage$6());
-    return function () {
-      var widgetParams = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-      var userItems = widgetParams.items,
-          _widgetParams$transfo = widgetParams.transformItems,
-          transformItems = _widgetParams$transfo === void 0 ? function (items) {
+    return function (widgetParams) {
+      var _ref = widgetParams || {},
+          userItems = _ref.items,
+          _ref$transformItems = _ref.transformItems,
+          transformItems = _ref$transformItems === void 0 ? function (items) {
         return items;
-      } : _widgetParams$transfo;
+      } : _ref$transformItems;
+
       var items = userItems;
 
       if (!Array.isArray(items)) {
@@ -10194,74 +10185,78 @@
       }
 
       var defaultItem = defaultItems[0];
+
+      var normalizeItems = function normalizeItems(_ref2) {
+        var hitsPerPage = _ref2.hitsPerPage;
+        return items.map(function (item) {
+          return _objectSpread2({}, item, {
+            isRefined: Number(item.value) === Number(hitsPerPage)
+          });
+        });
+      };
+
+      var connectorState = {};
       return {
         $$type: 'ais.hitsPerPage',
-        init: function init(_ref) {
-          var helper = _ref.helper,
-              createURL = _ref.createURL,
-              state = _ref.state,
-              instantSearchInstance = _ref.instantSearchInstance;
+        init: function init(_ref3) {
+          var helper = _ref3.helper,
+              createURL = _ref3.createURL,
+              state = _ref3.state,
+              instantSearchInstance = _ref3.instantSearchInstance;
           var isCurrentInOptions = items.some(function (item) {
             return Number(state.hitsPerPage) === Number(item.value);
           });
 
+          connectorState.setHitsPerPage = function (value) {
+            return !value && value !== 0 ? helper.setQueryParameter('hitsPerPage', undefined).search() : helper.setQueryParameter('hitsPerPage', value).search();
+          };
+
           if (!isCurrentInOptions) {
              _warning(state.hitsPerPage !== undefined, "\n`hitsPerPage` is not defined.\nThe option `hitsPerPage` needs to be set using the `configure` widget.\n\nLearn more: https://community.algolia.com/instantsearch.js/v2/widgets/configure.html\n            ") ;
              _warning(false, "\nThe `items` option of `hitsPerPage` does not contain the \"hits per page\" value coming from the state: ".concat(state.hitsPerPage, ".\n\nYou may want to add another entry to the `items` option with this value.")) ;
-            items = [{
+            items = [// The helper will convert the empty string to `undefined`.
+            {
               value: '',
               label: ''
             }].concat(_toConsumableArray(items));
           }
 
-          this.setHitsPerPage = function (value) {
-            return !value && value !== 0 ? helper.setQueryParameter('hitsPerPage', undefined).search() : helper.setQueryParameter('hitsPerPage', value).search();
-          };
-
-          this.createURL = function (helperState) {
+          connectorState.createURLFactory = function (helperState) {
             return function (value) {
               return createURL(helperState.setQueryParameter('hitsPerPage', !value && value !== 0 ? undefined : value));
             };
           };
 
           renderFn({
-            items: transformItems(this._normalizeItems(state)),
-            refine: this.setHitsPerPage,
-            createURL: this.createURL(helper.state),
+            items: transformItems(normalizeItems(state)),
+            refine: connectorState.setHitsPerPage,
+            createURL: connectorState.createURLFactory(helper.state),
             hasNoResults: true,
             widgetParams: widgetParams,
             instantSearchInstance: instantSearchInstance
           }, true);
         },
-        render: function render(_ref2) {
-          var state = _ref2.state,
-              results = _ref2.results,
-              instantSearchInstance = _ref2.instantSearchInstance;
+        render: function render(_ref4) {
+          var state = _ref4.state,
+              results = _ref4.results,
+              instantSearchInstance = _ref4.instantSearchInstance;
           var hasNoResults = results.nbHits === 0;
           renderFn({
-            items: transformItems(this._normalizeItems(state)),
-            refine: this.setHitsPerPage,
-            createURL: this.createURL(state),
+            items: transformItems(normalizeItems(state)),
+            refine: connectorState.setHitsPerPage,
+            createURL: connectorState.createURLFactory(state),
             hasNoResults: hasNoResults,
             widgetParams: widgetParams,
             instantSearchInstance: instantSearchInstance
           }, false);
         },
-        _normalizeItems: function _normalizeItems(_ref3) {
-          var hitsPerPage = _ref3.hitsPerPage;
-          return items.map(function (item) {
-            return _objectSpread2({}, item, {
-              isRefined: Number(item.value) === Number(hitsPerPage)
-            });
-          });
-        },
-        dispose: function dispose(_ref4) {
-          var state = _ref4.state;
+        dispose: function dispose(_ref5) {
+          var state = _ref5.state;
           unmountFn();
           return state.setQueryParameter('hitsPerPage', undefined);
         },
-        getWidgetState: function getWidgetState(uiState, _ref5) {
-          var searchParameters = _ref5.searchParameters;
+        getWidgetState: function getWidgetState(uiState, _ref6) {
+          var searchParameters = _ref6.searchParameters;
           var hitsPerPage = searchParameters.hitsPerPage;
 
           if (hitsPerPage === undefined || hitsPerPage === defaultItem.value) {
@@ -10272,15 +10267,15 @@
             hitsPerPage: hitsPerPage
           });
         },
-        getWidgetSearchParameters: function getWidgetSearchParameters(searchParameters, _ref6) {
-          var uiState = _ref6.uiState;
+        getWidgetSearchParameters: function getWidgetSearchParameters(searchParameters, _ref7) {
+          var uiState = _ref7.uiState;
           return searchParameters.setQueryParameters({
             hitsPerPage: uiState.hitsPerPage || defaultItem.value
           });
         }
       };
     };
-  }
+  };
 
   var withUsage$7 = createDocumentationMessageGenerator({
     name: 'infinite-hits',
@@ -13041,6 +13036,7 @@
       } : _widgetParams$transfo;
       var widgetState = {
         isRefineOnMapMove: enableRefineOnMapMove,
+        // @MAJOR hasMapMoveSinceLastRefine -> hasMapMovedSinceLastRefine
         hasMapMoveSinceLastRefine: false,
         lastRefinePosition: '',
         lastRefineBoundingBox: '',
@@ -15532,7 +15528,8 @@
         var templateData = _objectSpread2({}, facetValue, {
           url: url,
           attribute: this.props.attribute,
-          cssClasses: this.props.cssClasses
+          cssClasses: this.props.cssClasses,
+          isFromSearch: this.props.isFromSearch
         });
 
         var key = facetValue.value;
@@ -16170,53 +16167,8 @@
       })), containerNode);
     };
   };
-  /**
-   * @typedef {Object} HitsPerPageCSSClasses
-   * @property {string|string[]} [root] CSS classes added to the outer `<div>`.
-   * @property {string|string[]} [select] CSS classes added to the parent `<select>`.
-   * @property {string|string[]} [option] CSS classes added to each `<option>`.
-   */
 
-  /**
-   * @typedef {Object} HitsPerPageItems
-   * @property {number} value number of hits to display per page.
-   * @property {string} label Label to display in the option.
-   * @property {boolean} default The default hits per page on first search.
-   */
-
-  /**
-   * @typedef {Object} HitsPerPageWidgetOptions
-   * @property {string|HTMLElement} container CSS Selector or HTMLElement to insert the widget.
-   * @property {HitsPerPageItems[]} items Array of objects defining the different values and labels.
-   * @property {HitsPerPageCSSClasses} [cssClasses] CSS classes to be added.
-   * @property {function(object[]):object[]} [transformItems] Function to transform the items passed to the templates.
-   */
-
-  /**
-   * The hitsPerPage widget gives the user the ability to change the number of results
-   * displayed in the hits widget.
-   *
-   * You can specify the default hits per page using a boolean in the items[] array. If none is specified, this first hits per page option will be picked.
-   * @type {WidgetFactory}
-   * @devNovel HitsPerPage
-   * @category basic
-   * @param {HitsPerPageWidgetOptions} $0 The options of the HitPerPageSelector widget.
-   * @return {Widget} A new instance of the HitPerPageSelector widget.
-   * @example
-   * search.addWidgets([
-   *   instantsearch.widgets.hitsPerPage({
-   *     container: '#hits-per-page',
-   *     items: [
-   *       {value: 3, label: '3 per page', default: true},
-   *       {value: 6, label: '6 per page'},
-   *       {value: 12, label: '12 per page'},
-   *     ]
-   *   })
-   * ]);
-   */
-
-
-  function hitsPerPage() {
+  var hitsPerPage = function hitsPerPage() {
     var _ref5 = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
         container = _ref5.container,
         items = _ref5.items,
@@ -16249,7 +16201,7 @@
       items: items,
       transformItems: transformItems
     });
-  }
+  };
 
   var InfiniteHits = function InfiniteHits(_ref) {
     var results = _ref.results,
@@ -16605,7 +16557,7 @@
   }
 
   var defaultTemplates$6 = {
-    item: "<label class=\"{{cssClasses.label}}\">\n  <input type=\"checkbox\"\n         class=\"{{cssClasses.checkbox}}\"\n         value=\"{{value}}\"\n         {{#isRefined}}checked{{/isRefined}} />\n  <span class=\"{{cssClasses.labelText}}\">{{{highlighted}}}</span>\n  <span class=\"{{cssClasses.count}}\">{{#helpers.formatNumber}}{{count}}{{/helpers.formatNumber}}</span>\n</label>",
+    item: "<label class=\"{{cssClasses.label}}\">\n  <input type=\"checkbox\"\n         class=\"{{cssClasses.checkbox}}\"\n         value=\"{{value}}\"\n         {{#isRefined}}checked{{/isRefined}} />\n  <span class=\"{{cssClasses.labelText}}\">{{#isFromSearch}}{{{highlighted}}}{{/isFromSearch}}{{^isFromSearch}}{{highlighted}}{{/isFromSearch}}</span>\n  <span class=\"{{cssClasses.count}}\">{{#helpers.formatNumber}}{{count}}{{/helpers.formatNumber}}</span>\n</label>",
     showMoreText: "\n    {{#isShowingMore}}\n      Show less\n    {{/isShowingMore}}\n    {{^isShowingMore}}\n      Show more\n    {{/isShowingMore}}\n    ",
     searchableNoResults: 'No results',
     searchableReset: "\n  <svg class=\"{{cssClasses.resetIcon}}\" xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 20 20\" width=\"10\" height=\"10\">\n    <path d=\"M8.114 10L.944 2.83 0 1.885 1.886 0l.943.943L10 8.113l7.17-7.17.944-.943L20 1.886l-.943.943-7.17 7.17 7.17 7.17.943.944L18.114 20l-.943-.943-7.17-7.17-7.17 7.17-.944.943L0 18.114l.943-.943L8.113 10z\"></path>\n  </svg>\n    ",
