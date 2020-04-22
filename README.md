@@ -50,6 +50,7 @@ By default, a dark and responsive Hugo theme. Typography used is Space Mono, mon
   - Optimised for search engine
   - Custom schemas
 - Uses FiraCode with font ligatures for code block
+- You can add global banner to HTML page
 
 ## 1.2. Quick Start
 
@@ -114,6 +115,10 @@ enableRobotsTXT = true
     thumbnailUrl = "/img/akshay.jpg"
     acknowledge = false
     convertAssetsToInline = true
+    [params.alert]
+        body = "Stay home, protect yourself and everyone around you from COVID-19. For more information see - <a href='https://www.who.int/emergencies/diseases/novel-coronavirus-2019'>www.who.int/emergencies/diseases/novel-coronavirus-2019</a>"
+        type = "danger"
+        icon = ""
     [params.scss]
         primary = "#c9cacc"
         secondary = "#c9cacc"

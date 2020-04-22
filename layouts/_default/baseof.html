@@ -11,6 +11,12 @@
 <body class="uk-background-default">
     {{- partial "nav.html" . -}}
 
+    {{ if .Site.Params.alert.body }}
+        <div class="uk-container">
+            {{- partial "alert.html" . -}}
+        </div>
+    {{ end }}
+
     {{- block "main" . }}{{- end }}
 
     {{- partial "footer.html" . -}}

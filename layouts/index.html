@@ -29,6 +29,11 @@
                 <img class="uk-align-center" src="{{ .Site.Params.namedLogo | relURL}}"
                      alt="Akshay Raj Gollahalli's logo" width="300" height="70" uk-svg>
             {{ end }}
+            {{ if .Site.Params.alert.body }}
+                <div class="uk-container">
+                    {{- partial "alert.html" . -}}
+                </div>
+            {{ end }}
             {{ .Content }}
         </p>
         {{ if .Site.Params.pgp }}

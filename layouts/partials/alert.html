@@ -1,0 +1,3 @@
+<div class="uk-alert-{{ .Site.Params.alert.type }} uk-border-rounded uk-text-center" uk-alert>
+    <p>{{ if .Site.Params.alert.icon }}<span class="uk-margin-small-right" uk-icon="{{ .Site.Params.alert.icon }}"></span>{{end}} {{ .Site.Params.alert.body | safeHTML }}</p>
+</div>
