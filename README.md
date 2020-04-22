@@ -78,6 +78,10 @@ disqusShortname = "gollahalli-com" # Optional
 pygmentsCodeFences = true
 enableRobotsTXT = true
 
+[markup]
+  [markup.highlight]
+    style = "dracula"
+
 [outputFormats]
   [outputFormats.searchindex]
     mediaType= "application/json"
