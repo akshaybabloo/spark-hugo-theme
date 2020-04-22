@@ -5,12 +5,12 @@
 <div class="uk-grid uk-grid-match" uk-height-viewport="offset-bottom: 32">
     <div class="uk-width-expand@m">
         <div class="uk-section uk-section-default">
-            <div class="uk-container uk-container-xsmall uk-text-justify uk-text-break">
+            <div class="uk-container uk-text-justify uk-text-break">
                 {{ range (.Paginate (.Pages.GroupByPublishDate "2006")).PageGroups }}
                     {{ range .Pages }}
                         <article class="uk-article gol-links uk-margin-large">
                             <p class="uk-article-meta">
-                                <time datetime="{{.PublishDate}}" itemprop="datePublished" class="uk-text-left">{{.PublishDate.Format "02 Jan 2006"}}</time> - {{ range .Params.tags }}<span class="uk-label"># {{.}}</span> {{end}}<br>
+                                <time datetime="{{.PublishDate}}" itemprop="datePublished" class="uk-text-left">{{.PublishDate.Format "02 Jan 2006"}}</time> - {{ range .Params.tags }}<span class="uk-label">#{{.}}</span> {{end}}<br>
                                 <a class="uk-margin-bottom uk-text-large" style="font-size: 1.2rem;" href="{{.Permalink}}" onclick="ga('send', 'event', 'Blog', 'click', '{{ .Title }}')">{{.Title}}</a>
                             </p>
                             {{ if .Params.images }}
