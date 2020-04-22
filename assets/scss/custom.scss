@@ -12,217 +12,228 @@ $headers: {{ .Site.Params.scss.headers }};
 
 
 html {
-    font-family: $global-font-family;
+  font-family: $global-font-family;
 }
 
 code {
-    font-family: $global-font-family;
+  font-family: $global-font-family;
 }
 
 body {
-    color: $text-color !important;
-    background-color: $background-color !important;
-    font-size: 1em;
+  color: $text-color !important;
+  background-color: $background-color !important;
+  font-size: 1em;
 }
 
 ::placeholder {
-    /* Chrome, Firefox, Opera, Safari 10.1+ */
-    color: $primary !important;
-    opacity: 1;
-    /* Firefox */
-    text-transform: uppercase;
-    font-size: 0.875rem;
+  /* Chrome, Firefox, Opera, Safari 10.1+ */
+  color: $primary !important;
+  opacity: 1;
+  /* Firefox */
+  text-transform: uppercase;
+  font-size: 0.875rem;
 }
 
 :-ms-input-placeholder {
-    /* Internet Explorer 10-11 */
-    color: $primary !important;
+  /* Internet Explorer 10-11 */
+  color: $primary !important;
 }
 
 ::-ms-input-placeholder {
-    /* Microsoft Edge */
+  /* Microsoft Edge */
+  color: $primary !important;
+}
+
+.gol-subnav {
+  a {
     color: $primary !important;
-}
 
-.gol-subnav a {
-    color: $primary !important;
-}
+    &:hover, &:focus {
+      color: $secondary !important;
+      text-decoration: underline;
+      outline: none;
+    }
+  }
 
-/* Hover + Focus */
-.gol-subnav a:hover,
-.gol-subnav a:focus {
-    color: $secondary !important;
-    text-decoration: underline;
-    outline: none;
-}
-
-.gol-subnav> ::before {
+  > :nth-child(n+2):not(.uk-first-column)::before {
     border-left: 2px solid $primary !important;
+  }
 }
 
 .gol-tr-bgcolor {
-    background: $background-color-light
+  background: $background-color-light
 }
 
 .uk-light {
-    color: $text-color !important;
+  color: $text-color !important;
 }
 
 .uk-section-default {
-    background-color: $background-color !important;
+  background-color: $background-color !important;
 }
 
-.uk-card-default{
-    height: 100%;
-    color: #000000;
-}
+.uk-card-default {
+  height: 100%;
+  color: #000000;
 
-.uk-card-default a{
+  a {
     color: #000000 !important;
+
+    &:hover {
+      color: #000000 !important;
+    }
+  }
+
+  h4 {
+    color: #000000 !important;
+  }
+
+  h3 {
+    color: #000000 !important;
+  }
 }
 
-a.uk-card-default{
+a {
+  &.uk-card-default {
     color: #000000 !important;
-}
 
-.uk-card-default h4{
-    color: #000000 !important;
-}
-
-.uk-card-default a:hover{
-    color: #000000 !important;
-}
-
-a.uk-card-default:hover{
-    color: #000000 !important;
-    text-decoration: none;
-    background-image: linear-gradient(-20deg, #e9defa 0%, #fbfcdb 100%);
-}
-
-
-.uk-card-default h3{
-    color: #000000 !important;
+    &:hover {
+      color: #000000 !important;
+      text-decoration: none;
+      background-image: linear-gradient(-20deg, #e9defa 0%, #fbfcdb 100%);
+    }
+  }
 }
 
 .uk-link-text {
-    color: $primary !important;
+  color: $primary !important;
 }
 
 .uk-link-text:hover,
 .uk-link-text:focus {
-    color: $secondary !important;
+  color: $secondary !important;
 }
 
 .uk-label {
-    background: $label-background-color !important;
-    color: $label-text-color !important;
-    font-size: small;
-}
+  background: $label-background-color !important;
+  color: $label-text-color !important;
+  font-size: small;
 
-.uk-label a {
+  a {
     color: $label-text-color !important;
     font-weight: 700;
+
+    &:hover, &:focus {
+      color: $label-text-color !important;
+    }
+
+  }
 }
 
-.uk-label a:hover,
-.uk-label a:focus {
-    color: $label-text-color !important;
-}
+.gol-links {
+  a {
+    &:not(.uk-icon) {
+      color: $text-color !important;
+      text-decoration: none;
+      border-bottom: 2px solid $text-color !important;
+    }
 
-.gol-links a:not(.uk-icon) {
-    color: $text-color !important;
-    text-decoration: none;
-    border-bottom: 2px solid $text-color !important;
-}
-
-.gol-links a:hover:not(.uk-icon),
-.gol-links a:focus:not(.uk-icon) {
-    text-decoration: none;
-    border-bottom: 3px solid $primary !important;
+    &:hover:not(.uk-icon),
+    &:focus:not(.uk-icon) {
+      text-decoration: none;
+      border-bottom: 3px solid $primary !important;
+    }
+  }
 }
 
 a,
 .uk-link {
-    color: $primary !important;
-    text-decoration: none;
-    cursor: pointer;
+  color: $primary !important;
+  text-decoration: none;
+  cursor: pointer;
 }
 
 a:hover,
 .uk-link:hover {
-    color: $secondary !important;
+  color: $secondary !important;
 }
 
 h2 {
-    color: $headers !important;
+  color: $headers !important;
 }
 
 h2 > code {
-    font-size: 1.7rem;
+  font-size: 1.7rem;
 }
 
 h3 {
-    color: $headers !important;
+  color: $headers !important;
 }
 
 h4 {
-    color: $headers !important;
+  color: $headers !important;
 }
 
 h1 {
-    color: $headers !important;
+  color: $headers !important;
 }
 
 blockquote {
-    color: $sub-text-color !important;
+  color: $sub-text-color !important;
 }
 
 time {
-    color: $sub-text-color;
+  color: $sub-text-color;
 }
 
 .uk-badge {
-    background: $primary !important;
-    color: $label-text-color !important;
+  background: $primary !important;
+  color: $label-text-color !important;
 }
 
-#searchBox input{
+#searchBox {
+  input {
     border: 1px solid $primary !important;
     color: $primary !important;
-}
+  }
 
-#searchBox, .ais-SearchBox-loadingIndicator{
+  &, .ais-SearchBox-loadingIndicator {
     padding-right: 10px;
     stroke: $primary !important;
+  }
 }
 
 .ais-SearchBox-loadingIcon {
-    stroke: $primary !important;
+  stroke: $primary !important;
 }
 
 @font-face {
-    font-family: 'Fira Code';
-    src: url('/font/FiraCode-Regular.woff2') format('woff2'),
-    url("/font/FiraCode-Regular.woff") format("woff");
-    font-weight: 400;
-    font-style: normal;
+  font-family: 'Fira Code';
+  src: url('/font/FiraCode-Regular.woff2') format('woff2'),
+  url("/font/FiraCode-Regular.woff") format("woff");
+  font-weight: 400;
+  font-style: normal;
 }
 
-pre code{
-    font-family: "Fira Code", monospace !important;
-    font-variant-ligatures: common-ligatures;
+pre code {
+  font-family: "Fira Code", monospace !important;
+  font-variant-ligatures: common-ligatures;
 }
 
 // Algolia search
 
-.ais-Hits-item a:not(.uk-icon) {
-    color: $text-color-dark !important;
-    text-decoration: none;
-    //border-bottom: 2px solid $text-color-dark !important;
-}
+.ais-Hits-item {
+  a {
+    &:not(.uk-icon) {
+      color: $text-color-dark !important;
+      text-decoration: none;
+      //border-bottom: 2px solid $text-color-dark !important;
+    }
 
-.ais-Hits-item a:hover:not(.uk-icon),
-.ais-Hits-item a:focus:not(.uk-icon) {
-    text-decoration: none;
-    border-bottom: 2px solid $text-color-dark !important;
+    &:hover:not(.uk-icon),
+    &:focus:not(.uk-icon) {
+      text-decoration: none;
+      border-bottom: 2px solid $text-color-dark !important;
+    }
+  }
 }
