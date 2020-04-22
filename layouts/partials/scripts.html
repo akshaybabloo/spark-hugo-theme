@@ -9,7 +9,7 @@
         {{ $uikitIcons.Content | safeJS }}
     </script>
 
-    {{ $algoliasearchLite := resources.Get "js/algoliasearchLite.js" }}
+    {{ $algoliasearchLite := resources.Get "js/algoliasearch.umd.js" }}
     <script>
         {{ $algoliasearchLite.Content | safeJS }}
     </script>
@@ -19,16 +19,16 @@
         {{ $instantsearch.Content | safeJS }}
     </script>
 {{ else }}
-    {{ $uikitJs := resources.Get "js/uikit.js" | resources.Minify }}
+    {{ $uikitJs := resources.Get "js/uikit.min.js" }}
     <script src="{{ $uikitJs.Permalink }}"></script>
 
-    {{ $uikitIcons := resources.Get "js/uikit-icons.js" | resources.Minify }}
+    {{ $uikitIcons := resources.Get "js/uikit-icons.min.js" }}
     <script src="{{ $uikitIcons.Permalink }}"></script>
 
-    {{ $algoliasearchLite := resources.Get "js/algoliasearchLite.js" | resources.Minify }}
+    {{ $algoliasearchLite := resources.Get "js/algoliasearch.umd.js" }}
     <script src="{{ $algoliasearchLite.Permalink }}"></script>
 
-    {{ $instantsearch := resources.Get "js/instantsearch.development.js" | resources.Minify }}
+    {{ $instantsearch := resources.Get "js/instantsearch.production.min.js" }}
     <script src="{{ $instantsearch.Permalink }}"></script>
 {{ end }}
 

@@ -64,7 +64,7 @@
         {{ $style.Content | safeCSS }}
     </style>
 {{ else }}
-    {{ $uikitCss := resources.Get "css/uikit.css" | resources.Minify }}
+    {{ $uikitCss := resources.Get "css/uikit.min.css" }}
     <link rel="stylesheet" href="{{ $uikitCss.Permalink }}">
 
     {{ $sassTemplate := resources.Get "scss/custom.scss" }}

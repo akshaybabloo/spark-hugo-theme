@@ -34,7 +34,6 @@ By default, a dark and responsive Hugo theme. Typography used is Space Mono, mon
 - Disqus support
 - Google Ads support (Only for blogs) and AMP blogs
 - Google analytics support with event tracking
-- Inline CSS and JS, no need of cache bursting
 - Uses SASS/SCSS, no NodeJS needed
 - Can change the colour of the theme
 - Education and experience data files
@@ -50,6 +49,7 @@ By default, a dark and responsive Hugo theme. Typography used is Space Mono, mon
   - Optimised for search engine
   - Custom schemas
 - Uses FiraCode with font ligatures for code block
+- Option to convert JS/CSS to inline code
 - You can add global banner to HTML page
 
 ## 1.2. Quick Start
@@ -114,7 +114,7 @@ enableRobotsTXT = true
     algoliaIndexName = "gollahalli-website"
     thumbnailUrl = "/img/akshay.jpg"
     acknowledge = false
-    convertAssetsToInline = true
+    convertAssetsToInline = false  # Converts external assets into minified inline assets
     [params.alert]
         body = "Stay home, protect yourself and everyone around you from COVID-19. For more information see - <a href='https://www.who.int/emergencies/diseases/novel-coronavirus-2019'>www.who.int/emergencies/diseases/novel-coronavirus-2019</a>"
         type = "danger"
