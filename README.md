@@ -188,7 +188,6 @@ Make sure you add the following in your `config.toml` file for `searchindex.json
     baseName= "searchindex"
     isPlainText= true
 
-
 [outputs]
   home= ["HTML","RSS", "searchindex"]
 ```
@@ -207,8 +206,8 @@ Format:
     {
       "title": "Title of degree",
       "where": "name of university, location",
-      "from": 2007,
-      "to": 2011
+      "from": "yyyy",
+      "to": "yyyy"
     }
   ]
 }
@@ -225,9 +224,8 @@ Format:
       "title": "title of job",
       "company": "company name.",
       "where": "location",
-      "from": "month, year",
-      "to": "month, year",
-      "current": false
+      "from": "yyyy-mm-dd",
+      "to": "yyyy-mm-dd",
     }
   ]
 }
