@@ -1,4 +1,4 @@
-/*! InstantSearch.js 4.4.0 | © Algolia, Inc. and contributors; MIT License | https://github.com/algolia/instantsearch.js */
+/*! InstantSearch.js 4.7.0 | © Algolia, Inc. and contributors; MIT License | https://github.com/algolia/instantsearch.js */
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
   typeof define === 'function' && define.amd ? define(factory) :
@@ -137,36 +137,6 @@
     };
 
     return _setPrototypeOf(o, p);
-  }
-
-  function isNativeReflectConstruct() {
-    if (typeof Reflect === "undefined" || !Reflect.construct) return false;
-    if (Reflect.construct.sham) return false;
-    if (typeof Proxy === "function") return true;
-
-    try {
-      Date.prototype.toString.call(Reflect.construct(Date, [], function () {}));
-      return true;
-    } catch (e) {
-      return false;
-    }
-  }
-
-  function _construct(Parent, args, Class) {
-    if (isNativeReflectConstruct()) {
-      _construct = Reflect.construct;
-    } else {
-      _construct = function _construct(Parent, args, Class) {
-        var a = [null];
-        a.push.apply(a, args);
-        var Constructor = Function.bind.apply(Parent, a);
-        var instance = new Constructor();
-        if (Class) _setPrototypeOf(instance, Class.prototype);
-        return instance;
-      };
-    }
-
-    return _construct.apply(null, arguments);
   }
 
   function _objectWithoutPropertiesLoose(source, excluded) {
@@ -6587,6 +6557,44 @@
     }
   }
 
+  function noop() {}
+
+  /**
+   * Logs a warning
+   * This is used to log issues in development environment only.
+   */
+
+
+  var warn = noop;
+  /**
+   * Logs a warning if the condition is not met.
+   * This is used to log issues in development environment only.
+   */
+
+  var _warning = noop;
+
+  {
+    warn = function warn(message) {
+      // eslint-disable-next-line no-console
+      console.warn("[InstantSearch.js]: ".concat(message.trim()));
+    };
+
+    _warning = function warning(condition, message) {
+      if (condition) {
+        return;
+      }
+
+      var hasAlreadyPrinted = _warning.cache[message];
+
+      if (!hasAlreadyPrinted) {
+        _warning.cache[message] = true;
+        warn(message);
+      }
+    };
+
+    _warning.cache = {};
+  }
+
   // Some connectors are responsible for multiple widgets so we need
   // to map them.
   function getWidgetNames(connectorName) {
@@ -6733,8 +6741,6 @@
     }, object);
   }
 
-  function noop() {}
-
   // This is the `Number.isFinite()` polyfill recommended by MDN.
   // We do not provide any tests for this function.
   // See: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/isFinite#Polyfill
@@ -6798,7 +6804,7 @@
 
     var arrayLength = Math.round((end - start) / limitStep);
     return _toConsumableArray(Array(arrayLength)).map(function (_, current) {
-      return (start + current) * limitStep;
+      return start + current * limitStep;
     });
   }
 
@@ -7008,40 +7014,8 @@
     return states;
   };
 
-  /**
-   * Logs a warning
-   * This is used to log issues in development environment only.
-   */
-
-
-  var warn = noop;
-  /**
-   * Logs a warning if the condition is not met.
-   * This is used to log issues in development environment only.
-   */
-
-  var _warning = noop;
-
-  {
-    warn = function warn(message) {
-      // eslint-disable-next-line no-console
-      console.warn("[InstantSearch.js]: ".concat(message.trim()));
-    };
-
-    _warning = function warning(condition, message) {
-      if (condition) {
-        return;
-      }
-
-      var hasAlreadyPrinted = _warning.cache[message];
-
-      if (!hasAlreadyPrinted) {
-        _warning.cache[message] = true;
-        warn(message);
-      }
-    };
-
-    _warning.cache = {};
+  function toArray(value) {
+    return Array.isArray(value) ? value : [value];
   }
 
   var createDocumentationLink = function createDocumentationLink(_ref) {
@@ -7165,8 +7139,30 @@
   function isIndexWidget(widget) {
     return widget.$$type === 'ais.index';
   }
+  /**
+   * This is the same content as helper._change / setState, but allowing for extra
+   * UiState to be synchronized.
+   * see: https://github.com/algolia/algoliasearch-helper-js/blob/6b835ffd07742f2d6b314022cce6848f5cfecd4a/src/algoliasearch.helper.js#L1311-L1324
+   */
+
+  function privateHelperSetState(helper, _ref) {
+    var state = _ref.state,
+        isPageReset = _ref.isPageReset,
+        _uiState = _ref._uiState;
+
+    if (state !== helper.state) {
+      helper.state = state;
+      helper.emit('change', {
+        state: helper.state,
+        results: helper.lastResults,
+        isPageReset: isPageReset,
+        _uiState: _uiState
+      });
+    }
+  }
 
   function getLocalWidgetsState(widgets, widgetStateOptions) {
+    var initialUiState = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
     return widgets.filter(function (widget) {
       return !isIndexWidget(widget);
     }).reduce(function (uiState, widget) {
@@ -7175,7 +7171,7 @@
       }
 
       return widget.getWidgetState(uiState, widgetStateOptions);
-    }, {});
+    }, initialUiState);
   }
 
   function getLocalWidgetsSearchParameters(widgets, widgetSearchParametersOptions) {
@@ -7201,9 +7197,12 @@
     }
 
     indexWidgets.forEach(function (widget) {
-      var widgetHelper = widget.getHelper(); // @ts-ignore @TODO: remove "ts-ignore" once `resetPage()` is typed in the helper
-
-      widgetHelper.setState(widgetHelper.state.resetPage());
+      var widgetHelper = widget.getHelper();
+      privateHelperSetState(widgetHelper, {
+        // @ts-ignore @TODO: remove "ts-ignore" once `resetPage()` is typed in the helper
+        state: widgetHelper.state.resetPage(),
+        isPageReset: true
+      });
       resetPageFromWidgets(widget.getWidgets());
     });
   }
@@ -7284,16 +7283,19 @@
         localWidgets = localWidgets.concat(widgets);
 
         if (localInstantSearchInstance && Boolean(widgets.length)) {
-          helper.setState(getLocalWidgetsSearchParameters(localWidgets, {
-            uiState: localUiState,
-            initialSearchParameters: helper.state
-          }));
+          privateHelperSetState(helper, {
+            state: getLocalWidgetsSearchParameters(localWidgets, {
+              uiState: localUiState,
+              initialSearchParameters: helper.state
+            }),
+            _uiState: localUiState
+          });
           widgets.forEach(function (widget) {
             if (localInstantSearchInstance && widget.init) {
               widget.init({
                 helper: helper,
                 parent: _this,
-                uiState: {},
+                uiState: localInstantSearchInstance._initialUiState,
                 instantSearchInstance: localInstantSearchInstance,
                 state: helper.state,
                 templatesConfig: localInstantSearchInstance.templatesConfig,
@@ -7346,12 +7348,12 @@
 
         return this;
       },
-      init: function init(_ref) {
+      init: function init(_ref2) {
         var _this2 = this;
 
-        var instantSearchInstance = _ref.instantSearchInstance,
-            parent = _ref.parent,
-            uiState = _ref.uiState;
+        var instantSearchInstance = _ref2.instantSearchInstance,
+            parent = _ref2.parent,
+            uiState = _ref2.uiState;
         localInstantSearchInstance = instantSearchInstance;
         localParent = parent;
         localUiState = uiState[indexId] || {}; // The `mainHelper` is already defined at this point. The instance is created
@@ -7399,8 +7401,8 @@
         // It makes sense to replicate it at the `init` step. We have another
         // listener on `change` below, once `init` is done.
 
-        helper.on('change', function (_ref2) {
-          var isPageReset = _ref2.isPageReset;
+        helper.on('change', function (_ref3) {
+          var isPageReset = _ref3.isPageReset;
 
           if (isPageReset) {
             resetPageFromWidgets(localWidgets);
@@ -7420,8 +7422,8 @@
             });
           }
         });
-        derivedHelper.on('result', function (_ref3) {
-          var results = _ref3.results;
+        derivedHelper.on('result', function (_ref4) {
+          var results = _ref4.results;
           // The index does not render the results it schedules a new render
           // to let all the other indices emit their own results. It allows us to
           // run the render process in one pass.
@@ -7451,12 +7453,14 @@
         // configuration of the widget is pushed in the URL. That's what we want to avoid.
         // https://github.com/algolia/instantsearch.js/pull/994/commits/4a672ae3fd78809e213de0368549ef12e9dc9454
 
-        helper.on('change', function (_ref4) {
-          var state = _ref4.state;
+        helper.on('change', function (event) {
+          var state = event.state; // @ts-ignore _uiState comes from privateHelperSetState and thus isn't typed on the helper event
+
+          var _uiState = event._uiState;
           localUiState = getLocalWidgetsState(localWidgets, {
             searchParameters: state,
             helper: helper
-          }); // We don't trigger an internal change when controlled because it
+          }, _uiState || {}); // We don't trigger an internal change when controlled because it
           // becomes the responsibility of `setUiState`.
 
           if (!instantSearchInstance.onStateChange) {
@@ -7534,7 +7538,7 @@
     };
   };
 
-  var version$1 = '4.4.0';
+  var version$1 = '4.7.0';
 
   var TAG_PLACEHOLDER = {
     highlightPreTag: '__ais-highlight__',
@@ -7567,7 +7571,11 @@
 
   function escapeHits(hits) {
     if (hits.__escaped === undefined) {
-      hits = hits.map(function (hit) {
+      // We don't override the value on hit because it will mutate the raw results
+      // instead we make a shallow copy and we assign the escaped values on it.
+      hits = hits.map(function (_ref) {
+        var hit = _extends({}, _ref);
+
         if (hit._highlightResult) {
           hit._highlightResult = recursiveEscape(hit._highlightResult);
         }
@@ -8646,8 +8654,11 @@
         }
 
         this.writeTimer = window.setTimeout(function () {
-          setWindowTitle(title);
-          window.history.pushState(routeState, title || '', url);
+          if (window.location.href !== url) {
+            setWindowTitle(title);
+            window.history.pushState(routeState, title || '', url);
+          }
+
           _this.writeTimer = undefined;
         }, this.writeDelay);
       }
@@ -8719,12 +8730,8 @@
     return BrowserHistory;
   }();
 
-  function historyRouter () {
-    for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
-      args[_key] = arguments[_key];
-    }
-
-    return _construct(BrowserHistory, args);
+  function historyRouter (props) {
+    return new BrowserHistory(props);
   }
 
   var walk = function walk(current, callback) {
@@ -8852,7 +8859,9 @@
       _defineProperty(_assertThisInitialized(_this), "middleware", []);
 
       _defineProperty(_assertThisInitialized(_this), "scheduleSearch", defer(function () {
-        _this.mainHelper.search();
+        if (_this.started) {
+          _this.mainHelper.search();
+        }
       }));
 
       _defineProperty(_assertThisInitialized(_this), "scheduleRender", defer(function () {
@@ -9168,13 +9177,13 @@
           });
         });
         this.mainHelper = mainHelper;
-        this.middleware.forEach(function (m) {
-          m.subscribe();
-        });
         this.mainIndex.init({
           instantSearchInstance: this,
           parent: null,
           uiState: this._initialUiState
+        });
+        this.middleware.forEach(function (m) {
+          m.subscribe();
         });
         mainHelper.search(); // Keep the previous reference for legacy purpose, some pattern use
         // the direct Helper access `search.helper` (e.g multi-index).
@@ -9255,82 +9264,25 @@
     name: 'clear-refinements',
     connector: true
   });
-  /**
-   * @typedef {Object} CustomClearRefinementsWidgetOptions
-   * @property {string[]} [includedAttributes = []] The attributes to include in the refinements to clear (all by default). Cannot be used with `excludedAttributes`.
-   * @property {string[]} [excludedAttributes = ['query']] The attributes to exclude from the refinements to clear. Cannot be used with `includedAttributes`.
-   * @property {function(object[]):object[]} [transformItems] Function to transform the items passed to the templates.
-   */
 
-  /**
-   * @typedef {Object} ClearRefinementsRenderingOptions
-   * @property {function} refine Triggers the clear of all the currently refined values.
-   * @property {boolean} hasRefinements Indicates if search state is refined.
-   * @property {function} createURL Creates a url for the next state when refinements are cleared.
-   * @property {Object} widgetParams All original `CustomClearRefinementsWidgetOptions` forwarded to the `renderFn`.
-   */
-
-  /**
-   * **ClearRefinements** connector provides the logic to build a custom widget that will give the user
-   * the ability to reset the search state.
-   *
-   * This connector provides a `refine` function to remove the current refined facets.
-   *
-   * The behaviour of this function can be changed with widget options. If `clearsQuery`
-   * is set to `true`, `refine` will also clear the query and `excludedAttributes` can
-   * prevent certain attributes from being cleared.
-   *
-   * @type {Connector}
-   * @param {function(ClearRefinementsRenderingOptions, boolean)} renderFn Rendering function for the custom **ClearRefinements** widget.
-   * @param {function} unmountFn Unmount function called when the widget is disposed.
-   * @return {function(CustomClearRefinementsWidgetOptions)} Re-usable widget factory for a custom **ClearRefinements** widget.
-   * @example
-   * // custom `renderFn` to render the custom ClearRefinements widget
-   * function renderFn(ClearRefinementsRenderingOptions, isFirstRendering) {
-   *   var containerNode = ClearRefinementsRenderingOptions.widgetParams.containerNode;
-   *   if (isFirstRendering) {
-   *     var markup = $('<button id="custom-clear-all">Clear All</button>');
-   *     containerNode.append(markup);
-   *
-   *     markup.on('click', function(event) {
-   *       event.preventDefault();
-   *       ClearRefinementsRenderingOptions.refine();
-   *     })
-   *   }
-   *
-   *   var clearRefinementsCTA = containerNode.find('#custom-clear-all');
-   *   clearRefinementsCTA.attr('disabled', !ClearRefinementsRenderingOptions.hasRefinements)
-   * };
-   *
-   * // connect `renderFn` to ClearRefinements logic
-   * var customClearRefinementsWidget = instantsearch.connectors.connectClearRefinements(renderFn);
-   *
-   * // mount widget on the page
-   * search.addWidgets([
-   *   customClearRefinementsWidget({
-   *     containerNode: $('#custom-clear-all-container'),
-   *   })
-   * ]);
-   */
-
-  function connectClearRefinements(renderFn) {
+  var connectClearRefinements = function connectClearRefinements(renderFn) {
     var unmountFn = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : noop;
     checkRendering(renderFn, withUsage$2());
-    return function () {
-      var widgetParams = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+    return function (widgetParams) {
+      var _ref = widgetParams || {},
+          _ref$includedAttribut = _ref.includedAttributes,
+          includedAttributes = _ref$includedAttribut === void 0 ? [] : _ref$includedAttribut,
+          _ref$excludedAttribut = _ref.excludedAttributes,
+          excludedAttributes = _ref$excludedAttribut === void 0 ? ['query'] : _ref$excludedAttribut,
+          _ref$transformItems = _ref.transformItems,
+          transformItems = _ref$transformItems === void 0 ? function (items) {
+        return items;
+      } : _ref$transformItems;
 
       if (widgetParams.includedAttributes && widgetParams.excludedAttributes) {
         throw new Error(withUsage$2('The options `includedAttributes` and `excludedAttributes` cannot be used together.'));
       }
 
-      var _widgetParams$include = widgetParams.includedAttributes,
-          includedAttributes = _widgetParams$include === void 0 ? [] : _widgetParams$include,
-          _widgetParams$exclude = widgetParams.excludedAttributes,
-          excludedAttributes = _widgetParams$exclude === void 0 ? ['query'] : _widgetParams$exclude,
-          _widgetParams$transfo = widgetParams.transformItems,
-          transformItems = _widgetParams$transfo === void 0 ? function (items) {
-        return items;
-      } : _widgetParams$transfo;
       var connectorState = {
         refine: noop,
         createURL: function createURL() {
@@ -9348,8 +9300,8 @@
 
       return {
         $$type: 'ais.clearRefinements',
-        init: function init(_ref) {
-          var instantSearchInstance = _ref.instantSearchInstance;
+        init: function init(_ref2) {
+          var instantSearchInstance = _ref2.instantSearchInstance;
           renderFn({
             hasRefinements: false,
             refine: cachedRefine,
@@ -9358,10 +9310,10 @@
             widgetParams: widgetParams
           }, true);
         },
-        render: function render(_ref2) {
-          var scopedResults = _ref2.scopedResults,
-              createURL = _ref2.createURL,
-              instantSearchInstance = _ref2.instantSearchInstance;
+        render: function render(_ref3) {
+          var scopedResults = _ref3.scopedResults,
+              createURL = _ref3.createURL,
+              instantSearchInstance = _ref3.instantSearchInstance;
           var attributesToClear = scopedResults.reduce(function (results, scopedResult) {
             return results.concat(getAttributesToClear({
               scopedResult: scopedResult,
@@ -9372,9 +9324,9 @@
           }, []);
 
           connectorState.refine = function () {
-            attributesToClear.forEach(function (_ref3) {
-              var indexHelper = _ref3.helper,
-                  items = _ref3.items;
+            attributesToClear.forEach(function (_ref4) {
+              var indexHelper = _ref4.helper,
+                  items = _ref4.items;
               indexHelper.setState(clearRefinements({
                 helper: indexHelper,
                 attributesToClear: items
@@ -9383,9 +9335,9 @@
           };
 
           connectorState.createURL = function () {
-            return createURL(merge$1.apply(void 0, _toConsumableArray(attributesToClear.map(function (_ref4) {
-              var indexHelper = _ref4.helper,
-                  items = _ref4.items;
+            return createURL(merge$1.apply(void 0, _toConsumableArray(attributesToClear.map(function (_ref5) {
+              var indexHelper = _ref5.helper,
+                  items = _ref5.items;
               return clearRefinements({
                 helper: indexHelper,
                 attributesToClear: items
@@ -9408,13 +9360,13 @@
         }
       };
     };
-  }
+  };
 
-  function getAttributesToClear(_ref5) {
-    var scopedResult = _ref5.scopedResult,
-        includedAttributes = _ref5.includedAttributes,
-        excludedAttributes = _ref5.excludedAttributes,
-        transformItems = _ref5.transformItems;
+  function getAttributesToClear(_ref6) {
+    var scopedResult = _ref6.scopedResult,
+        includedAttributes = _ref6.includedAttributes,
+        excludedAttributes = _ref6.excludedAttributes,
+        transformItems = _ref6.transformItems;
     var clearsQuery = includedAttributes.indexOf('query') !== -1 || excludedAttributes.indexOf('query') === -1;
     return {
       helper: scopedResult.helper,
@@ -9460,7 +9412,7 @@
         $$type: 'ais.currentRefinements',
         init: function init(_ref2) {
           var helper = _ref2.helper,
-              createURL = _ref2.createURL,
+              _createURL = _ref2.createURL,
               instantSearchInstance = _ref2.instantSearchInstance;
           var items = transformItems(getItems({
             results: {},
@@ -9473,19 +9425,9 @@
             refine: function refine(refinement) {
               return clearRefinement(helper, refinement);
             },
-            createURL: function (_createURL) {
-              function createURL(_x) {
-                return _createURL.apply(this, arguments);
-              }
-
-              createURL.toString = function () {
-                return _createURL.toString();
-              };
-
-              return createURL;
-            }(function (refinement) {
-              return createURL(clearRefinementFromState(helper.state, refinement));
-            }),
+            createURL: function createURL(refinement) {
+              return _createURL(clearRefinementFromState(helper.state, refinement));
+            },
             instantSearchInstance: instantSearchInstance,
             widgetParams: widgetParams
           }, true);
@@ -9493,7 +9435,7 @@
         render: function render(_ref3) {
           var scopedResults = _ref3.scopedResults,
               helper = _ref3.helper,
-              createURL = _ref3.createURL,
+              _createURL2 = _ref3.createURL,
               instantSearchInstance = _ref3.instantSearchInstance;
           var items = scopedResults.reduce(function (results, scopedResult) {
             return results.concat(transformItems(getItems({
@@ -9508,19 +9450,9 @@
             refine: function refine(refinement) {
               return clearRefinement(helper, refinement);
             },
-            createURL: function (_createURL2) {
-              function createURL(_x2) {
-                return _createURL2.apply(this, arguments);
-              }
-
-              createURL.toString = function () {
-                return _createURL2.toString();
-              };
-
-              return createURL;
-            }(function (refinement) {
-              return createURL(clearRefinementFromState(helper.state, refinement));
-            }),
+            createURL: function createURL(refinement) {
+              return _createURL2(clearRefinementFromState(helper.state, refinement));
+            },
             instantSearchInstance: instantSearchInstance,
             widgetParams: widgetParams
           }, false);
@@ -9567,22 +9499,22 @@
   function clearRefinementFromState(state, refinement) {
     switch (refinement.type) {
       case 'facet':
-        return state.removeFacetRefinement(refinement.attribute, refinement.value);
+        return state.removeFacetRefinement(refinement.attribute, String(refinement.value));
 
       case 'disjunctive':
-        return state.removeDisjunctiveFacetRefinement(refinement.attribute, refinement.value);
+        return state.removeDisjunctiveFacetRefinement(refinement.attribute, String(refinement.value));
 
       case 'hierarchical':
         return state.removeHierarchicalFacetRefinement(refinement.attribute);
 
       case 'exclude':
-        return state.removeExcludeRefinement(refinement.attribute, refinement.value);
+        return state.removeExcludeRefinement(refinement.attribute, String(refinement.value));
 
       case 'numeric':
-        return state.removeNumericRefinement(refinement.attribute, refinement.operator, refinement.value);
+        return state.removeNumericRefinement(refinement.attribute, refinement.operator, String(refinement.value));
 
       case 'tag':
-        return state.removeTagRefinement(refinement.value);
+        return state.removeTagRefinement(String(refinement.value));
 
       case 'query':
         return state.setQueryParameter('query', '');
@@ -9884,61 +9816,23 @@
     name: 'hits',
     connector: true
   });
-  /**
-   * @typedef {Object} HitsRenderingOptions
-   * @property {Object[]} hits The matched hits from Algolia API.
-   * @property {Object} results The complete results response from Algolia API.
-   * @property {Object} widgetParams All original widget options forwarded to the `renderFn`.
-   */
 
-  /**
-   * @typedef {Object} CustomHitsWidgetOptions
-   * @property {boolean} [escapeHTML = true] Whether to escape HTML tags from `hits[i]._highlightResult`.
-   * @property {function(Object[]):Object[]} [transformItems] Function to transform the items passed to the templates.
-   */
-
-  /**
-   * **Hits** connector provides the logic to create custom widgets that will render the results retrieved from Algolia.
-   * @type {Connector}
-   * @param {function(HitsRenderingOptions, boolean)} renderFn Rendering function for the custom **Hits** widget.
-   * @param {function} unmountFn Unmount function called when the widget is disposed.
-   * @return {function(CustomHitsWidgetOptions)} Re-usable widget factory for a custom **Hits** widget.
-   * @example
-   * // custom `renderFn` to render the custom Hits widget
-   * function renderFn(HitsRenderingOptions) {
-   *   HitsRenderingOptions.widgetParams.containerNode.html(
-   *     HitsRenderingOptions.hits.map(function(hit) {
-   *       return '<div>' + hit._highlightResult.name.value + '</div>';
-   *     })
-   *   );
-   * }
-   *
-   * // connect `renderFn` to Hits logic
-   * var customHits = instantsearch.connectors.connectHits(renderFn);
-   *
-   * // mount widget on the page
-   * search.addWidgets([
-   *   customHits({
-   *     containerNode: $('#custom-hits-container'),
-   *   })
-   * ]);
-   */
-
-  function connectHits(renderFn) {
+  var connectHits = function connectHits(renderFn) {
     var unmountFn = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : noop;
     checkRendering(renderFn, withUsage$5());
-    return function () {
-      var widgetParams = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-      var _widgetParams$escapeH = widgetParams.escapeHTML,
-          escapeHTML = _widgetParams$escapeH === void 0 ? true : _widgetParams$escapeH,
-          _widgetParams$transfo = widgetParams.transformItems,
-          transformItems = _widgetParams$transfo === void 0 ? function (items) {
+    return function (widgetParams) {
+      var _ref = widgetParams || {},
+          _ref$escapeHTML = _ref.escapeHTML,
+          escapeHTML = _ref$escapeHTML === void 0 ? true : _ref$escapeHTML,
+          _ref$transformItems = _ref.transformItems,
+          transformItems = _ref$transformItems === void 0 ? function (items) {
         return items;
-      } : _widgetParams$transfo;
+      } : _ref$transformItems;
+
       return {
         $$type: 'ais.hits',
-        init: function init(_ref) {
-          var instantSearchInstance = _ref.instantSearchInstance;
+        init: function init(_ref2) {
+          var instantSearchInstance = _ref2.instantSearchInstance;
           renderFn({
             hits: [],
             results: undefined,
@@ -9946,9 +9840,9 @@
             widgetParams: widgetParams
           }, true);
         },
-        render: function render(_ref2) {
-          var results = _ref2.results,
-              instantSearchInstance = _ref2.instantSearchInstance;
+        render: function render(_ref3) {
+          var results = _ref3.results,
+              instantSearchInstance = _ref3.instantSearchInstance;
 
           if (escapeHTML && results.hits.length > 0) {
             results.hits = escapeHits(results.hits);
@@ -9969,8 +9863,8 @@
             widgetParams: widgetParams
           }, false);
         },
-        dispose: function dispose(_ref3) {
-          var state = _ref3.state;
+        dispose: function dispose(_ref4) {
+          var state = _ref4.state;
           unmountFn();
 
           if (!escapeHTML) {
@@ -9990,7 +9884,7 @@
         }
       };
     };
-  }
+  };
 
   var getSelectedHits = function getSelectedHits(hits, selectedObjectIDs) {
     return selectedObjectIDs.map(function (objectID) {
@@ -10282,40 +10176,81 @@
     connector: true
   });
 
+  function getStateWithoutPage(state) {
+    var _ref = state || {},
+        page = _ref.page,
+        rest = _objectWithoutProperties(_ref, ["page"]);
+
+    return rest;
+  }
+
+  function getInMemoryCache() {
+    var cachedHits = null;
+    var cachedState = undefined;
+    return {
+      read: function read(_ref2) {
+        var state = _ref2.state;
+        return isEqual(cachedState, getStateWithoutPage(state)) ? cachedHits : null;
+      },
+      write: function write(_ref3) {
+        var state = _ref3.state,
+            hits = _ref3.hits;
+        cachedState = getStateWithoutPage(state);
+        cachedHits = hits;
+      }
+    };
+  }
+
+  function extractHitsFromCachedHits(cachedHits) {
+    return Object.keys(cachedHits).map(Number).sort(function (a, b) {
+      return a - b;
+    }).reduce(function (acc, page) {
+      return acc.concat(cachedHits[page]);
+    }, []);
+  }
+
   var connectInfiniteHits = function connectInfiniteHits(renderFn) {
     var unmountFn = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : noop;
     checkRendering(renderFn, withUsage$7());
     return function (widgetParams) {
-      var _ref = widgetParams || {},
-          _ref$escapeHTML = _ref.escapeHTML,
-          escapeHTML = _ref$escapeHTML === void 0 ? true : _ref$escapeHTML,
-          _ref$transformItems = _ref.transformItems,
-          transformItems = _ref$transformItems === void 0 ? function (items) {
+      var _ref4 = widgetParams || {},
+          _ref4$escapeHTML = _ref4.escapeHTML,
+          escapeHTML = _ref4$escapeHTML === void 0 ? true : _ref4$escapeHTML,
+          _ref4$transformItems = _ref4.transformItems,
+          transformItems = _ref4$transformItems === void 0 ? function (items) {
         return items;
-      } : _ref$transformItems,
-          _ref$showPrevious = _ref.showPrevious,
-          hasShowPrevious = _ref$showPrevious === void 0 ? false : _ref$showPrevious;
+      } : _ref4$transformItems,
+          _ref4$showPrevious = _ref4.showPrevious,
+          hasShowPrevious = _ref4$showPrevious === void 0 ? false : _ref4$showPrevious,
+          _ref4$cache = _ref4.cache,
+          cache = _ref4$cache === void 0 ? getInMemoryCache() : _ref4$cache;
 
-      var hitsCache = [];
-      var firstReceivedPage = Infinity;
-      var lastReceivedPage = -1;
+      var cachedHits = undefined;
       var prevState;
       var showPrevious;
       var showMore;
+
+      var getFirstReceivedPage = function getFirstReceivedPage() {
+        return Math.min.apply(Math, _toConsumableArray(Object.keys(cachedHits || {}).map(Number)));
+      };
+
+      var getLastReceivedPage = function getLastReceivedPage() {
+        return Math.max.apply(Math, _toConsumableArray(Object.keys(cachedHits || {}).map(Number)));
+      };
 
       var getShowPrevious = function getShowPrevious(helper) {
         return function () {
           // Using the helper's `overrideStateWithoutTriggeringChangeEvent` method
           // avoid updating the browser URL when the user displays the previous page.
           helper.overrideStateWithoutTriggeringChangeEvent(_objectSpread2({}, helper.state, {
-            page: firstReceivedPage - 1
+            page: getFirstReceivedPage() - 1
           })).search();
         };
       };
 
       var getShowMore = function getShowMore(helper) {
         return function () {
-          helper.setPage(lastReceivedPage + 1).search();
+          helper.setPage(getLastReceivedPage() + 1).search();
         };
       };
 
@@ -10331,28 +10266,28 @@
 
       return {
         $$type: 'ais.infiniteHits',
-        init: function init(_ref2) {
-          var instantSearchInstance = _ref2.instantSearchInstance,
-              helper = _ref2.helper;
+        init: function init(_ref5) {
+          var instantSearchInstance = _ref5.instantSearchInstance,
+              helper = _ref5.helper;
           showPrevious = getShowPrevious(helper);
           showMore = getShowMore(helper);
-          firstReceivedPage = helper.state.page || 0;
-          lastReceivedPage = helper.state.page || 0;
           renderFn({
-            hits: hitsCache,
+            hits: extractHitsFromCachedHits(cache.read({
+              state: helper.state
+            }) || {}),
             results: undefined,
             showPrevious: showPrevious,
             showMore: showMore,
-            isFirstPage: firstReceivedPage === 0,
+            isFirstPage: getFirstReceivedPage() === 0 || helper.state.page === undefined,
             isLastPage: true,
             instantSearchInstance: instantSearchInstance,
             widgetParams: widgetParams
           }, true);
         },
-        render: function render(_ref3) {
-          var results = _ref3.results,
-              state = _ref3.state,
-              instantSearchInstance = _ref3.instantSearchInstance;
+        render: function render(_ref6) {
+          var results = _ref6.results,
+              state = _ref6.state,
+              instantSearchInstance = _ref6.instantSearchInstance;
 
           // Reset cache and received pages if anything changes in the
           // search state, except for the page.
@@ -10374,9 +10309,9 @@
           currentState.numericRefinements = filterEmptyRefinements(currentState.numericRefinements);
 
           if (!isEqual(currentState, prevState)) {
-            hitsCache = [];
-            firstReceivedPage = page;
-            lastReceivedPage = page;
+            cachedHits = cache.read({
+              state: state
+            }) || {};
             prevState = currentState;
           }
 
@@ -10393,18 +10328,24 @@
 
           results.hits.__escaped = initialEscaped;
 
-          if (lastReceivedPage < page || !hitsCache.length) {
-            hitsCache = [].concat(_toConsumableArray(hitsCache), _toConsumableArray(results.hits));
-            lastReceivedPage = page;
-          } else if (firstReceivedPage > page) {
-            hitsCache = [].concat(_toConsumableArray(results.hits), _toConsumableArray(hitsCache));
-            firstReceivedPage = page;
+          if (cachedHits === undefined) {
+            cachedHits = cache.read({
+              state: state
+            }) || {};
           }
 
-          var isFirstPage = firstReceivedPage === 0;
+          if (cachedHits[page] === undefined) {
+            cachedHits[page] = results.hits;
+            cache.write({
+              state: state,
+              hits: cachedHits
+            });
+          }
+
+          var isFirstPage = getFirstReceivedPage() === 0;
           var isLastPage = results.nbPages <= results.page + 1;
           renderFn({
-            hits: hitsCache,
+            hits: extractHitsFromCachedHits(cachedHits),
             results: results,
             showPrevious: showPrevious,
             showMore: showMore,
@@ -10414,8 +10355,8 @@
             widgetParams: widgetParams
           }, false);
         },
-        dispose: function dispose(_ref4) {
-          var state = _ref4.state;
+        dispose: function dispose(_ref7) {
+          var state = _ref7.state;
           unmountFn();
           var stateWithoutPage = state.setQueryParameter('page', undefined);
 
@@ -10427,8 +10368,8 @@
             return _objectSpread2({}, acc, _defineProperty({}, key, undefined));
           }, {}));
         },
-        getWidgetState: function getWidgetState(uiState, _ref5) {
-          var searchParameters = _ref5.searchParameters;
+        getWidgetState: function getWidgetState(uiState, _ref8) {
+          var searchParameters = _ref8.searchParameters;
           var page = searchParameters.page || 0;
 
           if (!hasShowPrevious || !page) {
@@ -10441,8 +10382,8 @@
             page: page + 1
           });
         },
-        getWidgetSearchParameters: function getWidgetSearchParameters(searchParameters, _ref6) {
-          var uiState = _ref6.uiState;
+        getWidgetSearchParameters: function getWidgetSearchParameters(searchParameters, _ref9) {
+          var uiState = _ref9.uiState;
           var widgetSearchParameters = searchParameters;
 
           if (escapeHTML) {
@@ -10993,7 +10934,7 @@
     }, {
       key: "isLastPage",
       value: function isLastPage() {
-        return this.currentPage === this.total - 1;
+        return this.currentPage === this.total - 1 || this.total === 0;
       }
     }, {
       key: "isFirstPage",
@@ -12597,8 +12538,8 @@
 
       var hasAnOffValue = userOff !== undefined;
       var hasAnOnValue = userOn !== undefined;
-      var on = hasAnOnValue ? escapeRefinement(userOn) : undefined;
-      var off = hasAnOffValue ? escapeRefinement(userOff) : undefined;
+      var on = hasAnOnValue ? toArray(userOn).map(escapeRefinement) : undefined;
+      var off = hasAnOffValue ? toArray(userOff).map(escapeRefinement) : undefined;
       return {
         $$type: 'ais.toggleRefinement',
         _toggleRefinement: function _toggleRefinement(helper) {
@@ -12608,16 +12549,24 @@
           // Checking
           if (!isRefined) {
             if (hasAnOffValue) {
-              helper.removeDisjunctiveFacetRefinement(attribute, off);
+              off.forEach(function (v) {
+                return helper.removeDisjunctiveFacetRefinement(attribute, v);
+              });
             }
 
-            helper.addDisjunctiveFacetRefinement(attribute, on);
+            on.forEach(function (v) {
+              return helper.addDisjunctiveFacetRefinement(attribute, v);
+            });
           } else {
             // Unchecking
-            helper.removeDisjunctiveFacetRefinement(attribute, on);
+            on.forEach(function (v) {
+              return helper.removeDisjunctiveFacetRefinement(attribute, v);
+            });
 
             if (hasAnOffValue) {
-              helper.addDisjunctiveFacetRefinement(attribute, off);
+              off.forEach(function (v) {
+                return helper.addDisjunctiveFacetRefinement(attribute, v);
+              });
             }
           }
 
@@ -12633,7 +12582,23 @@
 
           this._createURL = function (isCurrentlyRefined) {
             return function () {
-              return createURL(state.removeDisjunctiveFacetRefinement(attribute, isCurrentlyRefined ? on : off).addDisjunctiveFacetRefinement(attribute, isCurrentlyRefined ? off : on));
+              var valuesToRemove = isCurrentlyRefined ? on : off;
+
+              if (valuesToRemove) {
+                valuesToRemove.forEach(function (v) {
+                  state.removeDisjunctiveFacetRefinement(attribute, v);
+                });
+              }
+
+              var valuesToAdd = isCurrentlyRefined ? off : on;
+
+              if (valuesToAdd) {
+                valuesToAdd.forEach(function (v) {
+                  state.addDisjunctiveFacetRefinement(attribute, v);
+                });
+              }
+
+              return createURL(state);
             };
           };
 
@@ -12641,13 +12606,22 @@
             _this._toggleRefinement(helper, opts);
           };
 
-          var isRefined = state.isDisjunctiveFacetRefined(attribute, on); // no need to refine anything at init if no custom off values
+          var isRefined = on && on.every(function (v) {
+            return state.isDisjunctiveFacetRefined(attribute, v);
+          }); // no need to refine anything at init if no custom off values
 
           if (hasAnOffValue) {
             // Add filtering on the 'off' value if set
             if (!isRefined) {
               var currentPage = helper.state.page;
-              helper.addDisjunctiveFacetRefinement(attribute, off).setPage(currentPage);
+
+              if (off) {
+                off.forEach(function (v) {
+                  return helper.addDisjunctiveFacetRefinement(attribute, v);
+                });
+              }
+
+              helper.setPage(currentPage);
             }
           }
 
@@ -12679,7 +12653,9 @@
               results = _ref3.results,
               state = _ref3.state,
               instantSearchInstance = _ref3.instantSearchInstance;
-          var isRefined = helper.state.isDisjunctiveFacetRefined(attribute, on);
+          var isRefined = on && on.every(function (v) {
+            return helper.state.isDisjunctiveFacetRefined(attribute, v);
+          });
           var offValue = off === undefined ? false : off;
           var allFacetValues = results.getFacetValues(attribute) || [];
           var onData = find$1(allFacetValues, function (_ref4) {
@@ -12729,7 +12705,9 @@
         },
         getWidgetState: function getWidgetState(uiState, _ref8) {
           var searchParameters = _ref8.searchParameters;
-          var isRefined = searchParameters.isDisjunctiveFacetRefined(attribute, on);
+          var isRefined = on && on.every(function (v) {
+            return searchParameters.isDisjunctiveFacetRefined(attribute, v);
+          });
 
           if (!isRefined) {
             return uiState;
@@ -12745,12 +12723,24 @@
           var isRefined = Boolean(uiState.toggle && uiState.toggle[attribute]);
 
           if (isRefined) {
-            return withFacetConfiguration.addDisjunctiveFacetRefinement(attribute, on);
+            if (on) {
+              on.forEach(function (v) {
+                withFacetConfiguration = withFacetConfiguration.addDisjunctiveFacetRefinement(attribute, v);
+              });
+            }
+
+            return withFacetConfiguration;
           } // It's not refined with an `off` value
 
 
           if (hasAnOffValue) {
-            return withFacetConfiguration.addDisjunctiveFacetRefinement(attribute, off);
+            if (off) {
+              off.forEach(function (v) {
+                withFacetConfiguration = withFacetConfiguration.addDisjunctiveFacetRefinement(attribute, v);
+              });
+            }
+
+            return withFacetConfiguration;
           } // It's not refined without an `off` value
 
 
@@ -12766,54 +12756,22 @@
     name: 'breadcrumb',
     connector: true
   });
-  /**
-   * @typedef {Object} BreadcrumbItem
-   * @property {string} label Label of the category or subcategory.
-   * @property {string} value Value of breadcrumb item.
-   */
 
-  /**
-   * @typedef {Object} CustomBreadcrumbWidgetOptions
-   * @property {string[]} attributes Attributes to use to generate the hierarchy of the breadcrumb.
-   * @property {string} [rootPath = null] Prefix path to use if the first level is not the root level.
-   * @property {function(object[]):object[]} [transformItems] Function to transform the items passed to the templates.
-   *
-   * You can also use a sort function that behaves like the standard Javascript [compareFunction](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/sort#Syntax).
-   */
-
-  /**
-   * @typedef {Object} BreadcrumbRenderingOptions
-   * @property {function(item.value): string} createURL Creates an url for the next state for a clicked item. The special value `null` is used for the `Home` (or root) item of the breadcrumb and will return an empty array.
-   * @property {BreadcrumbItem[]} items Values to be rendered.
-   * @property {function(item.value)} refine Sets the path of the hierarchical filter and triggers a new search.
-   * @property {Object} widgetParams All original `CustomBreadcrumbWidgetOptions` forwarded to the `renderFn`.
-   */
-
-  /**
-   * **Breadcrumb** connector provides the logic to build a custom widget
-   * that will give the user the ability to see the current path in a hierarchical facet.
-   *
-   * This is commonly used in websites that have a large amount of content organized in a hierarchical manner (usually e-commerce websites).
-   * @type {Connector}
-   * @param {function(BreadcrumbRenderingOptions, boolean)} renderFn Rendering function for the custom **Breadcrumb* widget.
-   * @param {function} unmountFn Unmount function called when the widget is disposed.
-   * @return {function(CustomBreadcrumbWidgetOptions)} Re-usable widget factory for a custom **Breadcrumb** widget.
-   */
-
-  function connectBreadcrumb(renderFn) {
+  var connectBreadcrumb = function connectBreadcrumb(renderFn) {
     var unmountFn = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : noop;
     checkRendering(renderFn, withUsage$i());
-    return function () {
-      var widgetParams = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-      var attributes = widgetParams.attributes,
-          _widgetParams$separat = widgetParams.separator,
-          separator = _widgetParams$separat === void 0 ? ' > ' : _widgetParams$separat,
-          _widgetParams$rootPat = widgetParams.rootPath,
-          rootPath = _widgetParams$rootPat === void 0 ? null : _widgetParams$rootPat,
-          _widgetParams$transfo = widgetParams.transformItems,
-          transformItems = _widgetParams$transfo === void 0 ? function (items) {
+    var connectorState = {};
+    return function (widgetParams) {
+      var _ref = widgetParams || {},
+          attributes = _ref.attributes,
+          _ref$separator = _ref.separator,
+          separator = _ref$separator === void 0 ? ' > ' : _ref$separator,
+          _ref$rootPath = _ref.rootPath,
+          rootPath = _ref$rootPath === void 0 ? null : _ref$rootPath,
+          _ref$transformItems = _ref.transformItems,
+          transformItems = _ref$transformItems === void 0 ? function (items) {
         return items;
-      } : _widgetParams$transfo;
+      } : _ref$transformItems;
 
       if (!attributes || !Array.isArray(attributes) || attributes.length === 0) {
         throw new Error(withUsage$i('The `attributes` option expects an array of strings.'));
@@ -12824,24 +12782,24 @@
 
       return {
         $$type: 'ais.breadcrumb',
-        init: function init(_ref) {
-          var createURL = _ref.createURL,
-              helper = _ref.helper,
-              instantSearchInstance = _ref.instantSearchInstance;
+        init: function init(_ref2) {
+          var createURL = _ref2.createURL,
+              helper = _ref2.helper,
+              instantSearchInstance = _ref2.instantSearchInstance;
 
-          this._createURL = function (facetValue) {
+          connectorState.createURL = function (facetValue) {
             if (!facetValue) {
               var breadcrumb = helper.getHierarchicalFacetBreadcrumb(hierarchicalFacetName);
 
               if (breadcrumb.length > 0) {
-                return createURL(helper.state.toggleRefinement(hierarchicalFacetName, breadcrumb[0]));
+                return createURL(helper.state.toggleFacetRefinement(hierarchicalFacetName, breadcrumb[0]));
               }
             }
 
-            return createURL(helper.state.toggleRefinement(hierarchicalFacetName, facetValue));
+            return createURL(helper.state.toggleFacetRefinement(hierarchicalFacetName, facetValue));
           };
 
-          this._refine = function (facetValue) {
+          connectorState.refine = function (facetValue) {
             if (!facetValue) {
               var breadcrumb = helper.getHierarchicalFacetBreadcrumb(hierarchicalFacetName);
 
@@ -12854,31 +12812,31 @@
           };
 
           renderFn({
-            createURL: this._createURL,
+            createURL: connectorState.createURL,
             canRefine: false,
             instantSearchInstance: instantSearchInstance,
             items: [],
-            refine: this._refine,
+            refine: connectorState.refine,
             widgetParams: widgetParams
           }, true);
         },
-        render: function render(_ref2) {
-          var instantSearchInstance = _ref2.instantSearchInstance,
-              results = _ref2.results,
-              state = _ref2.state;
+        render: function render(_ref3) {
+          var instantSearchInstance = _ref3.instantSearchInstance,
+              results = _ref3.results,
+              state = _ref3.state;
 
           var _state$hierarchicalFa = _slicedToArray(state.hierarchicalFacets, 1),
               facetName = _state$hierarchicalFa[0].name;
 
-          var facetValues = results.getFacetValues(facetName);
+          var facetValues = results.getFacetValues(facetName, {});
           var data = Array.isArray(facetValues.data) ? facetValues.data : [];
           var items = transformItems(shiftItemsValues(prepareItems(data)));
           renderFn({
             canRefine: items.length > 0,
-            createURL: this._createURL,
+            createURL: connectorState.createURL,
             instantSearchInstance: instantSearchInstance,
             items: items,
-            refine: this._refine,
+            refine: connectorState.refine,
             widgetParams: widgetParams
           }, false);
         },
@@ -12901,7 +12859,7 @@
         }
       };
     };
-  }
+  };
 
   function prepareItems(data) {
     return data.reduce(function (result, currentItem) {
@@ -13260,6 +13218,10 @@
     };
   }
 
+  /**
+   * Refine the given search parameters.
+   */
+
   var withUsage$l = createDocumentationMessageGenerator({
     name: 'configure',
     connector: true
@@ -13392,14 +13354,8 @@
       }, []);
 
       var searchParameters = _objectSpread2({}, transformSearchParameters(new algoliasearchHelper_1.SearchParameters({
-        // @ts-ignore @TODO algoliasearch-helper@3.0.1 will contain the type
-        // `sumOrFiltersScores`.
-        // See https://github.com/algolia/algoliasearch-helper-js/pull/753
         sumOrFiltersScores: true,
         facetFilters: ["objectID:-".concat(hit.objectID)],
-        // @ts-ignore @TODO algoliasearch-helper@3.0.1 will contain the type
-        // `optionalFilters`.
-        // See https://github.com/algolia/algoliasearch-helper-js/pull/754
         optionalFilters: optionalFilters
       })));
 
@@ -13575,9 +13531,9 @@
     }
   }
 
-  var connectQueryRules = function connectQueryRules(render) {
+  var connectQueryRules = function connectQueryRules(_render) {
     var unmount = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : noop;
-    checkRendering(render, withUsage$o());
+    checkRendering(_render, withUsage$o());
     return function (widgetParams) {
       var _ref2 = widgetParams || {},
           _ref2$trackedFilters = _ref2.trackedFilters,
@@ -13631,34 +13587,25 @@
             helper.on('change', onHelperChange);
           }
 
-          render({
+          _render({
             items: [],
             instantSearchInstance: instantSearchInstance,
             widgetParams: widgetParams
           }, true);
         },
-        render: function (_render) {
-          function render(_x) {
-            return _render.apply(this, arguments);
-          }
-
-          render.toString = function () {
-            return _render.toString();
-          };
-
-          return render;
-        }(function (_ref4) {
+        render: function render(_ref4) {
           var results = _ref4.results,
               instantSearchInstance = _ref4.instantSearchInstance;
           var _results$userData = results.userData,
               userData = _results$userData === void 0 ? [] : _results$userData;
           var items = transformItems(userData);
-          render({
+
+          _render({
             items: items,
             instantSearchInstance: instantSearchInstance,
             widgetParams: widgetParams
           }, false);
-        }),
+        },
         dispose: function dispose(_ref5) {
           var helper = _ref5.helper,
               state = _ref5.state;
@@ -13675,7 +13622,7 @@
     };
   };
 
-  function createVoiceSearchHelper(_ref) {
+  var createVoiceSearchHelper = function createVoiceSearchHelper(_ref) {
     var searchAsYouSpeak = _ref.searchAsYouSpeak,
         language = _ref.language,
         onQueryChange = _ref.onQueryChange,
@@ -13754,7 +13701,7 @@
       }
     };
 
-    var start = function start() {
+    var startListening = function startListening() {
       recognition = new SpeechRecognitionAPI();
 
       if (!recognition) {
@@ -13788,7 +13735,7 @@
       recognition = undefined;
     };
 
-    var stop = function stop() {
+    var stopListening = function stopListening() {
       dispose(); // Because `dispose` removes event listeners, `end` listener is not called.
       // So we're setting the `status` as `finished` here.
       // If we don't do it, it will be still `waiting` or `recognizing`.
@@ -13796,26 +13743,15 @@
       resetState('finished');
     };
 
-    var toggleListening = function toggleListening() {
-      if (!isBrowserSupported()) {
-        return;
-      }
-
-      if (isListening()) {
-        stop();
-      } else {
-        start();
-      }
-    };
-
     return {
       getState: getState,
       isBrowserSupported: isBrowserSupported,
       isListening: isListening,
-      toggleListening: toggleListening,
+      startListening: startListening,
+      stopListening: stopListening,
       dispose: dispose
     };
-  }
+  };
 
   var withUsage$p = createDocumentationMessageGenerator({
     name: 'voice-search',
@@ -13832,12 +13768,23 @@
             _ref$voiceSearchHelpe = _ref.voiceSearchHelper,
             isBrowserSupported = _ref$voiceSearchHelpe.isBrowserSupported,
             isListening = _ref$voiceSearchHelpe.isListening,
-            toggleListening = _ref$voiceSearchHelpe.toggleListening,
+            startListening = _ref$voiceSearchHelpe.startListening,
+            stopListening = _ref$voiceSearchHelpe.stopListening,
             getState = _ref$voiceSearchHelpe.getState;
         renderFn({
           isBrowserSupported: isBrowserSupported(),
           isListening: isListening(),
-          toggleListening: toggleListening,
+          toggleListening: function toggleListening() {
+            if (!isBrowserSupported()) {
+              return;
+            }
+
+            if (isListening()) {
+              stopListening();
+            } else {
+              startListening();
+            }
+          },
           voiceListeningState: getState(),
           widgetParams: widgetParams,
           instantSearchInstance: instantSearchInstance
@@ -13847,7 +13794,9 @@
       var _widgetParams$searchA = widgetParams.searchAsYouSpeak,
           searchAsYouSpeak = _widgetParams$searchA === void 0 ? false : _widgetParams$searchA,
           language = widgetParams.language,
-          additionalQueryParameters = widgetParams.additionalQueryParameters;
+          additionalQueryParameters = widgetParams.additionalQueryParameters,
+          _widgetParams$createV = widgetParams.createVoiceSearchHelper,
+          createVoiceSearchHelper$1 = _widgetParams$createV === void 0 ? createVoiceSearchHelper : _widgetParams$createV;
       return {
         $$type: 'ais.voiceSearch',
         init: function init(_ref2) {
@@ -13876,7 +13825,7 @@
             }
           };
 
-          this._voiceSearchHelper = createVoiceSearchHelper({
+          this._voiceSearchHelper = createVoiceSearchHelper$1({
             searchAsYouSpeak: searchAsYouSpeak,
             language: language,
             onQueryChange: function onQueryChange(query) {
@@ -14395,52 +14344,10 @@
       }), containerNode);
     };
   };
-  /**
-   * @typedef {Object} ClearRefinementsCSSClasses
-   * @property {string|string[]} [root] CSS class to add to the wrapper element.
-   * @property {string|string[]} [button] CSS class to add to the button of the widget.
-   * @property {string|string[]} [disabledButton] CSS class to add to the button when there are no refinements.
-   */
 
-  /**
-   * @typedef {Object} ClearRefinementsTemplates
-   * @property {string|string[]} [resetLabel] Template for the content of the button
-   */
-
-  /**
-   * @typedef {Object} ClearRefinementsWidgetOptions
-   * @property {string|HTMLElement} container CSS Selector or HTMLElement to insert the widget.
-   * @property {string[]} [includedAttributes = []] The attributes to include in the refinements to clear (all by default). Cannot be used with `excludedAttributes`.
-   * @property {string[]} [excludedAttributes = ['query']] The attributes to exclude from the refinements to clear. Cannot be used with `includedAttributes`.
-   * @property {function(object[]):object[]} [transformItems] Function to transform the items passed to the templates.
-   * @property {ClearRefinementsTemplates} [templates] Templates to use for the widget.
-   * @property {ClearRefinementsCSSClasses} [cssClasses] CSS classes to be added.
-   */
-
-  /**
-   * The clear all widget gives the user the ability to clear all the refinements currently
-   * applied on the results. It is equivalent to the reset button of a form.
-   *
-   * The current refined values widget can display a button that has the same behavior.
-   * @type {WidgetFactory}
-   * @devNovel ClearRefinements
-   * @category clear-filter
-   * @param {ClearRefinementsWidgetOptions} $0 The ClearRefinements widget options.
-   * @returns {Widget} A new instance of the ClearRefinements widget.
-   * @example
-   * search.addWidgets([
-   *   instantsearch.widgets.clearRefinements({
-   *     container: '#clear-all',
-   *     templates: {
-   *       resetLabel: 'Reset everything'
-   *     },
-   *   })
-   * ]);
-   */
-
-
-  function clearRefinements$1(_ref3) {
-    var container = _ref3.container,
+  var clearRefinements$1 = function clearRefinements(widgetOptions) {
+    var _ref3 = widgetOptions || {},
+        container = _ref3.container,
         _ref3$templates = _ref3.templates,
         templates = _ref3$templates === void 0 ? defaultTemplates : _ref3$templates,
         includedAttributes = _ref3.includedAttributes,
@@ -14478,19 +14385,24 @@
       excludedAttributes: excludedAttributes,
       transformItems: transformItems
     });
-  }
+  };
+
+  /**
+   * A list of [search parameters](https://www.algolia.com/doc/api-reference/search-api-parameters/)
+   * to enable when the widget mounts.
+   */
 
   var configure = function configure(widgetParams) {
     // This is a renderless widget that falls back to the connector's
     // noop render and unmount functions.
-    var makeWidget = connectConfigure();
+    var makeWidget = connectConfigure(noop);
     return makeWidget({
       searchParameters: widgetParams
     });
   };
 
   var configureRelatedItems = function configureRelatedItems(widgetParams) {
-    var makeWidget = connectConfigureRelatedItems();
+    var makeWidget = connectConfigureRelatedItems(noop);
     return makeWidget(widgetParams);
   };
 
@@ -14566,8 +14478,9 @@
     }), container);
   };
 
-  var currentRefinements = function currentRefinements(_ref2) {
-    var container = _ref2.container,
+  var currentRefinements = function currentRefinements(widgetParams) {
+    var _ref2 = widgetParams || {},
+        container = _ref2.container,
         includedAttributes = _ref2.includedAttributes,
         excludedAttributes = _ref2.excludedAttributes,
         _ref2$cssClasses = _ref2.cssClasses,
@@ -14900,6 +14813,7 @@
     redo: 'Redo search here'
   };
 
+  // eslint-disable-next-line no-undef
   var createHTMLMarker = function createHTMLMarker(googleReference) {
     var HTMLMarker =
     /*#__PURE__*/
@@ -14923,6 +14837,19 @@
         _classCallCheck(this, HTMLMarker);
 
         _this = _possibleConstructorReturn(this, _getPrototypeOf(HTMLMarker).call(this));
+
+        _defineProperty(_assertThisInitialized(_this), "__id", void 0);
+
+        _defineProperty(_assertThisInitialized(_this), "anchor", void 0);
+
+        _defineProperty(_assertThisInitialized(_this), "offset", void 0);
+
+        _defineProperty(_assertThisInitialized(_this), "listeners", void 0);
+
+        _defineProperty(_assertThisInitialized(_this), "latLng", void 0);
+
+        _defineProperty(_assertThisInitialized(_this), "element", void 0);
+
         _this.__id = __id;
         _this.anchor = anchor;
         _this.listeners = {};
@@ -14962,7 +14889,7 @@
           this.element.style.top = "".concat(Math.round(position.y - this.offset.y), "px"); // Markers to the south are in front of markers to the north
           // This is the default behaviour of Google Maps
 
-          this.element.style.zIndex = parseInt(this.element.style.top, 10);
+          this.element.style.zIndex = String(parseInt(this.element.style.top, 10));
         }
       }, {
         key: "onRemove",
@@ -14982,7 +14909,13 @@
         key: "addListener",
         value: function addListener(eventName, listener) {
           this.listeners[eventName] = listener;
-          this.element.addEventListener(eventName, listener);
+          var element = this.element;
+          element.addEventListener(eventName, listener);
+          return {
+            remove: function remove() {
+              return element.removeEventListener(eventName, listener);
+            }
+          };
         }
       }, {
         key: "getPosition",
@@ -14992,7 +14925,9 @@
       }]);
 
       return HTMLMarker;
-    }(googleReference.maps.OverlayView);
+    }(googleReference.maps.OverlayView); // we have to cast this to a regular OverlayView to prevent internal class being exposed
+    // which TypeScript doesn't allow.
+
 
     return HTMLMarker;
   };
@@ -15079,7 +15014,6 @@
    *
    * Don't forget to explicitly set the `height` of the map container (default class `.ais-geo-search--map`), otherwise it won't be shown (it's a requirement of Google Maps).
    *
-   * @type {WidgetFactory}
    * @devNovel GeoSearch
    * @param {GeoSearchWidgetOptions} $0 Options of the GeoSearch widget.
    * @return {Widget} A new instance of GeoSearch widget.
@@ -16026,56 +15960,10 @@
       }), containerNode);
     };
   };
-  /**
-   * @typedef {Object} HitsCSSClasses
-   * @property {string|string[]} [root] CSS class to add to the wrapping element.
-   * @property {string|string[]} [emptyRoot] CSS class to add to the wrapping element when no results.
-   * @property {string|string[]} [list] CSS class to add to the list of results.
-   * @property {string|string[]} [item] CSS class to add to each result.
-   */
 
-  /**
-   * @typedef {Object} HitsTemplates
-   * @property {string|function(object):string} [empty=''] Template to use when there are no results.
-   * @property {string|function(object):string} [item=''] Template to use for each result. This template will receive an object containing a single record. The record will have a new property `__hitIndex` for the position of the record in the list of displayed hits.
-   */
-
-  /**
-   * @typedef {Object} HitsWidgetOptions
-   * @property {string|HTMLElement} container CSS Selector or HTMLElement to insert the widget.
-   * @property {HitsTemplates} [templates] Templates to use for the widget.
-   * @property {HitsCSSClasses} [cssClasses] CSS classes to add.
-   * @property {boolean} [escapeHTML = true] Escape HTML entities from hits string values.
-   * @property {function(object[]):object[]} [transformItems] Function to transform the items passed to the templates.
-   */
-
-  /**
-   * Display the list of results (hits) from the current search.
-   *
-   * This is a traditional display of the hits. It has to be implemented
-   * together with a pagination widget, to let the user browse the results
-   * beyond the first page.
-   * @type {WidgetFactory}
-   * @devNovel Hits
-   * @category basic
-   * @param {HitsWidgetOptions} $0 Options of the Hits widget.
-   * @return {Widget} A new instance of Hits widget.
-   * @example
-   * search.addWidgets([
-   *   instantsearch.widgets.hits({
-   *     container: '#hits-container',
-   *     templates: {
-   *       empty: 'No results',
-   *       item: '<strong>Hit {{objectID}}</strong>: {{{_highlightResult.name.value}}}'
-   *     },
-   *     transformItems: items => items.map(item => item),
-   *   })
-   * ]);
-   */
-
-
-  function hits(_ref3) {
-    var container = _ref3.container,
+  var hits = function hits(widgetOptions) {
+    var _ref3 = widgetOptions || {},
+        container = _ref3.container,
         escapeHTML = _ref3.escapeHTML,
         transformItems = _ref3.transformItems,
         _ref3$templates = _ref3.templates,
@@ -16113,7 +16001,7 @@
       escapeHTML: escapeHTML,
       transformItems: transformItems
     });
-  }
+  };
 
   /** @jsx h */
 
@@ -16168,8 +16056,8 @@
     };
   };
 
-  var hitsPerPage = function hitsPerPage() {
-    var _ref5 = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
+  var hitsPerPage = function hitsPerPage(widgetOptions) {
+    var _ref5 = widgetOptions || {},
         container = _ref5.container,
         items = _ref5.items,
         _ref5$cssClasses = _ref5.cssClasses,
@@ -16324,7 +16212,8 @@
         templates = _ref3$templates === void 0 ? defaultTemplates$4 : _ref3$templates,
         _ref3$cssClasses = _ref3.cssClasses,
         userCssClasses = _ref3$cssClasses === void 0 ? {} : _ref3$cssClasses,
-        showPrevious = _ref3.showPrevious;
+        showPrevious = _ref3.showPrevious,
+        cache = _ref3.cache;
 
     if (!container) {
       throw new Error(withUsage$w('The `container` option is required.'));
@@ -16370,7 +16259,8 @@
     return makeInfiniteHits({
       escapeHTML: escapeHTML,
       transformItems: transformItems,
-      showPrevious: showPrevious
+      showPrevious: showPrevious,
+      cache: cache
     });
   };
 
@@ -16898,73 +16788,9 @@
       }), containerNode);
     };
   };
-  /**
-   * @typedef {Object} NumericMenuCSSClasses
-   * @property {string|string[]} [root] CSS class to add to the root element.
-   * @property {string|string[]} [noRefinementRoot] CSS class to add to the root element when no refinements.
-   * @property {string|string[]} [list] CSS class to add to the list element.
-   * @property {string|string[]} [item] CSS class to add to each item element.
-   * @property {string|string[]} [selectedItem] CSS class to add to each selected item element.
-   * @property {string|string[]} [label] CSS class to add to each label element.
-   * @property {string|string[]} [labelText] CSS class to add to each label text element.
-   * @property {string|string[]} [radio] CSS class to add to each radio element (when using the default template).
-   */
 
-  /**
-   * @typedef {Object} NumericMenuTemplates
-   * @property {string|function} [item] Item template, provided with `label` (the name in the configuration), `isRefined`, `url`, `value` (the setting for the filter) data properties.
-   */
-
-  /**
-   * @typedef {Object} NumericMenuOption
-   * @property {string} label Label of the option.
-   * @property {number} [start] Low bound of the option (>=).
-   * @property {number} [end] High bound of the option (<=).
-   */
-
-  /**
-   * @typedef {Object} NumericMenuWidgetOptions
-   * @property {string|HTMLElement} container CSS Selector or HTMLElement to insert the widget.
-   * @property {string} attribute Name of the attribute for filtering.
-   * @property {NumericMenuOption[]} items List of all the items.
-   * @property {NumericMenuTemplates} [templates] Templates to use for the widget.
-   * @property {NumericMenuCSSClasses} [cssClasses] CSS classes to add to the wrapping elements.
-   * @property {function(object[]):object[]} [transformItems] Function to transform the items passed to the templates.
-   */
-
-  /**
-   * The numeric menu is a widget that displays a list of numeric filters in a list. Those numeric filters
-   * are pre-configured with creating the widget.
-   *
-   * @requirements
-   * The attribute passed to `attribute` must be declared as an [attribute for faceting](https://www.algolia.com/doc/guides/searching/faceting/#declaring-attributes-for-faceting) in your
-   * Algolia settings.
-   *
-   * The values inside this attribute must be JavaScript numbers and not strings.
-   *
-   * @type {WidgetFactory}
-   * @devNovel NumericMenu
-   * @category filter
-   * @param {NumericMenuWidgetOptions} $0 The NumericMenu widget items
-   * @return {Widget} Creates a new instance of the NumericMenu widget.
-   * @example
-   * search.addWidgets([
-   *   instantsearch.widgets.numericMenu({
-   *     container: '#popularity',
-   *     attribute: 'popularity',
-   *     items: [
-   *       { label: 'All' },
-   *       { end: 500, label: 'less than 500' },
-   *       { start: 500, end: 2000, label: 'between 500 and 2000' },
-   *       { start: 2000, label: 'more than 2000' }
-   *     ]
-   *   })
-   * ]);
-   */
-
-
-  function numericMenu() {
-    var _ref3 = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
+  var numericMenu = function numericMenu(widgetOptions) {
+    var _ref3 = widgetOptions || {},
         container = _ref3.container,
         attribute = _ref3.attribute,
         items = _ref3.items,
@@ -17019,7 +16845,7 @@
       items: items,
       transformItems: transformItems
     });
-  }
+  };
 
   /** @jsx h */
 
@@ -17136,7 +16962,7 @@
         return this.pageLink({
           ariaLabel: 'Previous',
           additionalClassName: this.props.cssClasses.previousPageItem,
-          isDisabled: this.props.nbHits === 0 || isFirstPage,
+          isDisabled: isFirstPage,
           label: this.props.templates.previous,
           pageNumber: currentPage - 1,
           createURL: createURL
@@ -17151,7 +16977,7 @@
         return this.pageLink({
           ariaLabel: 'Next',
           additionalClassName: this.props.cssClasses.nextPageItem,
-          isDisabled: this.props.nbHits === 0 || isLastPage,
+          isDisabled: isLastPage,
           label: this.props.templates.next,
           pageNumber: currentPage + 1,
           createURL: createURL
@@ -17165,7 +16991,7 @@
         return this.pageLink({
           ariaLabel: 'First',
           additionalClassName: this.props.cssClasses.firstPageItem,
-          isDisabled: this.props.nbHits === 0 || isFirstPage,
+          isDisabled: isFirstPage,
           label: this.props.templates.first,
           pageNumber: 0,
           createURL: createURL
@@ -17180,7 +17006,7 @@
         return this.pageLink({
           ariaLabel: 'Last',
           additionalClassName: this.props.cssClasses.lastPageItem,
-          isDisabled: this.props.nbHits === 0 || isLastPage,
+          isDisabled: isLastPage,
           label: this.props.templates.last,
           pageNumber: nbPages - 1,
           createURL: createURL
@@ -17459,14 +17285,14 @@
 
       _defineProperty(_assertThisInitialized(_this), "onInput", function (name) {
         return function (event) {
-          _this.setState(_defineProperty({}, name, Number(event.currentTarget.value)));
+          _this.setState(_defineProperty({}, name, event.currentTarget.value));
         };
       });
 
       _defineProperty(_assertThisInitialized(_this), "onSubmit", function (event) {
         event.preventDefault();
 
-        _this.props.refine([_this.state.min, _this.state.max]);
+        _this.props.refine([_this.state.min && Number(_this.state.min), _this.state.max && Number(_this.state.max)]);
       });
 
       _this.state = {
@@ -17512,7 +17338,7 @@
           min: min,
           max: max,
           step: step,
-          value: minValue,
+          value: minValue !== null && minValue !== void 0 ? minValue : '',
           onInput: this.onInput('min'),
           placeholder: min,
           disabled: isDisabled
@@ -17530,7 +17356,7 @@
           min: min,
           max: max,
           step: step,
-          value: maxValue,
+          value: maxValue !== null && maxValue !== void 0 ? maxValue : '',
           onInput: this.onInput('max'),
           placeholder: max,
           disabled: isDisabled
@@ -19447,8 +19273,8 @@
    * @typedef {Object} ToggleWidgetOptions
    * @property {string|HTMLElement} container Place where to insert the widget in your webpage.
    * @property {string} attribute Name of the attribute for faceting (eg. "free_shipping").
-   * @property {string|number|boolean} on Value to filter on when checked.
-   * @property {string|number|boolean} off Value to filter on when unchecked.
+   * @property {string|number|boolean|array} on Value to filter on when checked.
+   * @property {string|number|boolean|array} off Value to filter on when unchecked.
    * element (when using the default template). By default when switching to `off`, no refinement will be asked. So you
    * will get both `true` and `false` results. If you set the off value to `false` then you will get only objects
    * having `false` has a value for the selected attribute.
@@ -19536,8 +19362,8 @@
     name: 'analytics'
   });
 
-  function analytics() {
-    var _ref = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
+  var analytics = function analytics(widgetParams) {
+    var _ref = widgetParams || {},
         pushFunction = _ref.pushFunction,
         _ref$delay = _ref.delay,
         delay = _ref$delay === void 0 ? 3000 : _ref$delay,
@@ -19685,7 +19511,7 @@
         }
       }
     };
-  }
+  };
 
   var Breadcrumb = function Breadcrumb(_ref) {
     var items = _ref.items,
@@ -19775,96 +19601,13 @@
       }), containerNode);
     };
   };
-  /**
-   * @typedef {Object} BreadcrumbCSSClasses
-   * @property {string|string[]} [root] CSS class to add to the root element of the widget.
-   * @property {string|string[]} [noRefinementRoot] CSS class to add to the root element of the widget if there are no refinements.
-   * @property {string|string[]} [list] CSS class to add to the list element.
-   * @property {string|string[]} [item] CSS class to add to the items of the list. The items contains the link and the separator.
-   * @property {string|string[]} [selectedItem] CSS class to add to the selected item in the list: the last one or the home if there are no refinements.
-   * @property {string|string[]} [separator] CSS class to add to the separator.
-   * @property {string|string[]} [link] CSS class to add to the links in the items.
-   */
 
-  /**
-   * @typedef {Object} BreadcrumbTemplates
-   * @property {string|function(object):string} [home = 'Home'] Label of the breadcrumb's first element.
-   * @property {string|function(object):string} [separator = '>'] Symbol used to separate the elements of the breadcrumb.
-   */
-
-  /**
-   * @typedef {Object} BreadcrumbWidgetOptions
-   * @property {string|HTMLElement} container CSS Selector or HTMLElement to insert the widget.
-   * @property {string[]} attributes Array of attributes to use to generate the breadcrumb.
-   * @property {string} [separator = ' > '] The level separator used in the records.
-   * @property {string} [rootPath = null] Prefix path to use if the first level is not the root level.
-   * @property {BreadcrumbTemplates} [templates] Templates to use for the widget.
-   * @property {function(object[]):object[]} [transformItems] Function to transform the items passed to the templates.
-   * @property {BreadcrumbCSSClasses} [cssClasses] CSS classes to add to the wrapping elements.
-   */
-
-  /**
-   * The breadcrumb widget is a secondary navigation scheme that allows the user to see where the current page is in relation to the facet's hierarchy.
-   *
-   * It reduces the number of actions a user needs to take in order to get to a higher-level page and improve the discoverability of the app or website's sections and pages.
-   * It is commonly used for websites with a large amount of data organized into categories with subcategories.
-   *
-   * All attributes (lvl0, lvl1 in this case) must be declared as [attributes for faceting](https://www.algolia.com/doc/guides/searching/faceting/#declaring-attributes-for-faceting) in your
-   * Algolia settings.
-   *
-   * @requirements
-   * Your objects must be formatted in a specific way to be
-   * able to display a breadcrumb. Here's an example:
-   *
-   * ```javascript
-   * {
-   *   "objectID": "123",
-   *   "name": "orange",
-   *   "categories": {
-   *     "lvl0": "fruits",
-   *     "lvl1": "fruits > citrus"
-   *   }
-   * }
-   * ```
-   *
-   * Each level must be specified entirely.
-   * It's also possible to have multiple values per level, for instance:
-   *
-   * ```javascript
-   * {
-   *   "objectID": "123",
-   *   "name": "orange",
-   *   "categories": {
-   *     "lvl0": ["fruits", "vitamins"],
-   *     "lvl1": ["fruits > citrus", "vitamins > C"]
-   *   }
-   * }
-   * ```
-   * @type {WidgetFactory}
-   * @devNovel Breadcrumb
-   * @category navigation
-   * @param {BreadcrumbWidgetOptions} $0 The Breadcrumb widget options.
-   * @return {Widget} A new Breadcrumb widget instance.
-   * @example
-   * search.addWidgets([
-   *   instantsearch.widgets.breadcrumb({
-   *     container: '#breadcrumb',
-   *     attributes: ['hierarchicalCategories.lvl0', 'hierarchicalCategories.lvl1', 'hierarchicalCategories.lvl2'],
-   *     templates: { home: 'Home Page' },
-   *     separator: ' / ',
-   *     rootPath: 'Cameras & Camcorders > Digital Cameras',
-   *   })
-   * ]);
-   */
-
-
-  function breadcrumb() {
-    var _ref3 = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
+  var breadcrumb = function breadcrumb(widgetOptions) {
+    var _ref3 = widgetOptions || {},
         container = _ref3.container,
         attributes = _ref3.attributes,
         separator = _ref3.separator,
-        _ref3$rootPath = _ref3.rootPath,
-        rootPath = _ref3$rootPath === void 0 ? null : _ref3$rootPath,
+        rootPath = _ref3.rootPath,
         transformItems = _ref3.transformItems,
         _ref3$templates = _ref3.templates,
         templates = _ref3$templates === void 0 ? defaultTemplates$d : _ref3$templates,
@@ -19913,7 +19656,7 @@
       rootPath: rootPath,
       transformItems: transformItems
     });
-  }
+  };
 
   function MenuSelect(_ref) {
     var cssClasses = _ref.cssClasses,
@@ -20328,17 +20071,18 @@
    * The panel widget wraps other widgets in a consistent panel design.
    * It also reacts, indicates and sets CSS classes when widgets are no longer relevant for refining.
    */
-  var panel = function panel() {
-    var widgetParams = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-    var _widgetParams$templat = widgetParams.templates,
-        templates = _widgetParams$templat === void 0 ? {} : _widgetParams$templat,
-        _widgetParams$hidden = widgetParams.hidden,
-        hidden = _widgetParams$hidden === void 0 ? function () {
+  var panel = function panel(widgetParams) {
+    var _ref3 = widgetParams || {},
+        _ref3$templates = _ref3.templates,
+        templates = _ref3$templates === void 0 ? {} : _ref3$templates,
+        _ref3$hidden = _ref3.hidden,
+        hidden = _ref3$hidden === void 0 ? function () {
       return false;
-    } : _widgetParams$hidden,
-        collapsed = widgetParams.collapsed,
-        _widgetParams$cssClas = widgetParams.cssClasses,
-        userCssClasses = _widgetParams$cssClas === void 0 ? {} : _widgetParams$cssClas;
+    } : _ref3$hidden,
+        collapsed = _ref3.collapsed,
+        _ref3$cssClasses = _ref3.cssClasses,
+        userCssClasses = _ref3$cssClasses === void 0 ? {} : _ref3$cssClasses;
+
      _warning(typeof hidden === 'function', "The `hidden` option in the \"panel\" widget expects a function returning a boolean (received type ".concat(getObjectType(hidden), ").")) ;
      _warning(typeof collapsed === 'undefined' || typeof collapsed === 'function', "The `collapsed` option in the \"panel\" widget expects a function returning a boolean (received type ".concat(getObjectType(collapsed), ").")) ;
     var bodyContainerNode = document.createElement('div');
@@ -20374,9 +20118,9 @@
       }), userCssClasses.footer)
     };
     return function (widgetFactory) {
-      return function () {
-        var widgetOptions = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-        var container = widgetOptions.container;
+      return function (widgetOptions) {
+        var _ref4 = widgetOptions || {},
+            container = _ref4.container;
 
         if (!container) {
           throw new Error(withUsage$M("The `container` option is required in the widget within the panel."));
@@ -20385,8 +20129,8 @@
         var defaultTemplates = {
           header: '',
           footer: '',
-          collapseButtonText: function collapseButtonText(_ref3) {
-            var isCollapsed = _ref3.collapsed;
+          collapseButtonText: function collapseButtonText(_ref5) {
+            var isCollapsed = _ref5.collapsed;
             return "<svg\n          class=\"".concat(cssClasses.collapseIcon, "\"\n          width=\"1em\"\n          height=\"1em\"\n          viewBox=\"0 0 500 500\"\n        >\n        <path d=\"").concat(isCollapsed ? 'M100 250l300-150v300z' : 'M250 400l150-300H100z', "\" fill=\"currentColor\" />\n        </svg>");
           }
         };
@@ -20553,7 +20297,8 @@
         _ref2$searchAsYouSpea = _ref2.searchAsYouSpeak,
         searchAsYouSpeak = _ref2$searchAsYouSpea === void 0 ? false : _ref2$searchAsYouSpea,
         language = _ref2.language,
-        additionalQueryParameters = _ref2.additionalQueryParameters;
+        additionalQueryParameters = _ref2.additionalQueryParameters,
+        createVoiceSearchHelper = _ref2.createVoiceSearchHelper;
 
     if (!container) {
       throw new Error(withUsage$N('The `container` option is required.'));
@@ -20578,7 +20323,8 @@
       templates: _objectSpread2({}, defaultTemplates$f, {}, templates),
       searchAsYouSpeak: searchAsYouSpeak,
       language: language,
-      additionalQueryParameters: additionalQueryParameters
+      additionalQueryParameters: additionalQueryParameters,
+      createVoiceSearchHelper: createVoiceSearchHelper
     });
   };
 
@@ -20841,6 +20587,63 @@
     singleIndex: singleIndexStateMapping
   });
 
+  function getStateWithoutPage$1(state) {
+    var _ref = state || {},
+        page = _ref.page,
+        rest = _objectWithoutProperties(_ref, ["page"]);
+
+    return rest;
+  }
+
+  var KEY = 'ais.infiniteHits';
+
+  function hasSessionStorage() {
+    return typeof window !== 'undefined' && typeof window.sessionStorage !== 'undefined';
+  }
+
+  function createInfiniteHitsSessionStorageCache() {
+    return {
+      read: function read(_ref2) {
+        var state = _ref2.state;
+
+        if (!hasSessionStorage()) {
+          return null;
+        }
+
+        try {
+          var cache = JSON.parse( // @ts-ignore JSON.parse() requires a string, but it actually accepts null, too.
+          window.sessionStorage.getItem(KEY));
+          return cache && isEqual(cache.state, getStateWithoutPage$1(state)) ? cache.hits : null;
+        } catch (error) {
+          if (error instanceof SyntaxError) {
+            try {
+              window.sessionStorage.removeItem(KEY);
+            } catch (err) {// do nothing
+            }
+          }
+
+          return null;
+        }
+      },
+      write: function write(_ref3) {
+        var state = _ref3.state,
+            hits = _ref3.hits;
+
+        if (!hasSessionStorage()) {
+          return;
+        }
+
+        try {
+          window.sessionStorage.setItem(KEY, JSON.stringify({
+            state: getStateWithoutPage$1(state),
+            hits: hits
+          }));
+        } catch (error) {// do nothing
+        }
+      }
+    };
+  }
+
   /**
    * InstantSearch is the main component of InstantSearch.js. This object
    * manages the widget and lets you add new ones.
@@ -20867,6 +20670,7 @@
   instantsearch.connectors = connectors;
   instantsearch.widgets = widgets;
   instantsearch.version = version$1;
+  instantsearch.createInfiniteHitsSessionStorageCache = createInfiniteHitsSessionStorageCache;
   instantsearch.highlight = highlight;
   instantsearch.snippet = snippet;
   instantsearch.insights = insights;
