@@ -1,4 +1,4 @@
-/*! InstantSearch.js 4.7.0 | © Algolia, Inc. and contributors; MIT License | https://github.com/algolia/instantsearch.js */
+/*! InstantSearch.js 4.8.0 | © Algolia, Inc. and contributors; MIT License | https://github.com/algolia/instantsearch.js */
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
   typeof define === 'function' && define.amd ? define(factory) :
@@ -328,13 +328,20 @@
   var merge_1 = merge;
 
   // NOTE: this behaves like lodash/defaults, but doesn't mutate the target
+  // it also preserve keys order
   var defaultsPure = function defaultsPure() {
     var sources = Array.prototype.slice.call(arguments);
+
     return sources.reduceRight(function(acc, source) {
       Object.keys(Object(source)).forEach(function(key) {
-        if (source[key] !== undefined) {
-          acc[key] = source[key];
+        if (source[key] === undefined) {
+          return;
         }
+        if (acc[key] !== undefined) {
+          // remove if already added, so that we can add it in correct order
+          delete acc[key];
+        }
+        acc[key] = source[key];
       });
       return acc;
     }, {});
@@ -786,9 +793,12 @@
     // the one which is an array of float geo rectangles
     if (Array.isArray(partialState.insideBoundingBox)) {
       numbers.insideBoundingBox = partialState.insideBoundingBox.map(function(geoRect) {
-        return geoRect.map(function(value) {
-          return parseFloat(value);
-        });
+        if (Array.isArray(geoRect)) {
+          return geoRect.map(function(value) {
+            return parseFloat(value);
+          });
+        }
+        return geoRect;
       });
     }
 
@@ -2586,50 +2596,146 @@
 
     this._rawResults = results;
 
+    var self = this;
+
+    // https://www.algolia.com/doc/api-reference/api-methods/search/#response
+    Object.keys(mainSubResponse).forEach(function(key) {
+      self[key] = mainSubResponse[key];
+    });
+
     /**
      * query used to generate the results
+     * @name query
      * @member {string}
+     * @memberof SearchResults
+     * @instance
      */
-    this.query = mainSubResponse.query;
     /**
      * The query as parsed by the engine given all the rules.
+     * @name parsedQuery
      * @member {string}
+     * @memberof SearchResults
+     * @instance
      */
-    this.parsedQuery = mainSubResponse.parsedQuery;
     /**
      * all the records that match the search parameters. Each record is
      * augmented with a new attribute `_highlightResult`
      * which is an object keyed by attribute and with the following properties:
      *  - `value` : the value of the facet highlighted (html)
      *  - `matchLevel`: full, partial or none depending on how the query terms match
+     * @name hits
      * @member {object[]}
+     * @memberof SearchResults
+     * @instance
      */
-    this.hits = mainSubResponse.hits;
     /**
      * index where the results come from
+     * @name index
      * @member {string}
+     * @memberof SearchResults
+     * @instance
      */
-    this.index = mainSubResponse.index;
     /**
      * number of hits per page requested
+     * @name hitsPerPage
      * @member {number}
+     * @memberof SearchResults
+     * @instance
      */
-    this.hitsPerPage = mainSubResponse.hitsPerPage;
     /**
      * total number of hits of this query on the index
+     * @name nbHits
      * @member {number}
+     * @memberof SearchResults
+     * @instance
      */
-    this.nbHits = mainSubResponse.nbHits;
     /**
      * total number of pages with respect to the number of hits per page and the total number of hits
+     * @name nbPages
      * @member {number}
+     * @memberof SearchResults
+     * @instance
      */
-    this.nbPages = mainSubResponse.nbPages;
     /**
      * current page
+     * @name page
      * @member {number}
+     * @memberof SearchResults
+     * @instance
      */
-    this.page = mainSubResponse.page;
+    /**
+     * The position if the position was guessed by IP.
+     * @name aroundLatLng
+     * @member {string}
+     * @memberof SearchResults
+     * @instance
+     * @example "48.8637,2.3615",
+     */
+    /**
+     * The radius computed by Algolia.
+     * @name automaticRadius
+     * @member {string}
+     * @memberof SearchResults
+     * @instance
+     * @example "126792922",
+     */
+    /**
+     * String identifying the server used to serve this request.
+     *
+     * getRankingInfo needs to be set to `true` for this to be returned
+     *
+     * @name serverUsed
+     * @member {string}
+     * @memberof SearchResults
+     * @instance
+     * @example "c7-use-2.algolia.net",
+     */
+    /**
+     * Boolean that indicates if the computation of the counts did time out.
+     * @deprecated
+     * @name timeoutCounts
+     * @member {boolean}
+     * @memberof SearchResults
+     * @instance
+     */
+    /**
+     * Boolean that indicates if the computation of the hits did time out.
+     * @deprecated
+     * @name timeoutHits
+     * @member {boolean}
+     * @memberof SearchResults
+     * @instance
+     */
+    /**
+     * True if the counts of the facets is exhaustive
+     * @name exhaustiveFacetsCount
+     * @member {boolean}
+     * @memberof SearchResults
+     * @instance
+     */
+    /**
+     * True if the number of hits is exhaustive
+     * @name exhaustiveNbHits
+     * @member {boolean}
+     * @memberof SearchResults
+     * @instance
+     */
+    /**
+     * Contains the userData if they are set by a [query rule](https://www.algolia.com/doc/guides/query-rules/query-rules-overview/).
+     * @name userData
+     * @member {object[]}
+     * @memberof SearchResults
+     * @instance
+     */
+    /**
+     * queryID is the unique identifier of the query used to generate the current search results.
+     * This value is only available if the `clickAnalytics` search parameter is set to `true`.
+     * @name queryID
+     * @member {string}
+     * @memberof SearchResults
+     * @instance
+     */
+
     /**
      * sum of the processing time of all the queries
      * @member {number}
@@ -2639,65 +2745,6 @@
         ? sum
         : sum + result.processingTimeMS;
     }, 0);
-    /**
-     * The position if the position was guessed by IP.
-     * @member {string}
-     * @example "48.8637,2.3615",
-     */
-    this.aroundLatLng = mainSubResponse.aroundLatLng;
-    /**
-     * The radius computed by Algolia.
-     * @member {string}
-     * @example "126792922",
-     */
-    this.automaticRadius = mainSubResponse.automaticRadius;
-    /**
-     * String identifying the server used to serve this request.
-     *
-     * getRankingInfo needs to be set to `true` for this to be returned
-     *
-     * @member {string}
-     * @example "c7-use-2.algolia.net",
-     */
-    this.serverUsed = mainSubResponse.serverUsed;
-    /**
-     * Boolean that indicates if the computation of the counts did time out.
-     * @deprecated
-     * @member {boolean}
-     */
-    this.timeoutCounts = mainSubResponse.timeoutCounts;
-    /**
-     * Boolean that indicates if the computation of the hits did time out.
-     * @deprecated
-     * @member {boolean}
-     */
-    this.timeoutHits = mainSubResponse.timeoutHits;
-
-    /**
-     * True if the counts of the facets is exhaustive
-     * @member {boolean}
-     */
-    this.exhaustiveFacetsCount = mainSubResponse.exhaustiveFacetsCount;
-
-    /**
-     * True if the number of hits is exhaustive
-     * @member {boolean}
-     */
-    this.exhaustiveNbHits = mainSubResponse.exhaustiveNbHits;
-
-
-    /**
-     * Contains the userData if they are set by a [query rule](https://www.algolia.com/doc/guides/query-rules/query-rules-overview/).
-     * @member {object[]}
-     */
-    this.userData = mainSubResponse.userData;
-
-    /**
-     * queryID is the unique identifier of the query used to generate the current search results.
-     * This value is only available if the `clickAnalytics` search parameter is set to `true`.
-     * @member {string}
-     */
-    this.queryID = mainSubResponse.queryID;
 
     /**
      * disjunctive facets results
@@ -2723,7 +2770,6 @@
     var disjunctiveFacetsIndices = getIndices(state.disjunctiveFacets);
     var nextDisjunctiveResult = 1;
 
-    var self = this;
     // Since we send request only for disjunctive facets that have been refined,
     // we get the facets information from the first, general, response.
 
@@ -3911,7 +3957,7 @@
 
   var requestBuilder_1 = requestBuilder;
 
-  var version = '3.1.1';
+  var version = '3.2.2';
 
   /**
    * Event triggered when a parameter is set or updated
@@ -5511,10 +5557,6 @@
     }, preparedTemplates);
   }
 
-  function unwrapExports (x) {
-  	return x && x.__esModule && Object.prototype.hasOwnProperty.call(x, 'default') ? x['default'] : x;
-  }
-
   function createCommonjsModule(fn, module) {
   	return module = { exports: {} }, fn(module, module.exports), module.exports;
   }
@@ -6321,7 +6363,8 @@
         templateKey = _ref.templateKey,
         compileOptions = _ref.compileOptions,
         helpers = _ref.helpers,
-        data = _ref.data;
+        data = _ref.data,
+        bindEvent = _ref.bindEvent;
     var template = templates[templateKey];
 
     var templateType = _typeof(template);
@@ -6334,7 +6377,7 @@
     }
 
     if (isTemplateFunction) {
-      return template(data);
+      return template(data, bindEvent);
     }
 
     var transformedHelpers = transformHelpersToHogan(helpers, compileOptions, data);
@@ -6600,7 +6643,7 @@
   function getWidgetNames(connectorName) {
     switch (connectorName) {
       case 'range':
-        return ['rangeInput', 'rangeSlider'];
+        return [];
 
       case 'menu':
         return ['menu', 'menuSelect'];
@@ -6637,7 +6680,7 @@
     },
     range: {
       connectors: ['connectRange'],
-      widgets: ['ais.rangeInput', 'ais.rangeSlider']
+      widgets: ['ais.rangeInput', 'ais.rangeSlider', 'ais.range']
     },
     toggle: {
       connectors: ['connectToggleRefinement'],
@@ -7133,6 +7176,224 @@
     });
   };
 
+  function isFacetRefined(helper, facet, value) {
+    if (helper.state.isHierarchicalFacet(facet)) {
+      return helper.state.isHierarchicalFacetRefined(facet, value);
+    } else if (helper.state.isConjunctiveFacet(facet)) {
+      return helper.state.isFacetRefined(facet, value);
+    } else {
+      return helper.state.isDisjunctiveFacetRefined(facet, value);
+    }
+  }
+
+  function createSendEventForFacet(_ref) {
+    var instantSearchInstance = _ref.instantSearchInstance,
+        helper = _ref.helper,
+        attribute = _ref.attribute,
+        widgetType = _ref.widgetType;
+
+    var sendEventForFacet = function sendEventForFacet() {
+      for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
+        args[_key] = arguments[_key];
+      }
+
+      var eventType = args[0],
+          facetValue = args[1],
+          _args$ = args[2],
+          eventName = _args$ === void 0 ? 'Filter Applied' : _args$;
+
+      if (args.length === 1 && _typeof(args[0]) === 'object') {
+        instantSearchInstance.sendEventToInsights(args[0]);
+      } else if (eventType === 'click' && (args.length === 2 || args.length === 3)) {
+        if (!isFacetRefined(helper, attribute, facetValue)) {
+          // send event only when the facet is being checked "ON"
+          instantSearchInstance.sendEventToInsights({
+            insightsMethod: 'clickedFilters',
+            widgetType: widgetType,
+            eventType: eventType,
+            payload: {
+              eventName: eventName,
+              index: helper.getIndex(),
+              filters: ["".concat(attribute, ":").concat(JSON.stringify(facetValue))]
+            }
+          });
+        }
+      } else {
+        throw new Error("You need to pass two arguments like:\n  sendEvent('click', facetValue);\n\nIf you want to send a custom payload, you can pass one object: sendEvent(customPayload);\n");
+      }
+    };
+
+    return sendEventForFacet;
+  }
+
+  var buildPayload = function buildPayload(_ref) {
+    var index = _ref.index,
+        widgetType = _ref.widgetType,
+        methodName = _ref.methodName,
+        args = _ref.args;
+
+    if (args.length === 1 && _typeof(args[0]) === 'object') {
+      return args[0];
+    }
+
+    var eventType = args[0];
+    var hits = args[1];
+    var eventName = args[2];
+
+    if (!hits) {
+      {
+        throw new Error("You need to pass hit or hits as the second argument like:\n  ".concat(methodName, "(eventType, hit);\n  "));
+      }
+    }
+
+    if ((eventType === 'click' || eventType === 'conversion') && !eventName) {
+      {
+        throw new Error("You need to pass eventName as the third argument for 'click' or 'conversion' events like:\n  ".concat(methodName, "('click', hit, 'Product Purchased');\n\n  To learn more about event naming: https://www.algolia.com/doc/guides/getting-insights-and-analytics/search-analytics/click-through-and-conversions/in-depth/clicks-conversions-best-practices/\n  "));
+      }
+    }
+
+    var hitsArray = Array.isArray(hits) ? hits : [hits];
+
+    if (hitsArray.length === 0) {
+      return null;
+    }
+
+    var queryID = hitsArray[0].__queryID;
+    var objectIDs = hitsArray.map(function (hit) {
+      return hit.objectID;
+    });
+    var positions = hitsArray.map(function (hit) {
+      return hit.__position;
+    });
+
+    if (eventType === 'view') {
+      return {
+        insightsMethod: 'viewedObjectIDs',
+        widgetType: widgetType,
+        eventType: eventType,
+        payload: {
+          eventName: eventName || 'Hits Viewed',
+          index: index,
+          objectIDs: objectIDs
+        }
+      };
+    } else if (eventType === 'click') {
+      return {
+        insightsMethod: 'clickedObjectIDsAfterSearch',
+        widgetType: widgetType,
+        eventType: eventType,
+        payload: {
+          eventName: eventName,
+          index: index,
+          queryID: queryID,
+          objectIDs: objectIDs,
+          positions: positions
+        }
+      };
+    } else if (eventType === 'conversion') {
+      return {
+        insightsMethod: 'convertedObjectIDsAfterSearch',
+        widgetType: widgetType,
+        eventType: eventType,
+        payload: {
+          eventName: eventName,
+          index: index,
+          queryID: queryID,
+          objectIDs: objectIDs
+        }
+      };
+    } else {
+      throw new Error("eventType(\"".concat(eventType, "\") is not supported.\n    If you want to send a custom payload, you can pass one object: ").concat(methodName, "(customPayload);\n    "));
+    }
+  };
+
+  function createSendEventForHits(_ref2) {
+    var instantSearchInstance = _ref2.instantSearchInstance,
+        index = _ref2.index,
+        widgetType = _ref2.widgetType;
+
+    var sendEventForHits = function sendEventForHits() {
+      for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
+        args[_key] = arguments[_key];
+      }
+
+      var payload = buildPayload({
+        widgetType: widgetType,
+        index: index,
+        methodName: 'sendEvent',
+        args: args
+      });
+
+      if (payload) {
+        instantSearchInstance.sendEventToInsights(payload);
+      }
+    };
+
+    return sendEventForHits;
+  }
+  function createBindEventForHits(_ref3) {
+    var index = _ref3.index,
+        widgetType = _ref3.widgetType;
+
+    var bindEventForHits = function bindEventForHits() {
+      for (var _len2 = arguments.length, args = new Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
+        args[_key2] = arguments[_key2];
+      }
+
+      var payload = buildPayload({
+        widgetType: widgetType,
+        index: index,
+        methodName: 'bindEvent',
+        args: args
+      });
+      return payload ? "data-insights-event=".concat(btoa(JSON.stringify(payload))) : '';
+    };
+
+    return bindEventForHits;
+  }
+
+  function getAppIdAndApiKey(searchClient) {
+    if (searchClient.transporter) {
+      // searchClient v4
+      var _searchClient$transpo = searchClient.transporter,
+          headers = _searchClient$transpo.headers,
+          queryParameters = _searchClient$transpo.queryParameters;
+      var APP_ID = 'x-algolia-application-id';
+      var API_KEY = 'x-algolia-api-key';
+      var appId = headers[APP_ID] || queryParameters[APP_ID];
+      var apiKey = headers[API_KEY] || queryParameters[API_KEY];
+      return [appId, apiKey];
+    } else {
+      // searchClient v3
+      return [searchClient.applicationID, searchClient.apiKey];
+    }
+  }
+
+  function convertNumericRefinementsToFilters(state, attribute) {
+    if (!state) {
+      return null;
+    }
+
+    var filtersObj = state.numericRefinements[attribute];
+    /*
+      filtersObj === {
+        "<=": [10],
+        "=": [],
+        ">=": [5]
+      }
+    */
+
+    var filters = [];
+    Object.keys(filtersObj).filter(function (operator) {
+      return Array.isArray(filtersObj[operator]) && filtersObj[operator].length > 0;
+    }).forEach(function (operator) {
+      filtersObj[operator].forEach(function (value) {
+        filters.push("".concat(attribute).concat(operator).concat(value));
+      });
+    });
+    return filters;
+  }
+
   var withUsage = createDocumentationMessageGenerator({
     name: 'index-widget'
   });
@@ -7386,6 +7647,10 @@
           }
 
           return mainHelper.search();
+        };
+
+        helper.searchWithoutTriggeringOnStateChange = function () {
+          return mainHelper.search();
         }; // We use the same pattern for the `searchForFacetValues`.
 
 
@@ -7538,7 +7803,7 @@
     };
   };
 
-  var version$1 = '4.7.0';
+  var version$1 = '4.8.0';
 
   var TAG_PLACEHOLDER = {
     highlightPreTag: '__ais-highlight__',
@@ -7688,6 +7953,31 @@
       method: method,
       payload: payload
     });
+  }
+
+  var ANONYMOUS_TOKEN_COOKIE_KEY = '_ALGOLIA';
+
+  function getCookie(name) {
+    var prefix = "".concat(name, "=");
+    var cookies = document.cookie.split(';');
+
+    for (var i = 0; i < cookies.length; i++) {
+      var cookie = cookies[i];
+
+      while (cookie.charAt(0) === ' ') {
+        cookie = cookie.substring(1);
+      }
+
+      if (cookie.indexOf(prefix) === 0) {
+        return cookie.substring(prefix.length, cookie.length);
+      }
+    }
+
+    return undefined;
+  }
+
+  function getInsightsAnonymousUserToken() {
+    return getCookie(ANONYMOUS_TOKEN_COOKIE_KEY);
   }
 
   function hoganHelpers(_ref) {
@@ -8654,11 +8944,8 @@
         }
 
         this.writeTimer = window.setTimeout(function () {
-          if (window.location.href !== url) {
-            setWindowTitle(title);
-            window.history.pushState(routeState, title || '', url);
-          }
-
+          setWindowTitle(title);
+          window.history.pushState(routeState, title || '', url);
           _this.writeTimer = undefined;
         }, this.writeDelay);
       }
@@ -8743,7 +9030,7 @@
     });
   };
 
-  var createRouter = function createRouter() {
+  var createRouterMiddleware = function createRouterMiddleware() {
     var props = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
     var _props$router = props.router,
         router = _props$router === void 0 ? historyRouter() : _props$router,
@@ -8762,11 +9049,16 @@
 
       instantSearchInstance._createURL = topLevelCreateURL;
       instantSearchInstance._initialUiState = _objectSpread2({}, instantSearchInstance._initialUiState, {}, stateMapping.routeToState(router.read()));
+      var lastRouteState = undefined;
       return {
         onStateChange: function onStateChange(_ref2) {
           var uiState = _ref2.uiState;
-          var route = stateMapping.stateToRoute(uiState);
-          router.write(route);
+          var routeState = stateMapping.stateToRoute(uiState);
+
+          if (lastRouteState === undefined || !isEqual(lastRouteState, routeState)) {
+            router.write(routeState);
+            lastRouteState = routeState;
+          }
         },
         subscribe: function subscribe() {
           router.onUpdate(function (route) {
@@ -8857,6 +9149,8 @@
       _defineProperty(_assertThisInitialized(_this), "_mainHelperSearch", void 0);
 
       _defineProperty(_assertThisInitialized(_this), "middleware", []);
+
+      _defineProperty(_assertThisInitialized(_this), "sendEventToInsights", void 0);
 
       _defineProperty(_assertThisInitialized(_this), "scheduleSearch", defer(function () {
         if (_this.started) {
@@ -8989,10 +9283,12 @@
         _this._searchFunction = searchFunction;
       }
 
+      _this.sendEventToInsights = noop;
+
       if (routing) {
         var routerOptions = typeof routing === 'boolean' ? undefined : routing;
 
-        _this.EXPERIMENTAL_use(createRouter(routerOptions));
+        _this.EXPERIMENTAL_use(createRouterMiddleware(routerOptions));
       }
 
       return _this;
@@ -9613,7 +9909,7 @@
    * levels deep.
    *
    * @type {Connector}
-   * @param {function(HierarchicalMenuRenderingOptions)} renderFn Rendering function for the custom **HierarchicalMenu** widget.
+   * @param {function(HierarchicalMenuRenderingOptions, boolean)} renderFn Rendering function for the custom **HierarchicalMenu** widget.
    * @param {function} unmountFn Unmount function called when the widget is disposed.
    * @return {function(CustomHierarchicalMenuWidgetOptions)} Re-usable widget factory for a custom **HierarchicalMenu** widget.
    */
@@ -9657,6 +9953,7 @@
       var _attributes = _slicedToArray(attributes, 1),
           hierarchicalFacetName = _attributes[0];
 
+      var sendEvent;
       return {
         $$type: 'ais.hierarchicalMenu',
         isShowingMore: false,
@@ -9682,9 +9979,16 @@
           var helper = _ref.helper,
               createURL = _ref.createURL,
               instantSearchInstance = _ref.instantSearchInstance;
+          sendEvent = createSendEventForFacet({
+            instantSearchInstance: instantSearchInstance,
+            helper: helper,
+            attribute: hierarchicalFacetName,
+            widgetType: this.$$type
+          });
           this.cachedToggleShowMore = this.cachedToggleShowMore.bind(this);
 
           this._refine = function (facetValue) {
+            sendEvent('click', facetValue);
             helper.toggleRefinement(hierarchicalFacetName, facetValue).search();
           }; // Bind createURL to this specific attribute
 
@@ -9697,6 +10001,7 @@
             items: [],
             createURL: _createURL,
             refine: this._refine,
+            sendEvent: sendEvent,
             instantSearchInstance: instantSearchInstance,
             widgetParams: widgetParams,
             isShowingMore: false,
@@ -9749,6 +10054,7 @@
           renderFn({
             items: items,
             refine: this._refine,
+            sendEvent: sendEvent,
             createURL: _createURL,
             instantSearchInstance: instantSearchInstance,
             widgetParams: widgetParams,
@@ -9757,11 +10063,11 @@
             canToggleShowMore: showMore && (this.isShowingMore || !hasExhaustiveItems)
           }, false);
         },
-        // eslint-disable-next-line valid-jsdoc
 
         /**
-         * @param {Object} param0
-         * @param {import('algoliasearch-helper').SearchParameters} param0.state
+         * @param {Object} param0 cleanup arguments
+         * @param {any} param0.state current search parameters
+         * @returns {any} next search parameters
          */
         dispose: function dispose(_ref3) {
           var state = _ref3.state;
@@ -9829,13 +10135,27 @@
         return items;
       } : _ref$transformItems;
 
+      var sendEvent;
+      var bindEvent;
       return {
         $$type: 'ais.hits',
         init: function init(_ref2) {
-          var instantSearchInstance = _ref2.instantSearchInstance;
+          var instantSearchInstance = _ref2.instantSearchInstance,
+              helper = _ref2.helper;
+          sendEvent = createSendEventForHits({
+            instantSearchInstance: instantSearchInstance,
+            index: helper.getIndex(),
+            widgetType: this.$$type
+          });
+          bindEvent = createBindEventForHits({
+            index: helper.getIndex(),
+            widgetType: this.$$type
+          });
           renderFn({
             hits: [],
             results: undefined,
+            sendEvent: sendEvent,
+            bindEvent: bindEvent,
             instantSearchInstance: instantSearchInstance,
             widgetParams: widgetParams
           }, true);
@@ -9856,9 +10176,12 @@
           // hits widgets mounted on the page.
 
           results.hits.__escaped = initialEscaped;
+          sendEvent('view', results.hits);
           renderFn({
             hits: results.hits,
             results: results,
+            sendEvent: sendEvent,
+            bindEvent: bindEvent,
             instantSearchInstance: instantSearchInstance,
             widgetParams: widgetParams
           }, false);
@@ -10007,10 +10330,10 @@
 
   /** @jsx h */
 
-  var findInsightsTarget = function findInsightsTarget(startElement, endElement) {
+  var findInsightsTarget = function findInsightsTarget(startElement, endElement, validator) {
     var element = startElement;
 
-    while (element && !hasDataAttributes(element)) {
+    while (element && !validator(element)) {
       if (element === endElement) {
         return null;
       }
@@ -10021,17 +10344,47 @@
     return element;
   };
 
+  var parseInsightsEvent = function parseInsightsEvent(element) {
+    var serializedPayload = element.getAttribute('data-insights-event');
+
+    if (typeof serializedPayload !== 'string') {
+      throw new Error('The insights middleware expects `data-insights-event` to be a base64-encoded JSON string.');
+    }
+
+    try {
+      return JSON.parse(atob(serializedPayload));
+    } catch (error) {
+      throw new Error('The insights middleware was unable to parse `data-insights-event`.');
+    }
+  };
+
   var insightsListener = function insightsListener(BaseComponent) {
     function WithInsightsListener(props) {
       var handleClick = function handleClick(event) {
-        var insightsTarget = findInsightsTarget(event.target, event.currentTarget);
-        if (!insightsTarget) return;
+        if (props.sendEvent) {
+          // new way with insights middleware
+          var targetWithEvent = findInsightsTarget(event.target, event.currentTarget, function (element) {
+            return element.hasAttribute('data-insights-event');
+          });
 
-        var _readDataAttributes = readDataAttributes(insightsTarget),
-            method = _readDataAttributes.method,
-            payload = _readDataAttributes.payload;
+          if (targetWithEvent) {
+            var payload = parseInsightsEvent(targetWithEvent);
+            props.sendEvent(payload);
+          }
+        } else {
+          // old way, e.g. instantsearch.insights("clickedObjectIDsAfterSearch", { .. })
+          var insightsTarget = findInsightsTarget(event.target, event.currentTarget, function (element) {
+            return hasDataAttributes(element);
+          });
 
-        props.insights(method, payload);
+          if (insightsTarget) {
+            var _readDataAttributes = readDataAttributes(insightsTarget),
+                method = _readDataAttributes.method,
+                _payload = _readDataAttributes.payload;
+
+            props.insights(method, _payload);
+          }
+        }
       };
 
       return h("div", {
@@ -10220,8 +10573,6 @@
           transformItems = _ref4$transformItems === void 0 ? function (items) {
         return items;
       } : _ref4$transformItems,
-          _ref4$showPrevious = _ref4.showPrevious,
-          hasShowPrevious = _ref4$showPrevious === void 0 ? false : _ref4$showPrevious,
           _ref4$cache = _ref4.cache,
           cache = _ref4$cache === void 0 ? getInMemoryCache() : _ref4$cache;
 
@@ -10229,6 +10580,8 @@
       var prevState;
       var showPrevious;
       var showMore;
+      var sendEvent;
+      var bindEvent;
 
       var getFirstReceivedPage = function getFirstReceivedPage() {
         return Math.min.apply(Math, _toConsumableArray(Object.keys(cachedHits || {}).map(Number)));
@@ -10244,7 +10597,7 @@
           // avoid updating the browser URL when the user displays the previous page.
           helper.overrideStateWithoutTriggeringChangeEvent(_objectSpread2({}, helper.state, {
             page: getFirstReceivedPage() - 1
-          })).search();
+          })).searchWithoutTriggeringOnStateChange();
         };
       };
 
@@ -10271,11 +10624,22 @@
               helper = _ref5.helper;
           showPrevious = getShowPrevious(helper);
           showMore = getShowMore(helper);
+          sendEvent = createSendEventForHits({
+            instantSearchInstance: instantSearchInstance,
+            index: helper.getIndex(),
+            widgetType: this.$$type
+          });
+          bindEvent = createBindEventForHits({
+            index: helper.getIndex(),
+            widgetType: this.$$type
+          });
           renderFn({
             hits: extractHitsFromCachedHits(cache.read({
               state: helper.state
             }) || {}),
             results: undefined,
+            sendEvent: sendEvent,
+            bindEvent: bindEvent,
             showPrevious: showPrevious,
             showMore: showMore,
             isFirstPage: getFirstReceivedPage() === 0 || helper.state.page === undefined,
@@ -10344,9 +10708,12 @@
 
           var isFirstPage = getFirstReceivedPage() === 0;
           var isLastPage = results.nbPages <= results.page + 1;
+          sendEvent('view', cachedHits[page]);
           renderFn({
             hits: extractHitsFromCachedHits(cachedHits),
             results: results,
+            sendEvent: sendEvent,
+            bindEvent: bindEvent,
             showPrevious: showPrevious,
             showMore: showMore,
             isFirstPage: isFirstPage,
@@ -10372,7 +10739,9 @@
           var searchParameters = _ref8.searchParameters;
           var page = searchParameters.page || 0;
 
-          if (!hasShowPrevious || !page) {
+          if (!page) {
+            // return without adding `page` to uiState
+            // because we don't want `page=1` in the URL
             return uiState;
           }
 
@@ -10515,6 +10884,7 @@
         throw new Error(withUsage$8('The `showMoreLimit` option must be greater than `limit`.'));
       }
 
+      var sendEvent;
       return {
         $$type: 'ais.menu',
         isShowingMore: false,
@@ -10547,6 +10917,7 @@
                 _helper$getHierarchic2 = _slicedToArray(_helper$getHierarchic, 1),
                 refinedItem = _helper$getHierarchic2[0];
 
+            sendEvent('click', facetValue ? facetValue : refinedItem);
             helper.toggleRefinement(attribute, facetValue ? facetValue : refinedItem).search();
           };
         },
@@ -10554,6 +10925,12 @@
           var helper = _ref2.helper,
               createURL = _ref2.createURL,
               instantSearchInstance = _ref2.instantSearchInstance;
+          sendEvent = createSendEventForFacet({
+            instantSearchInstance: instantSearchInstance,
+            helper: helper,
+            attribute: attribute,
+            widgetType: this.$$type
+          });
           this.cachedToggleShowMore = this.cachedToggleShowMore.bind(this);
 
           this._createURL = function (facetValue) {
@@ -10565,6 +10942,7 @@
             items: [],
             createURL: this._createURL,
             refine: this._refine,
+            sendEvent: sendEvent,
             instantSearchInstance: instantSearchInstance,
             canRefine: false,
             widgetParams: widgetParams,
@@ -10598,6 +10976,7 @@
             items: items,
             createURL: this._createURL,
             refine: this._refine,
+            sendEvent: sendEvent,
             instantSearchInstance: instantSearchInstance,
             canRefine: items.length > 0,
             widgetParams: widgetParams,
@@ -10653,20 +11032,65 @@
     name: 'numeric-menu',
     connector: true
   });
+  var $$type = 'ais.numericMenu';
+
+  var createSendEvent = function createSendEvent(_ref) {
+    var instantSearchInstance = _ref.instantSearchInstance,
+        helper = _ref.helper,
+        attribute = _ref.attribute;
+    return function () {
+      for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
+        args[_key] = arguments[_key];
+      }
+
+      if (args.length === 1) {
+        instantSearchInstance.sendEventToInsights(args[0]);
+        return;
+      }
+
+      var eventType = args[0],
+          facetValue = args[1],
+          _args$ = args[2],
+          eventName = _args$ === void 0 ? 'Filter Applied' : _args$;
+
+      if (eventType !== 'click') {
+        return;
+      } // facetValue === "%7B%22start%22:5,%22end%22:10%7D"
+
+
+      var filters = convertNumericRefinementsToFilters(getRefinedState(helper.state, attribute, facetValue), attribute);
+
+      if (filters && filters.length > 0) {
+        /*
+            filters === ["price<=10", "price>=5"]
+          */
+        instantSearchInstance.sendEventToInsights({
+          insightsMethod: 'clickedFilters',
+          widgetType: $$type,
+          eventType: eventType,
+          payload: {
+            eventName: eventName,
+            index: helper.getIndex(),
+            filters: filters
+          }
+        });
+      }
+    };
+  };
 
   var connectNumericMenu = function connectNumericMenu(renderFn) {
     var unmountFn = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : noop;
     checkRendering(renderFn, withUsage$9());
     return function (widgetParams) {
-      var _ref = widgetParams || {},
-          _ref$attribute = _ref.attribute,
-          attribute = _ref$attribute === void 0 ? '' : _ref$attribute,
-          _ref$items = _ref.items,
-          items = _ref$items === void 0 ? [] : _ref$items,
-          _ref$transformItems = _ref.transformItems,
-          transformItems = _ref$transformItems === void 0 ? function (x) {
+      var _ref2 = widgetParams || {},
+          _ref2$attribute = _ref2.attribute,
+          attribute = _ref2$attribute === void 0 ? '' : _ref2$attribute,
+          _ref2$items = _ref2.items,
+          items = _ref2$items === void 0 ? [] : _ref2$items,
+          _ref2$transformItems = _ref2.transformItems,
+          transformItems = _ref2$transformItems === void 0 ? function (x) {
         return x;
-      } : _ref$transformItems;
+      } : _ref2$transformItems;
 
       if (attribute === '') {
         throw new Error(withUsage$9('The `attribute` option is required.'));
@@ -10677,10 +11101,10 @@
       }
 
       var prepareItems = function prepareItems(state) {
-        return items.map(function (_ref2) {
-          var start = _ref2.start,
-              end = _ref2.end,
-              label = _ref2.label;
+        return items.map(function (_ref3) {
+          var start = _ref3.start,
+              end = _ref3.end,
+              label = _ref3.label;
           return {
             label: label,
             value: window.encodeURI(JSON.stringify({
@@ -10698,20 +11122,26 @@
 
       var connectorState = {};
       return {
-        $$type: 'ais.numericMenu',
-        init: function init(_ref3) {
-          var helper = _ref3.helper,
-              createURL = _ref3.createURL,
-              instantSearchInstance = _ref3.instantSearchInstance;
+        $$type: $$type,
+        init: function init(_ref4) {
+          var helper = _ref4.helper,
+              createURL = _ref4.createURL,
+              instantSearchInstance = _ref4.instantSearchInstance;
+          connectorState.sendEvent = createSendEvent({
+            instantSearchInstance: instantSearchInstance,
+            helper: helper,
+            attribute: attribute
+          });
 
           connectorState.refine = function (facetValue) {
-            var refinedState = refine(helper.state, attribute, facetValue);
+            var refinedState = getRefinedState(helper.state, attribute, facetValue);
+            connectorState.sendEvent('click', facetValue);
             helper.setState(refinedState).search();
           };
 
           connectorState.createURL = function (state) {
             return function (facetValue) {
-              return createURL(refine(state, attribute, facetValue));
+              return createURL(getRefinedState(state, attribute, facetValue));
             };
           };
 
@@ -10720,30 +11150,32 @@
             items: transformItems(prepareItems(helper.state)),
             hasNoResults: true,
             refine: connectorState.refine,
+            sendEvent: connectorState.sendEvent,
             instantSearchInstance: instantSearchInstance,
             widgetParams: widgetParams
           }, true);
         },
-        render: function render(_ref4) {
-          var results = _ref4.results,
-              state = _ref4.state,
-              instantSearchInstance = _ref4.instantSearchInstance;
+        render: function render(_ref5) {
+          var results = _ref5.results,
+              state = _ref5.state,
+              instantSearchInstance = _ref5.instantSearchInstance;
           renderFn({
             createURL: connectorState.createURL(state),
             items: transformItems(prepareItems(state)),
             hasNoResults: results.nbHits === 0,
             refine: connectorState.refine,
+            sendEvent: connectorState.sendEvent,
             instantSearchInstance: instantSearchInstance,
             widgetParams: widgetParams
           }, false);
         },
-        dispose: function dispose(_ref5) {
-          var state = _ref5.state;
+        dispose: function dispose(_ref6) {
+          var state = _ref6.state;
           unmountFn();
           return state.clearRefinements(attribute);
         },
-        getWidgetState: function getWidgetState(uiState, _ref6) {
-          var searchParameters = _ref6.searchParameters;
+        getWidgetState: function getWidgetState(uiState, _ref7) {
+          var searchParameters = _ref7.searchParameters;
           var values = searchParameters.getNumericRefinements(attribute);
           var equal = values['='] && values['='][0];
 
@@ -10764,8 +11196,8 @@
             numericMenu: _objectSpread2({}, uiState.numericMenu, _defineProperty({}, attribute, "".concat(min, ":").concat(max)))
           });
         },
-        getWidgetSearchParameters: function getWidgetSearchParameters(searchParameters, _ref7) {
-          var uiState = _ref7.uiState;
+        getWidgetSearchParameters: function getWidgetSearchParameters(searchParameters, _ref8) {
+          var uiState = _ref8.uiState;
           var value = uiState.numericMenu && uiState.numericMenu[attribute];
           var withoutRefinements = searchParameters.clearRefinements(attribute);
 
@@ -10821,7 +11253,7 @@
     return false;
   }
 
-  function refine(state, attribute, facetValue) {
+  function getRefinedState(state, attribute, facetValue) {
     var resolvedState = state;
     var refinedOption = JSON.parse(window.decodeURI(facetValue)); // @TODO: why is array / element mixed here & hasRefinements; seems wrong?
 
@@ -11128,6 +11560,7 @@
     name: 'range-slider',
     connector: true
   });
+  var $$type$1 = 'ais.range';
   /**
    * @typedef {Object} CustomRangeWidgetOptions
    * @property {string} attribute Name of the attribute for faceting.
@@ -11192,9 +11625,123 @@
         to: function to(v) {
           return formatToNumber(v).toLocaleString();
         }
+      }; // eslint-disable-next-line complexity
+
+      var getRefinedState = function getRefinedState(helper, currentRange, nextMin, nextMax) {
+        var resolvedState = helper.state;
+        var currentRangeMin = currentRange.min,
+            currentRangeMax = currentRange.max;
+
+        var _ref = resolvedState.getNumericRefinement(attribute, '>=') || [],
+            _ref2 = _slicedToArray(_ref, 1),
+            min = _ref2[0];
+
+        var _ref3 = resolvedState.getNumericRefinement(attribute, '<=') || [],
+            _ref4 = _slicedToArray(_ref3, 1),
+            max = _ref4[0];
+
+        var isResetMin = nextMin === undefined || nextMin === '';
+        var isResetMax = nextMax === undefined || nextMax === '';
+        var nextMinAsNumber = !isResetMin ? parseFloat(nextMin) : undefined;
+        var nextMaxAsNumber = !isResetMax ? parseFloat(nextMax) : undefined;
+        var newNextMin;
+
+        if (!hasMinBound && currentRangeMin === nextMinAsNumber) {
+          newNextMin = undefined;
+        } else if (hasMinBound && isResetMin) {
+          newNextMin = minBound;
+        } else {
+          newNextMin = nextMinAsNumber;
+        }
+
+        var newNextMax;
+
+        if (!hasMaxBound && currentRangeMax === nextMaxAsNumber) {
+          newNextMax = undefined;
+        } else if (hasMaxBound && isResetMax) {
+          newNextMax = maxBound;
+        } else {
+          newNextMax = nextMaxAsNumber;
+        }
+
+        var isResetNewNextMin = newNextMin === undefined;
+        var isValidNewNextMin = isFiniteNumber(newNextMin);
+        var isValidMinCurrentRange = isFiniteNumber(currentRangeMin);
+        var isGreaterThanCurrentRange = isValidMinCurrentRange && currentRangeMin <= newNextMin;
+        var isMinValid = isResetNewNextMin || isValidNewNextMin && (!isValidMinCurrentRange || isGreaterThanCurrentRange);
+        var isResetNewNextMax = newNextMax === undefined;
+        var isValidNewNextMax = isFiniteNumber(newNextMax);
+        var isValidMaxCurrentRange = isFiniteNumber(currentRangeMax);
+        var isLowerThanRange = isValidMaxCurrentRange && currentRangeMax >= newNextMax;
+        var isMaxValid = isResetNewNextMax || isValidNewNextMax && (!isValidMaxCurrentRange || isLowerThanRange);
+        var hasMinChange = min !== newNextMin;
+        var hasMaxChange = max !== newNextMax;
+
+        if ((hasMinChange || hasMaxChange) && isMinValid && isMaxValid) {
+          resolvedState = resolvedState.removeNumericRefinement(attribute);
+
+          if (isValidNewNextMin) {
+            resolvedState = resolvedState.addNumericRefinement(attribute, '>=', formatToNumber(newNextMin));
+          }
+
+          if (isValidNewNextMax) {
+            resolvedState = resolvedState.addNumericRefinement(attribute, '<=', formatToNumber(newNextMax));
+          }
+
+          return resolvedState;
+        }
+
+        return null;
       };
+
+      var sendEventWithRefinedState = function sendEventWithRefinedState(refinedState, instantSearchInstance, helper) {
+        var eventName = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : 'Filter Applied';
+        var filters = convertNumericRefinementsToFilters(refinedState, attribute);
+
+        if (filters && filters.length > 0) {
+          instantSearchInstance.sendEventToInsights({
+            insightsMethod: 'clickedFilters',
+            widgetType: $$type$1,
+            eventType: 'click',
+            payload: {
+              eventName: eventName,
+              index: helper.getIndex(),
+              filters: filters
+            }
+          });
+        }
+      };
+
+      var createSendEvent = function createSendEvent(instantSearchInstance, helper, currentRange) {
+        return function () {
+          for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
+            args[_key] = arguments[_key];
+          }
+
+          if (args.length === 1) {
+            instantSearchInstance.sendEventToInsights(args[0]);
+            return;
+          }
+
+          var eventType = args[0],
+              facetValue = args[1],
+              eventName = args[2];
+
+          if (eventType !== 'click') {
+            return;
+          }
+
+          var _facetValue = _slicedToArray(facetValue, 2),
+              nextMin = _facetValue[0],
+              nextMax = _facetValue[1];
+
+          var refinedState = getRefinedState(helper, currentRange, nextMin, nextMax);
+          sendEventWithRefinedState(refinedState, instantSearchInstance, helper, eventName);
+        };
+      };
+
       return {
-        $$type: 'ais.range',
+        $$type: $$type$1,
         _getCurrentRange: function _getCurrentRange(stats) {
           var pow = Math.pow(10, precision);
           var min;
@@ -11223,86 +11770,31 @@
           };
         },
         _getCurrentRefinement: function _getCurrentRefinement(helper) {
-          var _ref = helper.getNumericRefinement(attribute, '>=') || [],
-              _ref2 = _slicedToArray(_ref, 1),
-              minValue = _ref2[0];
+          var _ref5 = helper.getNumericRefinement(attribute, '>=') || [],
+              _ref6 = _slicedToArray(_ref5, 1),
+              minValue = _ref6[0];
 
-          var _ref3 = helper.getNumericRefinement(attribute, '<=') || [],
-              _ref4 = _slicedToArray(_ref3, 1),
-              maxValue = _ref4[0];
+          var _ref7 = helper.getNumericRefinement(attribute, '<=') || [],
+              _ref8 = _slicedToArray(_ref7, 1),
+              maxValue = _ref8[0];
 
           var min = isFiniteNumber(minValue) ? minValue : -Infinity;
           var max = isFiniteNumber(maxValue) ? maxValue : Infinity;
           return [min, max];
         },
-        _refine: function _refine(helper, currentRange) {
+        _refine: function _refine(instantSearchInstance, helper, currentRange) {
           // eslint-disable-next-line complexity
           return function () {
-            var _ref5 = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [],
-                _ref6 = _slicedToArray(_ref5, 2),
-                nextMin = _ref6[0],
-                nextMax = _ref6[1];
+            var _ref9 = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [],
+                _ref10 = _slicedToArray(_ref9, 2),
+                nextMin = _ref10[0],
+                nextMax = _ref10[1];
 
-            var currentRangeMin = currentRange.min,
-                currentRangeMax = currentRange.max;
+            var refinedState = getRefinedState(helper, currentRange, nextMin, nextMax);
 
-            var _ref7 = helper.getNumericRefinement(attribute, '>=') || [],
-                _ref8 = _slicedToArray(_ref7, 1),
-                min = _ref8[0];
-
-            var _ref9 = helper.getNumericRefinement(attribute, '<=') || [],
-                _ref10 = _slicedToArray(_ref9, 1),
-                max = _ref10[0];
-
-            var isResetMin = nextMin === undefined || nextMin === '';
-            var isResetMax = nextMax === undefined || nextMax === '';
-            var nextMinAsNumber = !isResetMin ? parseFloat(nextMin) : undefined;
-            var nextMaxAsNumber = !isResetMax ? parseFloat(nextMax) : undefined;
-            var newNextMin;
-
-            if (!hasMinBound && currentRangeMin === nextMinAsNumber) {
-              newNextMin = undefined;
-            } else if (hasMinBound && isResetMin) {
-              newNextMin = minBound;
-            } else {
-              newNextMin = nextMinAsNumber;
-            }
-
-            var newNextMax;
-
-            if (!hasMaxBound && currentRangeMax === nextMaxAsNumber) {
-              newNextMax = undefined;
-            } else if (hasMaxBound && isResetMax) {
-              newNextMax = maxBound;
-            } else {
-              newNextMax = nextMaxAsNumber;
-            }
-
-            var isResetNewNextMin = newNextMin === undefined;
-            var isValidNewNextMin = isFiniteNumber(newNextMin);
-            var isValidMinCurrentRange = isFiniteNumber(currentRangeMin);
-            var isGreaterThanCurrentRange = isValidMinCurrentRange && currentRangeMin <= newNextMin;
-            var isMinValid = isResetNewNextMin || isValidNewNextMin && (!isValidMinCurrentRange || isGreaterThanCurrentRange);
-            var isResetNewNextMax = newNextMax === undefined;
-            var isValidNewNextMax = isFiniteNumber(newNextMax);
-            var isValidMaxCurrentRange = isFiniteNumber(currentRangeMax);
-            var isLowerThanRange = isValidMaxCurrentRange && currentRangeMax >= newNextMax;
-            var isMaxValid = isResetNewNextMax || isValidNewNextMax && (!isValidMaxCurrentRange || isLowerThanRange);
-            var hasMinChange = min !== newNextMin;
-            var hasMaxChange = max !== newNextMax;
-
-            if ((hasMinChange || hasMaxChange) && isMinValid && isMaxValid) {
-              helper.removeNumericRefinement(attribute);
-
-              if (isValidNewNextMin) {
-                helper.addNumericRefinement(attribute, '>=', formatToNumber(newNextMin));
-              }
-
-              if (isValidNewNextMax) {
-                helper.addNumericRefinement(attribute, '<=', formatToNumber(newNextMax));
-              }
-
-              helper.search();
+            if (refinedState) {
+              sendEventWithRefinedState(refinedState, instantSearchInstance, helper);
+              helper.setState(refinedState).search();
             }
           };
         },
@@ -11319,7 +11811,8 @@
             // On first render pass an empty range
             // to be able to bypass the validation
             // related to it
-            refine: this._refine(helper, {}),
+            refine: this._refine(instantSearchInstance, helper, {}),
+            sendEvent: createSendEvent(instantSearchInstance, helper, {}),
             format: rangeFormatter,
             range: currentRange,
             widgetParams: _objectSpread2({}, widgetParams, {
@@ -11344,7 +11837,8 @@
           var start = this._getCurrentRefinement(helper);
 
           renderFn({
-            refine: this._refine(helper, currentRange),
+            refine: this._refine(instantSearchInstance, helper, currentRange),
+            sendEvent: createSendEvent(instantSearchInstance, helper, currentRange),
             format: rangeFormatter,
             range: currentRange,
             widgetParams: _objectSpread2({}, widgetParams, {
@@ -11578,6 +12072,7 @@
       var hasExhaustiveItems = true;
       var searchForFacetValues;
       var triggerRefine;
+      var sendEvent;
 
       var _render = function render(_ref2) {
         var items = _ref2.items,
@@ -11701,9 +12196,16 @@
               createURL = _ref4.createURL,
               instantSearchInstance = _ref4.instantSearchInstance;
           this.cachedToggleShowMore = this.cachedToggleShowMore.bind(this);
+          sendEvent = createSendEventForFacet({
+            instantSearchInstance: instantSearchInstance,
+            helper: helper,
+            attribute: attribute,
+            widgetType: this.$$type
+          });
 
           triggerRefine = function triggerRefine(facetValue) {
-            return helper.toggleRefinement(attribute, facetValue).search();
+            sendEvent('click', facetValue);
+            helper.toggleRefinement(attribute, facetValue).search();
           };
 
           searchForFacetValues = createSearchForFacetValues(helper, this.cachedToggleShowMore);
@@ -11718,7 +12220,8 @@
             isFirstSearch: true,
             instantSearchInstance: instantSearchInstance,
             isShowingMore: this.isShowingMore,
-            toggleShowMore: this.cachedToggleShowMore
+            toggleShowMore: this.cachedToggleShowMore,
+            sendEvent: sendEvent
           });
         },
         render: function render(renderOptions) {
@@ -11752,7 +12255,8 @@
             isFirstSearch: false,
             instantSearchInstance: instantSearchInstance,
             isShowingMore: this.isShowingMore,
-            toggleShowMore: this.cachedToggleShowMore
+            toggleShowMore: this.cachedToggleShowMore,
+            sendEvent: sendEvent
           });
         },
         dispose: function dispose(_ref5) {
@@ -12115,6 +12619,48 @@
     name: 'rating-menu',
     connector: true
   });
+  var $$type$2 = 'ais.ratingMenu';
+
+  var createSendEvent$1 = function createSendEvent(_ref) {
+    var instantSearchInstance = _ref.instantSearchInstance,
+        helper = _ref.helper,
+        getRefinedStar = _ref.getRefinedStar,
+        attribute = _ref.attribute;
+    return function () {
+      for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
+        args[_key] = arguments[_key];
+      }
+
+      if (args.length === 1) {
+        instantSearchInstance.sendEventToInsights(args[0]);
+        return;
+      }
+
+      var eventType = args[0],
+          facetValue = args[1],
+          _args$ = args[2],
+          eventName = _args$ === void 0 ? 'Filter Applied' : _args$;
+
+      if (eventType !== 'click') {
+        return;
+      }
+
+      var isRefined = getRefinedStar() === Number(facetValue);
+
+      if (!isRefined) {
+        instantSearchInstance.sendEventToInsights({
+          insightsMethod: 'clickedFilters',
+          widgetType: $$type$2,
+          eventType: eventType,
+          payload: {
+            eventName: eventName,
+            index: helper.getIndex(),
+            filters: ["".concat(attribute, ">=").concat(facetValue)]
+          }
+        });
+      }
+    };
+  };
   /**
    * @typedef {Object} StarRatingItems
    * @property {string} name Name corresponding to the number of stars.
@@ -12200,6 +12746,7 @@
    * ]);
    */
 
+
   function connectRatingMenu(renderFn) {
     var unmountFn = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : noop;
     checkRendering(renderFn, withUsage$f());
@@ -12213,12 +12760,15 @@
         throw new Error(withUsage$f('The `attribute` option is required.'));
       }
 
+      var sendEvent;
       return {
-        $$type: 'ais.ratingMenu',
-        init: function init(_ref) {
-          var helper = _ref.helper,
-              createURL = _ref.createURL,
-              instantSearchInstance = _ref.instantSearchInstance;
+        $$type: $$type$2,
+        init: function init(_ref2) {
+          var _this = this;
+
+          var helper = _ref2.helper,
+              createURL = _ref2.createURL,
+              instantSearchInstance = _ref2.instantSearchInstance;
           this._toggleRefinement = this._toggleRefinement.bind(this, helper);
 
           this._createURL = function (state) {
@@ -12227,20 +12777,29 @@
             };
           };
 
+          sendEvent = createSendEvent$1({
+            instantSearchInstance: instantSearchInstance,
+            helper: helper,
+            getRefinedStar: function getRefinedStar() {
+              return _this._getRefinedStar(helper.state);
+            },
+            attribute: attribute
+          });
           renderFn({
             instantSearchInstance: instantSearchInstance,
             items: [],
             hasNoResults: true,
             refine: this._toggleRefinement,
+            sendEvent: sendEvent,
             createURL: this._createURL(helper.state),
             widgetParams: widgetParams
           }, true);
         },
-        render: function render(_ref2) {
-          var helper = _ref2.helper,
-              results = _ref2.results,
-              state = _ref2.state,
-              instantSearchInstance = _ref2.instantSearchInstance;
+        render: function render(_ref3) {
+          var helper = _ref3.helper,
+              results = _ref3.results,
+              state = _ref3.state,
+              instantSearchInstance = _ref3.instantSearchInstance;
           var facetValues = [];
           var allValues = {};
 
@@ -12291,17 +12850,18 @@
             items: facetValues,
             hasNoResults: results.nbHits === 0,
             refine: this._toggleRefinement,
+            sendEvent: sendEvent,
             createURL: this._createURL(state),
             widgetParams: widgetParams
           }, false);
         },
-        dispose: function dispose(_ref3) {
-          var state = _ref3.state;
+        dispose: function dispose(_ref4) {
+          var state = _ref4.state;
           unmountFn();
           return state.removeDisjunctiveFacet(attribute);
         },
-        getWidgetState: function getWidgetState(uiState, _ref4) {
-          var searchParameters = _ref4.searchParameters;
+        getWidgetState: function getWidgetState(uiState, _ref5) {
+          var searchParameters = _ref5.searchParameters;
 
           var value = this._getRefinedStar(searchParameters);
 
@@ -12313,8 +12873,8 @@
             ratingMenu: _objectSpread2({}, uiState.ratingMenu, _defineProperty({}, attribute, value))
           });
         },
-        getWidgetSearchParameters: function getWidgetSearchParameters(searchParameters, _ref5) {
-          var uiState = _ref5.uiState;
+        getWidgetSearchParameters: function getWidgetSearchParameters(searchParameters, _ref6) {
+          var uiState = _ref6.uiState;
           var value = uiState.ratingMenu && uiState.ratingMenu[attribute];
           var withoutRefinements = searchParameters.clearRefinements(attribute);
           var withDisjunctiveFacet = withoutRefinements.addDisjunctiveFacet(attribute);
@@ -12333,6 +12893,7 @@
           }, withDisjunctiveFacet);
         },
         _toggleRefinement: function _toggleRefinement(helper, facetValue) {
+          sendEvent('click', facetValue);
           var isRefined = this._getRefinedStar(helper.state) === Number(facetValue);
           helper.removeDisjunctiveFacetRefinement(attribute);
 
@@ -12373,13 +12934,17 @@
    */
 
   /**
+   * @typedef {Object} CustomStatsWidgetOptions
+   */
+
+  /**
    * **Stats** connector provides the logic to build a custom widget that will displays
    * search statistics (hits number and processing time).
    *
    * @type {Connector}
    * @param {function(StatsRenderingOptions, boolean)} renderFn Rendering function for the custom **Stats** widget.
    * @param {function} unmountFn Unmount function called when the widget is disposed.
-   * @return {function} Re-usable widget factory for a custom **Stats** widget.
+   * @return {function(CustomStatsWidgetOptions)} Re-usable widget factory for a custom **Stats** widget.
    * @example
    * // custom `renderFn` to render the custom Stats widget
    * function renderFn(StatsRenderingOptions, isFirstRendering) {
@@ -12446,6 +13011,49 @@
     name: 'toggle-refinement',
     connector: true
   });
+  var $$type$3 = 'ais.toggleRefinement';
+
+  var createSendEvent$2 = function createSendEvent(_ref) {
+    var instantSearchInstance = _ref.instantSearchInstance,
+        attribute = _ref.attribute,
+        on = _ref.on,
+        helper = _ref.helper;
+    return function () {
+      for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
+        args[_key] = arguments[_key];
+      }
+
+      if (args.length === 1) {
+        instantSearchInstance.sendEventToInsights(args[0]);
+        return;
+      }
+
+      var eventType = args[0],
+          isRefined = args[1],
+          _args$ = args[2],
+          eventName = _args$ === void 0 ? 'Filter Applied' : _args$;
+
+      if (eventType !== 'click' || on === undefined) {
+        return;
+      } // Checking
+
+
+      if (!isRefined) {
+        instantSearchInstance.sendEventToInsights({
+          insightsMethod: 'clickedFilters',
+          widgetType: $$type$3,
+          eventType: eventType,
+          payload: {
+            eventName: eventName,
+            index: helper.getIndex(),
+            filters: on.map(function (value) {
+              return "".concat(attribute, ":").concat(JSON.stringify(value));
+            })
+          }
+        });
+      }
+    };
+  };
   /**
    * @typedef {Object} ToggleValue
    * @property {boolean} isRefined `true` if the toggle is on.
@@ -12522,6 +13130,7 @@
    * ]);
    */
 
+
   function connectToggleRefinement(renderFn) {
     var unmountFn = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : noop;
     checkRendering(renderFn, withUsage$h());
@@ -12540,14 +13149,17 @@
       var hasAnOnValue = userOn !== undefined;
       var on = hasAnOnValue ? toArray(userOn).map(escapeRefinement) : undefined;
       var off = hasAnOffValue ? toArray(userOff).map(escapeRefinement) : undefined;
+      var sendEvent;
       return {
-        $$type: 'ais.toggleRefinement',
+        $$type: $$type$3,
         _toggleRefinement: function _toggleRefinement(helper) {
-          var _ref = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
-              isRefined = _ref.isRefined;
+          var _ref2 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
+              isRefined = _ref2.isRefined;
 
           // Checking
           if (!isRefined) {
+            sendEvent('click', isRefined);
+
             if (hasAnOffValue) {
               off.forEach(function (v) {
                 return helper.removeDisjunctiveFacetRefinement(attribute, v);
@@ -12572,13 +13184,19 @@
 
           helper.search();
         },
-        init: function init(_ref2) {
+        init: function init(_ref3) {
           var _this = this;
 
-          var state = _ref2.state,
-              helper = _ref2.helper,
-              createURL = _ref2.createURL,
-              instantSearchInstance = _ref2.instantSearchInstance;
+          var state = _ref3.state,
+              helper = _ref3.helper,
+              createURL = _ref3.createURL,
+              instantSearchInstance = _ref3.instantSearchInstance;
+          sendEvent = createSendEvent$2({
+            instantSearchInstance: instantSearchInstance,
+            attribute: attribute,
+            on: on,
+            helper: helper
+          });
 
           this._createURL = function (isCurrentlyRefined) {
             return function () {
@@ -12644,38 +13262,55 @@
             value: value,
             createURL: this._createURL(value.isRefined),
             refine: this.toggleRefinement,
+            sendEvent: sendEvent,
             instantSearchInstance: instantSearchInstance,
             widgetParams: widgetParams
           }, true);
         },
-        render: function render(_ref3) {
-          var helper = _ref3.helper,
-              results = _ref3.results,
-              state = _ref3.state,
-              instantSearchInstance = _ref3.instantSearchInstance;
+        render: function render(_ref4) {
+          var helper = _ref4.helper,
+              results = _ref4.results,
+              state = _ref4.state,
+              instantSearchInstance = _ref4.instantSearchInstance;
           var isRefined = on && on.every(function (v) {
             return helper.state.isDisjunctiveFacetRefined(attribute, v);
           });
-          var offValue = off === undefined ? false : off;
+          var offValue = toArray(off === undefined ? false : off);
           var allFacetValues = results.getFacetValues(attribute) || [];
-          var onData = find$1(allFacetValues, function (_ref4) {
-            var name = _ref4.name;
-            return name === unescapeRefinement(on);
+          var onData = on && on.map(function (v) {
+            return find$1(allFacetValues, function (_ref5) {
+              var name = _ref5.name;
+              return name === unescapeRefinement(v);
+            });
+          }).filter(function (v) {
+            return v !== undefined;
           });
           var onFacetValue = {
-            isRefined: onData !== undefined ? onData.isRefined : false,
-            count: onData === undefined ? null : onData.count
+            isRefined: onData.length > 0 ? onData.every(function (v) {
+              return v.isRefined;
+            }) : false,
+            count: onData.length === 0 ? null : onData.reduce(function (acc, v) {
+              return acc + v.count;
+            }, 0)
           };
-          var offData = hasAnOffValue ? find$1(allFacetValues, function (_ref5) {
-            var name = _ref5.name;
-            return name === unescapeRefinement(offValue);
-          }) : undefined;
+          var offData = hasAnOffValue ? offValue.map(function (v) {
+            return find$1(allFacetValues, function (_ref6) {
+              var name = _ref6.name;
+              return name === unescapeRefinement(v);
+            });
+          }).filter(function (v) {
+            return v !== undefined;
+          }) : [];
           var offFacetValue = {
-            isRefined: offData !== undefined ? offData.isRefined : false,
-            count: offData === undefined ? allFacetValues.reduce(function (total, _ref6) {
-              var count = _ref6.count;
+            isRefined: offData.length > 0 ? offData.every(function (v) {
+              return v.isRefined;
+            }) : false,
+            count: offData.length === 0 ? allFacetValues.reduce(function (total, _ref7) {
+              var count = _ref7.count;
               return total + count;
-            }, 0) : offData.count
+            }, 0) : offData.reduce(function (acc, v) {
+              return acc + v.count;
+            }, 0)
           }; // what will we show by default,
           // if checkbox is not checked, show: [ ] free shipping (countWhenChecked)
           // if checkbox is checked, show: [x] free shipping (countWhenNotChecked)
@@ -12693,18 +13328,19 @@
             state: state,
             createURL: this._createURL(value.isRefined),
             refine: this.toggleRefinement,
+            sendEvent: sendEvent,
             helper: helper,
             instantSearchInstance: instantSearchInstance,
             widgetParams: widgetParams
           }, false);
         },
-        dispose: function dispose(_ref7) {
-          var state = _ref7.state;
+        dispose: function dispose(_ref8) {
+          var state = _ref8.state;
           unmountFn();
           return state.removeDisjunctiveFacet(attribute);
         },
-        getWidgetState: function getWidgetState(uiState, _ref8) {
-          var searchParameters = _ref8.searchParameters;
+        getWidgetState: function getWidgetState(uiState, _ref9) {
+          var searchParameters = _ref9.searchParameters;
           var isRefined = on && on.every(function (v) {
             return searchParameters.isDisjunctiveFacetRefined(attribute, v);
           });
@@ -12717,8 +13353,8 @@
             toggle: _objectSpread2({}, uiState.toggle, _defineProperty({}, attribute, isRefined))
           });
         },
-        getWidgetSearchParameters: function getWidgetSearchParameters(searchParameters, _ref9) {
-          var uiState = _ref9.uiState;
+        getWidgetSearchParameters: function getWidgetSearchParameters(searchParameters, _ref10) {
+          var uiState = _ref10.uiState;
           var withFacetConfiguration = searchParameters.clearRefinements(attribute).addDisjunctiveFacet(attribute);
           var isRefined = Boolean(uiState.toggle && uiState.toggle[attribute]);
 
@@ -12891,6 +13527,7 @@
     name: 'geo-search',
     connector: true
   });
+  var $$type$4 = 'ais.geoSearch';
   /**
    * @typedef {Object} LatLng
    * @property {number} lat The latitude in degrees.
@@ -13067,11 +13704,18 @@
         return widgetState.hasMapMoveSinceLastRefine;
       };
 
+      var sendEvent;
+
       var init = function init(initArgs) {
         var state = initArgs.state,
             helper = initArgs.helper,
             instantSearchInstance = initArgs.instantSearchInstance;
         var isFirstRendering = true;
+        sendEvent = createSendEventForHits({
+          instantSearchInstance: instantSearchInstance,
+          index: helper.getIndex(),
+          widgetType: $$type$4
+        });
         widgetState.internalToggleRefineOnMapMove = createInternalToggleRefinementOnMapMove(noop, initArgs);
         widgetState.internalSetMapMoveSinceLastRefine = createInternalSetMapMoveSinceLastRefine(noop, initArgs);
         renderFn({
@@ -13079,6 +13723,7 @@
           position: getPositionFromState(state),
           currentRefinement: getCurrentRefinementFromState(state),
           refine: refine(helper),
+          sendEvent: sendEvent,
           clearMapRefinement: clearMapRefinement(helper),
           isRefinedWithMap: isRefinedWithMap(state),
           toggleRefineOnMapMove: toggleRefineOnMapMove,
@@ -13112,11 +13757,13 @@
         var items = transformItems(results.hits.filter(function (hit) {
           return hit._geoloc;
         }));
+        sendEvent('view', items);
         renderFn({
           items: items,
           position: getPositionFromState(state),
           currentRefinement: getCurrentRefinementFromState(state),
           refine: refine(helper),
+          sendEvent: sendEvent,
           clearMapRefinement: clearMapRefinement(helper),
           isRefinedWithMap: isRefinedWithMap(state),
           toggleRefineOnMapMove: toggleRefineOnMapMove,
@@ -13129,7 +13776,7 @@
       };
 
       return {
-        $$type: 'ais.geoSearch',
+        $$type: $$type$4,
         init: init,
         render: render,
         dispose: function dispose(_ref2) {
@@ -13328,7 +13975,7 @@
 
       var optionalFilters = Object.keys(matchingPatterns).reduce(function (acc, attributeName) {
         var attribute = matchingPatterns[attributeName];
-        var attributeValue = hit[attributeName];
+        var attributeValue = getPropertyByPath(hit, attributeName);
         var attributeScore = attribute.score;
 
         if (Array.isArray(attributeValue)) {
@@ -13405,6 +14052,8 @@
           }, true);
         },
         render: function render(_ref4) {
+          var _this = this;
+
           var helper = _ref4.helper,
               scopedResults = _ref4.scopedResults,
               instantSearchInstance = _ref4.instantSearchInstance;
@@ -13412,11 +14061,18 @@
             // We need to escape the hits because highlighting
             // exposes HTML tags to the end-user.
             scopedResult.results.hits = escapeHTML ? escapeHits(scopedResult.results.hits) : scopedResult.results.hits;
+            var sendEvent = createSendEventForHits({
+              instantSearchInstance: instantSearchInstance,
+              index: scopedResult.results.index,
+              widgetType: _this.$$type
+            });
+            sendEvent('view', scopedResult.results.hits);
             return {
               indexId: scopedResult.indexId,
               indexName: scopedResult.results.index,
               hits: scopedResult.results.hits,
-              results: scopedResult.results
+              results: scopedResult.results,
+              sendEvent: sendEvent
             };
           });
           renderFn({
@@ -13934,254 +14590,6 @@
     connectVoiceSearch: connectVoiceSearch
   });
 
-  var reactIs_production_min = createCommonjsModule(function (module, exports) {
-  Object.defineProperty(exports,"__esModule",{value:!0});
-  var b="function"===typeof Symbol&&Symbol.for,c=b?Symbol.for("react.element"):60103,d=b?Symbol.for("react.portal"):60106,e=b?Symbol.for("react.fragment"):60107,f=b?Symbol.for("react.strict_mode"):60108,g=b?Symbol.for("react.profiler"):60114,h=b?Symbol.for("react.provider"):60109,k=b?Symbol.for("react.context"):60110,l=b?Symbol.for("react.async_mode"):60111,m=b?Symbol.for("react.concurrent_mode"):60111,n=b?Symbol.for("react.forward_ref"):60112,p=b?Symbol.for("react.suspense"):60113,q=b?Symbol.for("react.suspense_list"):
-  60120,r=b?Symbol.for("react.memo"):60115,t=b?Symbol.for("react.lazy"):60116,v=b?Symbol.for("react.fundamental"):60117,w=b?Symbol.for("react.responder"):60118;function x(a){if("object"===typeof a&&null!==a){var u=a.$$typeof;switch(u){case c:switch(a=a.type,a){case l:case m:case e:case g:case f:case p:return a;default:switch(a=a&&a.$$typeof,a){case k:case n:case h:return a;default:return u}}case t:case r:case d:return u}}}function y(a){return x(a)===m}exports.typeOf=x;exports.AsyncMode=l;
-  exports.ConcurrentMode=m;exports.ContextConsumer=k;exports.ContextProvider=h;exports.Element=c;exports.ForwardRef=n;exports.Fragment=e;exports.Lazy=t;exports.Memo=r;exports.Portal=d;exports.Profiler=g;exports.StrictMode=f;exports.Suspense=p;
-  exports.isValidElementType=function(a){return "string"===typeof a||"function"===typeof a||a===e||a===m||a===g||a===f||a===p||a===q||"object"===typeof a&&null!==a&&(a.$$typeof===t||a.$$typeof===r||a.$$typeof===h||a.$$typeof===k||a.$$typeof===n||a.$$typeof===v||a.$$typeof===w)};exports.isAsyncMode=function(a){return y(a)||x(a)===l};exports.isConcurrentMode=y;exports.isContextConsumer=function(a){return x(a)===k};exports.isContextProvider=function(a){return x(a)===h};
-  exports.isElement=function(a){return "object"===typeof a&&null!==a&&a.$$typeof===c};exports.isForwardRef=function(a){return x(a)===n};exports.isFragment=function(a){return x(a)===e};exports.isLazy=function(a){return x(a)===t};exports.isMemo=function(a){return x(a)===r};exports.isPortal=function(a){return x(a)===d};exports.isProfiler=function(a){return x(a)===g};exports.isStrictMode=function(a){return x(a)===f};exports.isSuspense=function(a){return x(a)===p};
-  });
-
-  unwrapExports(reactIs_production_min);
-  var reactIs_production_min_1 = reactIs_production_min.typeOf;
-  var reactIs_production_min_2 = reactIs_production_min.AsyncMode;
-  var reactIs_production_min_3 = reactIs_production_min.ConcurrentMode;
-  var reactIs_production_min_4 = reactIs_production_min.ContextConsumer;
-  var reactIs_production_min_5 = reactIs_production_min.ContextProvider;
-  var reactIs_production_min_6 = reactIs_production_min.Element;
-  var reactIs_production_min_7 = reactIs_production_min.ForwardRef;
-  var reactIs_production_min_8 = reactIs_production_min.Fragment;
-  var reactIs_production_min_9 = reactIs_production_min.Lazy;
-  var reactIs_production_min_10 = reactIs_production_min.Memo;
-  var reactIs_production_min_11 = reactIs_production_min.Portal;
-  var reactIs_production_min_12 = reactIs_production_min.Profiler;
-  var reactIs_production_min_13 = reactIs_production_min.StrictMode;
-  var reactIs_production_min_14 = reactIs_production_min.Suspense;
-  var reactIs_production_min_15 = reactIs_production_min.isValidElementType;
-  var reactIs_production_min_16 = reactIs_production_min.isAsyncMode;
-  var reactIs_production_min_17 = reactIs_production_min.isConcurrentMode;
-  var reactIs_production_min_18 = reactIs_production_min.isContextConsumer;
-  var reactIs_production_min_19 = reactIs_production_min.isContextProvider;
-  var reactIs_production_min_20 = reactIs_production_min.isElement;
-  var reactIs_production_min_21 = reactIs_production_min.isForwardRef;
-  var reactIs_production_min_22 = reactIs_production_min.isFragment;
-  var reactIs_production_min_23 = reactIs_production_min.isLazy;
-  var reactIs_production_min_24 = reactIs_production_min.isMemo;
-  var reactIs_production_min_25 = reactIs_production_min.isPortal;
-  var reactIs_production_min_26 = reactIs_production_min.isProfiler;
-  var reactIs_production_min_27 = reactIs_production_min.isStrictMode;
-  var reactIs_production_min_28 = reactIs_production_min.isSuspense;
-
-  var reactIs_development = createCommonjsModule(function (module, exports) {
-  });
-
-  unwrapExports(reactIs_development);
-  var reactIs_development_1 = reactIs_development.typeOf;
-  var reactIs_development_2 = reactIs_development.AsyncMode;
-  var reactIs_development_3 = reactIs_development.ConcurrentMode;
-  var reactIs_development_4 = reactIs_development.ContextConsumer;
-  var reactIs_development_5 = reactIs_development.ContextProvider;
-  var reactIs_development_6 = reactIs_development.Element;
-  var reactIs_development_7 = reactIs_development.ForwardRef;
-  var reactIs_development_8 = reactIs_development.Fragment;
-  var reactIs_development_9 = reactIs_development.Lazy;
-  var reactIs_development_10 = reactIs_development.Memo;
-  var reactIs_development_11 = reactIs_development.Portal;
-  var reactIs_development_12 = reactIs_development.Profiler;
-  var reactIs_development_13 = reactIs_development.StrictMode;
-  var reactIs_development_14 = reactIs_development.Suspense;
-  var reactIs_development_15 = reactIs_development.isValidElementType;
-  var reactIs_development_16 = reactIs_development.isAsyncMode;
-  var reactIs_development_17 = reactIs_development.isConcurrentMode;
-  var reactIs_development_18 = reactIs_development.isContextConsumer;
-  var reactIs_development_19 = reactIs_development.isContextProvider;
-  var reactIs_development_20 = reactIs_development.isElement;
-  var reactIs_development_21 = reactIs_development.isForwardRef;
-  var reactIs_development_22 = reactIs_development.isFragment;
-  var reactIs_development_23 = reactIs_development.isLazy;
-  var reactIs_development_24 = reactIs_development.isMemo;
-  var reactIs_development_25 = reactIs_development.isPortal;
-  var reactIs_development_26 = reactIs_development.isProfiler;
-  var reactIs_development_27 = reactIs_development.isStrictMode;
-  var reactIs_development_28 = reactIs_development.isSuspense;
-
-  var reactIs = createCommonjsModule(function (module) {
-
-  {
-    module.exports = reactIs_production_min;
-  }
-  });
-
-  /*
-  object-assign
-  (c) Sindre Sorhus
-  @license MIT
-  */
-  /* eslint-disable no-unused-vars */
-  var getOwnPropertySymbols = Object.getOwnPropertySymbols;
-  var hasOwnProperty = Object.prototype.hasOwnProperty;
-  var propIsEnumerable = Object.prototype.propertyIsEnumerable;
-
-  function toObject(val) {
-  	if (val === null || val === undefined) {
-  		throw new TypeError('Object.assign cannot be called with null or undefined');
-  	}
-
-  	return Object(val);
-  }
-
-  function shouldUseNative() {
-  	try {
-  		if (!Object.assign) {
-  			return false;
-  		}
-
-  		// Detect buggy property enumeration order in older V8 versions.
-
-  		// https://bugs.chromium.org/p/v8/issues/detail?id=4118
-  		var test1 = new String('abc');  // eslint-disable-line no-new-wrappers
-  		test1[5] = 'de';
-  		if (Object.getOwnPropertyNames(test1)[0] === '5') {
-  			return false;
-  		}
-
-  		// https://bugs.chromium.org/p/v8/issues/detail?id=3056
-  		var test2 = {};
-  		for (var i = 0; i < 10; i++) {
-  			test2['_' + String.fromCharCode(i)] = i;
-  		}
-  		var order2 = Object.getOwnPropertyNames(test2).map(function (n) {
-  			return test2[n];
-  		});
-  		if (order2.join('') !== '0123456789') {
-  			return false;
-  		}
-
-  		// https://bugs.chromium.org/p/v8/issues/detail?id=3056
-  		var test3 = {};
-  		'abcdefghijklmnopqrst'.split('').forEach(function (letter) {
-  			test3[letter] = letter;
-  		});
-  		if (Object.keys(Object.assign({}, test3)).join('') !==
-  				'abcdefghijklmnopqrst') {
-  			return false;
-  		}
-
-  		return true;
-  	} catch (err) {
-  		// We don't expect any of the above to throw, but better to be safe.
-  		return false;
-  	}
-  }
-
-  var objectAssign = shouldUseNative() ? Object.assign : function (target, source) {
-  	var from;
-  	var to = toObject(target);
-  	var symbols;
-
-  	for (var s = 1; s < arguments.length; s++) {
-  		from = Object(arguments[s]);
-
-  		for (var key in from) {
-  			if (hasOwnProperty.call(from, key)) {
-  				to[key] = from[key];
-  			}
-  		}
-
-  		if (getOwnPropertySymbols) {
-  			symbols = getOwnPropertySymbols(from);
-  			for (var i = 0; i < symbols.length; i++) {
-  				if (propIsEnumerable.call(from, symbols[i])) {
-  					to[symbols[i]] = from[symbols[i]];
-  				}
-  			}
-  		}
-  	}
-
-  	return to;
-  };
-
-  /**
-   * Copyright (c) 2013-present, Facebook, Inc.
-   *
-   * This source code is licensed under the MIT license found in the
-   * LICENSE file in the root directory of this source tree.
-   */
-
-  var ReactPropTypesSecret = 'SECRET_DO_NOT_PASS_THIS_OR_YOU_WILL_BE_FIRED';
-
-  var ReactPropTypesSecret_1 = ReactPropTypesSecret;
-
-  var has$3 = Function.call.bind(Object.prototype.hasOwnProperty);
-
-  function emptyFunction() {}
-  function emptyFunctionWithReset() {}
-  emptyFunctionWithReset.resetWarningCache = emptyFunction;
-
-  var factoryWithThrowingShims = function() {
-    function shim(props, propName, componentName, location, propFullName, secret) {
-      if (secret === ReactPropTypesSecret_1) {
-        // It is still safe when called from React.
-        return;
-      }
-      var err = new Error(
-        'Calling PropTypes validators directly is not supported by the `prop-types` package. ' +
-        'Use PropTypes.checkPropTypes() to call them. ' +
-        'Read more at http://fb.me/use-check-prop-types'
-      );
-      err.name = 'Invariant Violation';
-      throw err;
-    }  shim.isRequired = shim;
-    function getShim() {
-      return shim;
-    }  // Important!
-    // Keep this list in sync with production version in `./factoryWithTypeCheckers.js`.
-    var ReactPropTypes = {
-      array: shim,
-      bool: shim,
-      func: shim,
-      number: shim,
-      object: shim,
-      string: shim,
-      symbol: shim,
-
-      any: shim,
-      arrayOf: getShim,
-      element: shim,
-      elementType: shim,
-      instanceOf: getShim,
-      node: shim,
-      objectOf: getShim,
-      oneOf: getShim,
-      oneOfType: getShim,
-      shape: getShim,
-      exact: getShim,
-
-      checkPropTypes: emptyFunctionWithReset,
-      resetWarningCache: emptyFunction
-    };
-
-    ReactPropTypes.PropTypes = ReactPropTypes;
-
-    return ReactPropTypes;
-  };
-
-  var propTypes = createCommonjsModule(function (module) {
-  /**
-   * Copyright (c) 2013-present, Facebook, Inc.
-   *
-   * This source code is licensed under the MIT license found in the
-   * LICENSE file in the root directory of this source tree.
-   */
-
-  {
-    // By explicitly using `prop-types` you are opting into new production behavior.
-    // http://fb.me/prop-types-in-prod
-    module.exports = factoryWithThrowingShims();
-  }
-  });
-
   var classnames = createCommonjsModule(function (module) {
   /*!
     Copyright (c) 2017 Jed Watson.
@@ -14258,7 +14666,8 @@
           templateKey: this.props.templateKey,
           compileOptions: compileOptions,
           helpers: this.props.templatesConfig.helpers,
-          data: this.props.data
+          data: this.props.data,
+          bindEvent: this.props.bindEvent
         });
 
         if (content === null) {
@@ -15344,7 +15753,7 @@
           autoComplete: "off",
           autoCorrect: "off",
           autoCapitalize: "off",
-          spellCheck: false,
+          spellCheck: "false",
           maxLength: 512,
           onInput: this.onInput,
           onBlur: this.onBlur,
@@ -15878,6 +16287,7 @@
   var Hits = function Hits(_ref) {
     var results = _ref.results,
         hits = _ref.hits,
+        bindEvent = _ref.bindEvent,
         cssClasses = _ref.cssClasses,
         templateProps = _ref.templateProps;
 
@@ -15905,7 +16315,8 @@
         key: hit.objectID,
         data: _objectSpread2({}, hit, {
           __hitIndex: position
-        })
+        }),
+        bindEvent: bindEvent
       }));
     })));
   };
@@ -15940,7 +16351,8 @@
       var receivedHits = _ref2.hits,
           results = _ref2.results,
           instantSearchInstance = _ref2.instantSearchInstance,
-          insights = _ref2.insights;
+          insights = _ref2.insights,
+          bindEvent = _ref2.bindEvent;
 
       if (isFirstRendering) {
         renderState.templateProps = prepareTemplateProps({
@@ -15956,7 +16368,11 @@
         hits: receivedHits,
         results: results,
         templateProps: renderState.templateProps,
-        insights: insights
+        insights: insights,
+        sendEvent: function sendEvent(event) {
+          instantSearchInstance.sendEventToInsights(event);
+        },
+        bindEvent: bindEvent
       }), containerNode);
     };
   };
@@ -16094,6 +16510,7 @@
   var InfiniteHits = function InfiniteHits(_ref) {
     var results = _ref.results,
         hits = _ref.hits,
+        bindEvent = _ref.bindEvent,
         hasShowPrevious = _ref.hasShowPrevious,
         showPrevious = _ref.showPrevious,
         showMore = _ref.showMore,
@@ -16134,7 +16551,8 @@
         key: hit.objectID,
         data: _objectSpread2({}, hit, {
           __hitIndex: position
-        })
+        }),
+        bindEvent: bindEvent
       }));
     })), h(Template, _extends({}, templateProps, {
       templateKey: "showMoreText",
@@ -16177,7 +16595,8 @@
           isFirstPage = _ref2.isFirstPage,
           isLastPage = _ref2.isLastPage,
           instantSearchInstance = _ref2.instantSearchInstance,
-          insights = _ref2.insights;
+          insights = _ref2.insights,
+          bindEvent = _ref2.bindEvent;
 
       if (isFirstRendering) {
         renderState.templateProps = prepareTemplateProps({
@@ -16198,7 +16617,11 @@
         templateProps: renderState.templateProps,
         isFirstPage: isFirstPage,
         isLastPage: isLastPage,
-        insights: insights
+        insights: insights,
+        sendEvent: function sendEvent(event) {
+          instantSearchInstance.sendEventToInsights(event);
+        },
+        bindEvent: bindEvent
       }), containerNode);
     };
   };
@@ -16446,13 +16869,20 @@
     });
   }
 
+  /* eslint max-len: 0 */
   var defaultTemplates$6 = {
+    reset: "\n<svg class=\"{{cssClasses.resetIcon}}\" xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 20 20\" width=\"10\" height=\"10\">\n  <path d=\"M8.114 10L.944 2.83 0 1.885 1.886 0l.943.943L10 8.113l7.17-7.17.944-.943L20 1.886l-.943.943-7.17 7.17 7.17 7.17.943.944L18.114 20l-.943-.943-7.17-7.17-7.17 7.17-.944.943L0 18.114l.943-.943L8.113 10z\"></path>\n</svg>\n  ",
+    submit: "\n<svg class=\"{{cssClasses.submitIcon}}\" xmlns=\"http://www.w3.org/2000/svg\" width=\"10\" height=\"10\" viewBox=\"0 0 40 40\">\n  <path d=\"M26.804 29.01c-2.832 2.34-6.465 3.746-10.426 3.746C7.333 32.756 0 25.424 0 16.378 0 7.333 7.333 0 16.378 0c9.046 0 16.378 7.333 16.378 16.378 0 3.96-1.406 7.594-3.746 10.426l10.534 10.534c.607.607.61 1.59-.004 2.202-.61.61-1.597.61-2.202.004L26.804 29.01zm-10.426.627c7.323 0 13.26-5.936 13.26-13.26 0-7.32-5.937-13.257-13.26-13.257C9.056 3.12 3.12 9.056 3.12 16.378c0 7.323 5.936 13.26 13.258 13.26z\"></path>\n</svg>\n  ",
+    loadingIndicator: "\n<svg class=\"{{cssClasses.loadingIcon}}\" width=\"16\" height=\"16\" viewBox=\"0 0 38 38\" xmlns=\"http://www.w3.org/2000/svg\" stroke=\"#444\">\n  <g fill=\"none\" fillRule=\"evenodd\">\n    <g transform=\"translate(1 1)\" strokeWidth=\"2\">\n      <circle strokeOpacity=\".5\" cx=\"18\" cy=\"18\" r=\"18\" />\n      <path d=\"M36 18c0-9.94-8.06-18-18-18\">\n        <animateTransform\n          attributeName=\"transform\"\n          type=\"rotate\"\n          from=\"0 18 18\"\n          to=\"360 18 18\"\n          dur=\"1s\"\n          repeatCount=\"indefinite\"\n        />\n      </path>\n    </g>\n  </g>\n</svg>\n  "
+  };
+
+  var defaultTemplates$7 = {
     item: "<label class=\"{{cssClasses.label}}\">\n  <input type=\"checkbox\"\n         class=\"{{cssClasses.checkbox}}\"\n         value=\"{{value}}\"\n         {{#isRefined}}checked{{/isRefined}} />\n  <span class=\"{{cssClasses.labelText}}\">{{#isFromSearch}}{{{highlighted}}}{{/isFromSearch}}{{^isFromSearch}}{{highlighted}}{{/isFromSearch}}</span>\n  <span class=\"{{cssClasses.count}}\">{{#helpers.formatNumber}}{{count}}{{/helpers.formatNumber}}</span>\n</label>",
     showMoreText: "\n    {{#isShowingMore}}\n      Show less\n    {{/isShowingMore}}\n    {{^isShowingMore}}\n      Show more\n    {{/isShowingMore}}\n    ",
     searchableNoResults: 'No results',
-    searchableReset: "\n  <svg class=\"{{cssClasses.resetIcon}}\" xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 20 20\" width=\"10\" height=\"10\">\n    <path d=\"M8.114 10L.944 2.83 0 1.885 1.886 0l.943.943L10 8.113l7.17-7.17.944-.943L20 1.886l-.943.943-7.17 7.17 7.17 7.17.943.944L18.114 20l-.943-.943-7.17-7.17-7.17 7.17-.944.943L0 18.114l.943-.943L8.113 10z\"></path>\n  </svg>\n    ",
-    searchableSubmit: "\n  <svg class=\"{{cssClasses.submitIcon}}\" xmlns=\"http://www.w3.org/2000/svg\" width=\"10\" height=\"10\" viewBox=\"0 0 40 40\">\n    <path d=\"M26.804 29.01c-2.832 2.34-6.465 3.746-10.426 3.746C7.333 32.756 0 25.424 0 16.378 0 7.333 7.333 0 16.378 0c9.046 0 16.378 7.333 16.378 16.378 0 3.96-1.406 7.594-3.746 10.426l10.534 10.534c.607.607.61 1.59-.004 2.202-.61.61-1.597.61-2.202.004L26.804 29.01zm-10.426.627c7.323 0 13.26-5.936 13.26-13.26 0-7.32-5.937-13.257-13.26-13.257C9.056 3.12 3.12 9.056 3.12 16.378c0 7.323 5.936 13.26 13.258 13.26z\"></path>\n  </svg>\n    ",
-    searchableLoadingIndicator: "\n  <svg class=\"{{cssClasses.loadingIcon}}\" width=\"16\" height=\"16\" viewBox=\"0 0 38 38\" xmlns=\"http://www.w3.org/2000/svg\" stroke=\"#444\">\n    <g fill=\"none\" fillRule=\"evenodd\">\n      <g transform=\"translate(1 1)\" strokeWidth=\"2\">\n        <circle strokeOpacity=\".5\" cx=\"18\" cy=\"18\" r=\"18\" />\n        <path d=\"M36 18c0-9.94-8.06-18-18-18\">\n          <animateTransform\n            attributeName=\"transform\"\n            type=\"rotate\"\n            from=\"0 18 18\"\n            to=\"360 18 18\"\n            dur=\"1s\"\n            repeatCount=\"indefinite\"\n          />\n        </path>\n      </g>\n    </g>\n  </svg>\n    "
+    searchableReset: defaultTemplates$6.reset,
+    searchableSubmit: defaultTemplates$6.submit,
+    searchableLoadingIndicator: defaultTemplates$6.loadingIndicator
   };
 
   var withUsage$y = createDocumentationMessageGenerator({
@@ -16643,7 +17073,7 @@
         _ref3$cssClasses = _ref3.cssClasses,
         userCssClasses = _ref3$cssClasses === void 0 ? {} : _ref3$cssClasses,
         _ref3$templates = _ref3.templates,
-        userTemplates = _ref3$templates === void 0 ? defaultTemplates$6 : _ref3$templates,
+        userTemplates = _ref3$templates === void 0 ? defaultTemplates$7 : _ref3$templates,
         transformItems = _ref3.transformItems;
 
     if (!container) {
@@ -16652,7 +17082,7 @@
 
     var escapeFacetValues = searchable ? Boolean(searchableEscapeFacetValues) : false;
     var containerNode = getContainerNode(container);
-    var templates = transformTemplates(_objectSpread2({}, defaultTemplates$6, {}, userTemplates));
+    var templates = transformTemplates(_objectSpread2({}, defaultTemplates$7, {}, userTemplates));
     var cssClasses = {
       root: classnames(suit$a(), userCssClasses.root),
       noRefinementRoot: classnames(suit$a({
@@ -16747,7 +17177,7 @@
   }
 
   /* eslint-disable max-len */
-  var defaultTemplates$7 = {
+  var defaultTemplates$8 = {
     item: "<label class=\"{{cssClasses.label}}\">\n  <input type=\"radio\" class=\"{{cssClasses.radio}}\" name=\"{{attribute}}\"{{#isRefined}} checked{{/isRefined}} />\n  <span class=\"{{cssClasses.labelText}}\">{{label}}</span>\n</label>"
   };
 
@@ -16771,7 +17201,7 @@
 
       if (isFirstRendering) {
         renderState.templateProps = prepareTemplateProps({
-          defaultTemplates: defaultTemplates$7,
+          defaultTemplates: defaultTemplates$8,
           templatesConfig: instantSearchInstance.templatesConfig,
           templates: templates
         });
@@ -16797,7 +17227,7 @@
         _ref3$cssClasses = _ref3.cssClasses,
         userCssClasses = _ref3$cssClasses === void 0 ? {} : _ref3$cssClasses,
         _ref3$templates = _ref3.templates,
-        templates = _ref3$templates === void 0 ? defaultTemplates$7 : _ref3$templates,
+        templates = _ref3$templates === void 0 ? defaultTemplates$8 : _ref3$templates,
         transformItems = _ref3.transformItems;
 
     if (!container) {
@@ -17055,7 +17485,7 @@
     name: 'pagination'
   });
   var suit$c = component('Pagination');
-  var defaultTemplates$8 = {
+  var defaultTemplates$9 = {
     previous: '‹',
     next: '›',
     first: '«',
@@ -17249,7 +17679,7 @@
       }), userCssClasses.link)
     };
 
-    var templates = _objectSpread2({}, defaultTemplates$8, {}, userTemplates);
+    var templates = _objectSpread2({}, defaultTemplates$9, {}, userTemplates);
 
     var specializedRenderer = renderer$a({
       containerNode: containerNode,
@@ -17553,13 +17983,6 @@
     });
   }
 
-  /* eslint max-len: 0 */
-  var defaultTemplates$9 = {
-    reset: "\n<svg class=\"{{cssClasses.resetIcon}}\" xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 20 20\" width=\"10\" height=\"10\">\n  <path d=\"M8.114 10L.944 2.83 0 1.885 1.886 0l.943.943L10 8.113l7.17-7.17.944-.943L20 1.886l-.943.943-7.17 7.17 7.17 7.17.943.944L18.114 20l-.943-.943-7.17-7.17-7.17 7.17-.944.943L0 18.114l.943-.943L8.113 10z\"></path>\n</svg>\n  ",
-    submit: "\n<svg class=\"{{cssClasses.submitIcon}}\" xmlns=\"http://www.w3.org/2000/svg\" width=\"10\" height=\"10\" viewBox=\"0 0 40 40\">\n  <path d=\"M26.804 29.01c-2.832 2.34-6.465 3.746-10.426 3.746C7.333 32.756 0 25.424 0 16.378 0 7.333 7.333 0 16.378 0c9.046 0 16.378 7.333 16.378 16.378 0 3.96-1.406 7.594-3.746 10.426l10.534 10.534c.607.607.61 1.59-.004 2.202-.61.61-1.597.61-2.202.004L26.804 29.01zm-10.426.627c7.323 0 13.26-5.936 13.26-13.26 0-7.32-5.937-13.257-13.26-13.257C9.056 3.12 3.12 9.056 3.12 16.378c0 7.323 5.936 13.26 13.258 13.26z\"></path>\n</svg>\n  ",
-    loadingIndicator: "\n<svg class=\"{{cssClasses.loadingIcon}}\" width=\"16\" height=\"16\" viewBox=\"0 0 38 38\" xmlns=\"http://www.w3.org/2000/svg\" stroke=\"#444\">\n  <g fill=\"none\" fillRule=\"evenodd\">\n    <g transform=\"translate(1 1)\" strokeWidth=\"2\">\n      <circle strokeOpacity=\".5\" cx=\"18\" cy=\"18\" r=\"18\" />\n      <path d=\"M36 18c0-9.94-8.06-18-18-18\">\n        <animateTransform\n          attributeName=\"transform\"\n          type=\"rotate\"\n          from=\"0 18 18\"\n          to=\"360 18 18\"\n          dur=\"1s\"\n          repeatCount=\"indefinite\"\n        />\n      </path>\n    </g>\n  </g>\n</svg>\n  "
-  };
-
   var withUsage$C = createDocumentationMessageGenerator({
     name: 'search-box'
   });
@@ -17710,7 +18133,7 @@
       containerNode: containerNode,
       cssClasses: cssClasses,
       placeholder: placeholder,
-      templates: _objectSpread2({}, defaultTemplates$9, {}, templates),
+      templates: _objectSpread2({}, defaultTemplates$6, {}, templates),
       autofocus: autofocus,
       searchAsYouType: searchAsYouType,
       showReset: showReset,
@@ -20553,6 +20976,109 @@
     places: placesWidget
   });
 
+  var createInsightsMiddleware = function createInsightsMiddleware(props) {
+    var _ref = props || {},
+        _insightsClient = _ref.insightsClient,
+        onEvent = _ref.onEvent;
+
+    if (_insightsClient !== null && !_insightsClient) {
+      {
+        throw new Error("The `insightsClient` option is required if you want userToken to be automatically set in search calls. If you don't want this behaviour, set it to `null`.");
+      }
+    }
+
+    var hasInsightsClient = Boolean(_insightsClient);
+    var insightsClient = _insightsClient === null ? noop : _insightsClient;
+    return function (_ref2) {
+      var instantSearchInstance = _ref2.instantSearchInstance;
+      insightsClient('_get', '_hasCredentials', function (hasCredentials) {
+        if (!hasCredentials) {
+          var _getAppIdAndApiKey = getAppIdAndApiKey(instantSearchInstance.client),
+              _getAppIdAndApiKey2 = _slicedToArray(_getAppIdAndApiKey, 2),
+              appId = _getAppIdAndApiKey2[0],
+              apiKey = _getAppIdAndApiKey2[1];
+
+          insightsClient('_get', '_userToken', function (userToken) {
+             _warning(!userToken, "You set userToken before `createInsightsMiddleware()` and it is ignored.\nPlease set the token after the `createInsightsMiddleware()` call.\n\ncreateInsightsMiddleware({ /* ... */ });\n\ninsightsClient('setUserToken', 'your-user-token');\n// or\naa('setUserToken', 'your-user-token');\n            ") ;
+          });
+          insightsClient('init', {
+            appId: appId,
+            apiKey: apiKey
+          });
+        }
+      });
+      return {
+        onStateChange: function onStateChange() {},
+        subscribe: function subscribe() {
+          var setUserTokenToSearch = function setUserTokenToSearch(userToken) {
+            // At the time this middleware is subscribed, `mainIndex.init()` is already called.
+            // It means `mainIndex.getHelper()` exists.
+            if (userToken) {
+              instantSearchInstance.mainIndex.getHelper().setQueryParameter('userToken', userToken);
+            }
+          };
+
+          instantSearchInstance.mainIndex.getHelper().setQueryParameter('clickAnalytics', true);
+
+          if (hasInsightsClient) {
+            // When `aa('init', { ... })` is called, it creates an anonymous user token in cookie.
+            // We can set it as userToken.
+            setUserTokenToSearch(getInsightsAnonymousUserToken());
+          }
+
+          if (Array.isArray(insightsClient.queue)) {
+            // Context: The umd build of search-insights is asynchronously loaded by the snippet.
+            //
+            // When user calls `aa('setUserToken', 'my-user-token')` before `search-insights` is loaded,
+            // ['setUserToken', 'my-user-token'] gets stored in `aa.queue`.
+            // Whenever `search-insights` is finally loaded, it will process the queue.
+            //
+            // But here's the reason why we handle it here:
+            // At this point, even though `search-insights` is not loaded yet,
+            // we still want to read the token from the queue.
+            // Otherwise, the first search call will be fired without the token.
+            insightsClient.queue.forEach(function (_ref3) {
+              var _ref4 = _slicedToArray(_ref3, 2),
+                  method = _ref4[0],
+                  firstArgument = _ref4[1];
+
+              if (method === 'setUserToken') {
+                setUserTokenToSearch(firstArgument);
+              }
+            });
+          } // This updates userToken which is set explicitly by `aa('setUserToken', userToken)`
+
+
+          insightsClient('onUserTokenChange', setUserTokenToSearch, {
+            immediate: true
+          });
+
+          instantSearchInstance.sendEventToInsights = function (event) {
+            if (onEvent) {
+              onEvent(event, _insightsClient);
+            } else if (event.insightsMethod) {
+              insightsClient(event.insightsMethod, event.payload);
+            } else {
+               _warning(false, 'Cannot send event to Algolia Insights because `insightsMethod` option is missing.') ;
+            }
+          };
+        },
+        unsubscribe: function unsubscribe() {
+          insightsClient('onUserTokenChange', undefined);
+          instantSearchInstance.sendEventToInsights = noop;
+        }
+      };
+    };
+  };
+
+
+
+  var middlewares = /*#__PURE__*/Object.freeze({
+    __proto__: null,
+    createInsightsMiddleware: createInsightsMiddleware,
+    createRouterMiddleware: createRouterMiddleware
+  });
+
 
 
   var routers = /*#__PURE__*/Object.freeze({
@@ -20674,6 +21200,7 @@
   instantsearch.highlight = highlight;
   instantsearch.snippet = snippet;
   instantsearch.insights = insights;
+  instantsearch.middlewares = middlewares;
 
   return instantsearch;
 
