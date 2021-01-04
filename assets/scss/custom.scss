@@ -160,6 +160,8 @@ a:hover,
 
 h2 {
   color: $headers !important;
+  &:before {
+    content: "# ";
 }
 
 h2 > code {
@@ -168,6 +170,9 @@ h2 > code {
 
 h3 {
   color: $headers !important;
+  &:before {
+    content: "## ";
+  }
 }
 
 h4 {
