@@ -162,10 +162,10 @@ h2 {
   color: $headers !important;
   &:before {
     content: "# ";
-}
-
-h2 > code {
-  font-size: 1.7rem;
+  }
+  &>code {
+    font-size: 1.7rem;
+  }
 }
 
 h3 {
