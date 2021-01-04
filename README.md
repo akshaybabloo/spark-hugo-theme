@@ -77,6 +77,7 @@ googleAnalytics = "UA-74123356-1" # Optional
 disqusShortname = "gollahalli-com" # Optional
 pygmentsCodeFences = true
 enableRobotsTXT = true
+enableEmoji = true
 
 [markup]
   [markup.highlight]
@@ -119,6 +120,10 @@ enableRobotsTXT = true
     thumbnailUrl = "/img/akshay.jpg"
     acknowledge = false
     convertAssetsToInline = false  # Converts external assets into minified inline assets
+    cloudflareInsight = "83b998816e3e4417be0a7582d7645cd3"
+    [params.sponsor]
+        enable = true
+        link = "https://github.com/sponsors/akshaybabloo"
     [params.alert]
         body = "Stay home, protect yourself and everyone around you from COVID-19. For more information see - <a href='https://www.who.int/emergencies/diseases/novel-coronavirus-2019'>www.who.int/emergencies/diseases/novel-coronavirus-2019</a>"
         type = "danger"
@@ -135,7 +140,6 @@ enableRobotsTXT = true
         labelBackgroundColor = "#e2e8f0"
         labelTextColor = "#1a202c"
         headers = "#fc8181"
-
 ```
 
 ### 1.3.2. Front Matter
