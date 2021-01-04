@@ -13,6 +13,9 @@
                     {{ range .Site.Menus.main }}
                         <li><a onclick="ga('send', 'event', 'Menu', 'click', '{{ .Name }}')" href="{{ .URL }}" class="uk-link-text">{{ .Name }}</a></li>
                     {{ end }}
+                    {{ if .Site.Params.sponsor.enable }}
+                    <li><a href="{{ .Site.Params.sponsor.link }}" class="uk-button uk-button-danger sponsor" onclick="ga('send', 'event', 'Menu', 'click', 'Sponsor')"><span class="uk-icon uk-margin-small-right" uk-icon="icon: heart"></span> Sponsor</a></li>
+                    {{ end }}
                 </ul>
 
             </div>
@@ -52,6 +55,9 @@
             </li>
             {{ range .Site.Menus.main }}
                 <li><a onclick="ga('send', 'event', 'OffcanvasMenu', 'click', '{{ .Name }}')" href="{{ .URL }}" class="uk-link-text uk-text-large">{{ .Name }}</a></li>
+            {{ end }}
+            {{ if .Site.Params.sponsor.enable }}
+            <li><a href="{{ .Site.Params.sponsor.link }}" class="uk-button uk-button-danger sponsor" onclick="ga('send', 'event', 'Menu', 'click', 'Sponsor')"><span class="uk-icon uk-margin-small-right" uk-icon="icon: heart"></span> Sponsor</a></li>
             {{ end }}
         </ul>
 
