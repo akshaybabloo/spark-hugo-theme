@@ -1,4 +1,4 @@
-/*! InstantSearch.js 4.8.0 | © Algolia, Inc. and contributors; MIT License | https://github.com/algolia/instantsearch.js */
+/*! InstantSearch.js 4.9.2 | © Algolia, Inc. and contributors; MIT License | https://github.com/algolia/instantsearch.js */
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
   typeof define === 'function' && define.amd ? define(factory) :
@@ -408,6 +408,13 @@
 
   var objectHasKeys_1 = objectHasKeys;
 
+  var isValidUserToken = function isValidUserToken(userToken) {
+    if (userToken === null) {
+      return false;
+    }
+    return /^[a-zA-Z0-9_-]{1,64}$/.test(userToken);
+  };
+
   /**
    * Functions to manipulate refinement lists
    *
@@ -637,6 +644,9 @@
   function SearchParameters(newParameters) {
     var params = newParameters ? SearchParameters._parseNumbers(newParameters) : {};
 
+    if (params.userToken !== undefined && !isValidUserToken(params.userToken)) {
+      console.warn('[algoliasearch-helper] The `userToken` parameter is invalid. This can lead to wrong analytics.\n  - Format: [a-zA-Z0-9_-]{1,64}');
+    }
     /**
      * This attribute contains the list of all the conjunctive facets
      * used. This list will be added to requested facets in the
@@ -1178,7 +1188,7 @@
     /**
      * Get the list of numeric refinements for a single facet
      * @param {string} facetName name of the attribute used for faceting
-     * @return {SearchParameters.OperatorList[]} list of refinements
+     * @return {SearchParameters.OperatorList} list of refinements
      */
     getNumericRefinements: function(facetName) {
       return this.numericRefinements[facetName] || {};
@@ -1209,9 +1219,6 @@
         }
         return {};
       } else if (typeof attribute === 'string') {
-        if (!objectHasKeys_1(this.numericRefinements[attribute])) {
-          return this.numericRefinements;
-        }
         return omit(this.numericRefinements, [attribute]);
       } else if (typeof attribute === 'function') {
         var hasChanged = false;
@@ -3957,7 +3964,7 @@
 
   var requestBuilder_1 = requestBuilder;
 
-  var version = '3.2.2';
+  var version = '3.3.4';
 
   /**
    * Event triggered when a parameter is set or updated
@@ -6394,12 +6401,18 @@
   // was decided as too risky.
   // @MAJOR Replace with the native `Array.prototype.find` method
   // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/find
-  function find$1(items, predicate, thisArg) {
-    if (!Array.prototype.find) {
-      return items.filter(predicate, thisArg)[0];
+  function find$1(items, predicate) {
+    var value;
+
+    for (var i = 0; i < items.length; i++) {
+      value = items[i]; // inlined for performance: if (Call(predicate, thisArg, [value, i, list])) {
+
+      if (predicate(value, i, items)) {
+        return value;
+      }
     }
 
-    return items.find(predicate, thisArg);
+    return undefined;
   }
 
   function unescapeRefinement(value) {
@@ -6778,7 +6791,7 @@
   }
 
   function getPropertyByPath(object, path) {
-    var parts = path.split('.');
+    var parts = Array.isArray(path) ? path : path.split('.');
     return parts.reduce(function (current, key) {
       return current && current[key];
     }, object);
@@ -7427,8 +7440,12 @@
     return widgets.filter(function (widget) {
       return !isIndexWidget(widget);
     }).reduce(function (uiState, widget) {
-      if (!widget.getWidgetState) {
+      if (!widget.getWidgetUiState && !widget.getWidgetState) {
         return uiState;
+      }
+
+      if (widget.getWidgetUiState) {
+        return widget.getWidgetUiState(uiState, widgetStateOptions);
       }
 
       return widget.getWidgetState(uiState, widgetStateOptions);
@@ -7460,7 +7477,6 @@
     indexWidgets.forEach(function (widget) {
       var widgetHelper = widget.getHelper();
       privateHelperSetState(widgetHelper, {
-        // @ts-ignore @TODO: remove "ts-ignore" once `resetPage()` is typed in the helper
         state: widgetHelper.state.resetPage(),
         isPageReset: true
       });
@@ -7550,17 +7566,48 @@
               initialSearchParameters: helper.state
             }),
             _uiState: localUiState
+          }); // We compute the render state before calling `init` in a separate loop
+          // to construct the whole render state object that is then passed to
+          // `init`.
+
+          widgets.forEach(function (widget) {
+            if (widget.getRenderState) {
+              var renderState = widget.getRenderState(localInstantSearchInstance.renderState[_this.getIndexId()] || {}, {
+                uiState: localInstantSearchInstance._initialUiState,
+                helper: _this.getHelper(),
+                parent: _this,
+                instantSearchInstance: localInstantSearchInstance,
+                state: helper.state,
+                renderState: localInstantSearchInstance.renderState,
+                templatesConfig: localInstantSearchInstance.templatesConfig,
+                createURL: createURL,
+                scopedResults: [],
+                searchMetadata: {
+                  isSearchStalled: localInstantSearchInstance._isSearchStalled
+                }
+              });
+              storeRenderState({
+                renderState: renderState,
+                instantSearchInstance: localInstantSearchInstance,
+                parent: _this
+              });
+            }
           });
           widgets.forEach(function (widget) {
-            if (localInstantSearchInstance && widget.init) {
+            if (widget.init) {
               widget.init({
                 helper: helper,
                 parent: _this,
                 uiState: localInstantSearchInstance._initialUiState,
                 instantSearchInstance: localInstantSearchInstance,
                 state: helper.state,
+                renderState: localInstantSearchInstance.renderState,
                 templatesConfig: localInstantSearchInstance.templatesConfig,
-                createURL: createURL
+                createURL: createURL,
+                scopedResults: [],
+                searchMetadata: {
+                  isSearchStalled: localInstantSearchInstance._isSearchStalled
+                }
               });
             }
           });
@@ -7638,7 +7685,7 @@
         helper.search = function () {
           if (instantSearchInstance.onStateChange) {
             instantSearchInstance.onStateChange({
-              uiState: instantSearchInstance.mainIndex.getWidgetState({}),
+              uiState: instantSearchInstance.mainIndex.getWidgetUiState({}),
               setUiState: instantSearchInstance.setUiState.bind(instantSearchInstance)
             }); // We don't trigger a search when controlled because it becomes the
             // responsibility of `setUiState`.
@@ -7698,8 +7745,36 @@
           // search behavior.
 
           helper.lastResults = results;
+        }); // We compute the render state before calling `render` in a separate loop
+        // to construct the whole render state object that is then passed to
+        // `render`.
+
+        localWidgets.forEach(function (widget) {
+          if (widget.getRenderState) {
+            var renderState = widget.getRenderState(instantSearchInstance.renderState[_this2.getIndexId()] || {}, {
+              uiState: uiState,
+              helper: helper,
+              parent: _this2,
+              instantSearchInstance: instantSearchInstance,
+              state: helper.state,
+              renderState: instantSearchInstance.renderState,
+              templatesConfig: instantSearchInstance.templatesConfig,
+              createURL: createURL,
+              scopedResults: [],
+              searchMetadata: {
+                isSearchStalled: instantSearchInstance._isSearchStalled
+              }
+            });
+            storeRenderState({
+              renderState: renderState,
+              instantSearchInstance: instantSearchInstance,
+              parent: _this2
+            });
+          }
         });
         localWidgets.forEach(function (widget) {
+           _warning(!widget.getWidgetState, 'The `getWidgetState` method is renamed `getWidgetUiState` and will no longer exist under that name in InstantSearch.js 5.x. Please use `getWidgetUiState` instead.') ;
+
           if (widget.init) {
             widget.init({
               uiState: uiState,
@@ -7707,8 +7782,13 @@
               parent: _this2,
               instantSearchInstance: instantSearchInstance,
               state: helper.state,
+              renderState: instantSearchInstance.renderState,
               templatesConfig: instantSearchInstance.templatesConfig,
-              createURL: createURL
+              createURL: createURL,
+              scopedResults: [],
+              searchMetadata: {
+                isSearchStalled: instantSearchInstance._isSearchStalled
+              }
             });
           }
         }); // Subscribe to the Helper state changes for the `uiState` once widgets
@@ -7737,6 +7817,34 @@
         var _this3 = this;
 
         var instantSearchInstance = _ref5.instantSearchInstance;
+
+        if (!this.getResults()) {
+          return;
+        }
+
+        localWidgets.forEach(function (widget) {
+          if (widget.getRenderState) {
+            var renderState = widget.getRenderState(instantSearchInstance.renderState[_this3.getIndexId()] || {}, {
+              helper: _this3.getHelper(),
+              parent: _this3,
+              instantSearchInstance: instantSearchInstance,
+              results: _this3.getResults(),
+              scopedResults: resolveScopedResultsFromIndex(_this3),
+              state: _this3.getResults()._state,
+              renderState: instantSearchInstance.renderState,
+              templatesConfig: instantSearchInstance.templatesConfig,
+              createURL: createURL,
+              searchMetadata: {
+                isSearchStalled: instantSearchInstance._isSearchStalled
+              }
+            });
+            storeRenderState({
+              renderState: renderState,
+              instantSearchInstance: instantSearchInstance,
+              parent: _this3
+            });
+          }
+        });
         localWidgets.forEach(function (widget) {
           // At this point, all the variables used below are set. Both `helper`
           // and `derivedHelper` have been created at the `init` step. The attribute
@@ -7744,13 +7852,15 @@
           // happens before the result e.g with a dynamically added index the request might
           // be delayed. The render is triggered for the complete tree but some parts do
           // not have results yet.
-          if (widget.render && derivedHelper.lastResults) {
+          if (widget.render) {
             widget.render({
               helper: helper,
+              parent: _this3,
               instantSearchInstance: instantSearchInstance,
-              results: derivedHelper.lastResults,
+              results: _this3.getResults(),
               scopedResults: resolveScopedResultsFromIndex(_this3),
-              state: derivedHelper.lastResults._state,
+              state: _this3.getResults()._state,
+              renderState: instantSearchInstance.renderState,
               templatesConfig: instantSearchInstance.templatesConfig,
               createURL: createURL,
               searchMetadata: {
@@ -7782,10 +7892,14 @@
         derivedHelper.detach();
         derivedHelper = null;
       },
-      getWidgetState: function getWidgetState(uiState) {
+      getWidgetUiState: function getWidgetUiState(uiState) {
         return localWidgets.filter(isIndexWidget).reduce(function (previousUiState, innerIndex) {
-          return innerIndex.getWidgetState(previousUiState);
+          return innerIndex.getWidgetUiState(previousUiState);
         }, _objectSpread2({}, uiState, _defineProperty({}, this.getIndexId(), localUiState)));
+      },
+      getWidgetState: function getWidgetState(uiState) {
+         _warning(false, 'The `getWidgetState` method is renamed `getWidgetUiState` and will no longer exist under that name in InstantSearch.js 5.x. Please use `getWidgetUiState` instead.') ;
+        return this.getWidgetUiState(uiState);
       },
       getWidgetSearchParameters: function getWidgetSearchParameters(searchParameters, _ref6) {
         var uiState = _ref6.uiState;
@@ -7803,7 +7917,15 @@
     };
   };
 
-  var version$1 = '4.8.0';
+  function storeRenderState(_ref7) {
+    var renderState = _ref7.renderState,
+        instantSearchInstance = _ref7.instantSearchInstance,
+        parent = _ref7.parent;
+    var parentIndexName = parent ? parent.getIndexId() : instantSearchInstance.mainIndex.getIndexId();
+    instantSearchInstance.renderState = _objectSpread2({}, instantSearchInstance.renderState, _defineProperty({}, parentIndexName, _objectSpread2({}, instantSearchInstance.renderState[parentIndexName], {}, renderState)));
+  }
+
+  var version$1 = '4.9.2';
 
   var TAG_PLACEHOLDER = {
     highlightPreTag: '__ais-highlight__',
@@ -7885,7 +8007,11 @@
         hit = _ref.hit,
         _ref$cssClasses = _ref.cssClasses,
         cssClasses = _ref$cssClasses === void 0 ? {} : _ref$cssClasses;
-    var attributeValue = getPropertyByPath(hit, "_highlightResult.".concat(attribute, ".value")) || ''; // cx is not used, since it would be bundled as a dependency for Vue & Angular
+
+    var _ref2 = getPropertyByPath(hit._highlightResult, attribute) || {},
+        _ref2$value = _ref2.value,
+        attributeValue = _ref2$value === void 0 ? '' : _ref2$value; // cx is not used, since it would be bundled as a dependency for Vue & Angular
+
 
     var className = suit({
       descendantName: 'highlighted'
@@ -7901,7 +8027,11 @@
         hit = _ref.hit,
         _ref$cssClasses = _ref.cssClasses,
         cssClasses = _ref$cssClasses === void 0 ? {} : _ref$cssClasses;
-    var attributeValue = getPropertyByPath(hit, "_snippetResult.".concat(attribute, ".value")) || ''; // cx is not used, since it would be bundled as a dependency for Vue & Angular
+
+    var _ref2 = getPropertyByPath(hit._snippetResult, attribute) || {},
+        _ref2$value = _ref2.value,
+        attributeValue = _ref2$value === void 0 ? '' : _ref2$value; // cx is not used, since it would be bundled as a dependency for Vue & Angular
+
 
     var className = suit$1({
       descendantName: 'highlighted'
@@ -7948,7 +8078,12 @@
 
     return "data-insights-method=\"".concat(method, "\" data-insights-payload=\"").concat(serializedPayload, "\"");
   }
+  /**
+   * @deprecated This function will be still supported in 4.x releases, but not further. It is replaced by the `insights` middleware. For more information, visit https://www.algolia.com/doc/guides/getting-insights-and-analytics/search-analytics/click-through-and-conversions/how-to/send-click-and-conversion-events-with-instantsearch/js/
+   */
+
   function insights(method, payload) {
+     _warning(false, "`insights` function has been deprecated. It is still supported in 4.x releases, but not further. It is replaced by the `insights` middleware.\n\nFor more information, visit https://www.algolia.com/doc/guides/getting-insights-and-analytics/search-analytics/click-through-and-conversions/how-to/send-click-and-conversion-events-with-instantsearch/js/") ;
     return writeDataAttributes({
       method: method,
       payload: payload
@@ -7976,7 +8111,7 @@
     return undefined;
   }
 
-  function getInsightsAnonymousUserToken() {
+  function getInsightsAnonymousUserTokenInternal() {
     return getCookie(ANONYMOUS_TOKEN_COOKIE_KEY);
   }
 
@@ -8020,10 +8155,6 @@
         }
       }
     };
-  }
-
-  function hasDetectedInsightsClient() {
-    return typeof window !== 'undefined' && Boolean(window.AlgoliaAnalyticsObject);
   }
 
   function getIndexStateWithoutConfigure(uiState) {
@@ -9021,15 +9152,6 @@
     return new BrowserHistory(props);
   }
 
-  var walk = function walk(current, callback) {
-    callback(current);
-    current.getWidgets().filter(function (widget) {
-      return widget.$$type === 'ais.index';
-    }).forEach(function (innerIndex) {
-      walk(innerIndex, callback);
-    });
-  };
-
   var createRouterMiddleware = function createRouterMiddleware() {
     var props = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
     var _props$router = props.router,
@@ -9042,7 +9164,7 @@
       function topLevelCreateURL(nextState) {
         var uiState = Object.keys(nextState).reduce(function (acc, indexId) {
           return _objectSpread2({}, acc, _defineProperty({}, indexId, nextState[indexId]));
-        }, instantSearchInstance.mainIndex.getWidgetState({}));
+        }, instantSearchInstance.mainIndex.getWidgetUiState({}));
         var route = stateMapping.stateToRoute(uiState);
         return router.createURL(route);
       }
@@ -9062,22 +9184,7 @@
         },
         subscribe: function subscribe() {
           router.onUpdate(function (route) {
-            var uiState = stateMapping.routeToState(route);
-            walk(instantSearchInstance.mainIndex, function (current) {
-              var widgets = current.getWidgets();
-              var indexUiState = uiState[current.getIndexId()] || {};
-              var searchParameters = widgets.reduce(function (parameters, widget) {
-                if (!widget.getWidgetSearchParameters) {
-                  return parameters;
-                }
-
-                return widget.getWidgetSearchParameters(parameters, {
-                  uiState: indexUiState
-                });
-              }, current.getHelper().state);
-              current.getHelper().overrideStateWithoutTriggeringChangeEvent(searchParameters);
-              instantSearchInstance.scheduleSearch();
-            });
+            instantSearchInstance.setUiState(stateMapping.routeToState(route));
           });
         },
         unsubscribe: function unsubscribe() {
@@ -9134,6 +9241,8 @@
 
       _defineProperty(_assertThisInitialized(_this), "templatesConfig", void 0);
 
+      _defineProperty(_assertThisInitialized(_this), "renderState", {});
+
       _defineProperty(_assertThisInitialized(_this), "_stalledSearchDelay", void 0);
 
       _defineProperty(_assertThisInitialized(_this), "_searchStalledTimer", void 0);
@@ -9172,41 +9281,8 @@
         _this.emit('render');
       }));
 
-      _defineProperty(_assertThisInitialized(_this), "setUiState", function (uiState) {
-        if (!_this.mainHelper) {
-          throw new Error(withUsage$1('The `start` method needs to be called before `setUiState`.'));
-        }
-
-         _warning(false, "\n`setUiState` provides a powerful way to manage the UI state. This is considered experimental as the API might change in a next minor version.\n\nFeel free to give us feedback on GitHub: https://github.com/algolia/instantsearch.js/issues/new\n    ") ; // We refresh the index UI state to update the local UI state that the
-        // main index passes to the function form of `setUiState`.
-
-        _this.mainIndex.refreshUiState();
-
-        var nextUiState = typeof uiState === 'function' ? uiState(_this.mainIndex.getWidgetState({})) : uiState;
-
-        var setIndexHelperState = function setIndexHelperState(indexWidget) {
-          {
-            checkIndexUiState({
-              index: indexWidget,
-              indexUiState: nextUiState[indexWidget.getIndexId()]
-            });
-          }
-
-          indexWidget.getHelper().overrideStateWithoutTriggeringChangeEvent(indexWidget.getWidgetSearchParameters(indexWidget.getHelper().state, {
-            uiState: nextUiState[indexWidget.getIndexId()]
-          }));
-          indexWidget.getWidgets().filter(isIndexWidget).forEach(setIndexHelperState);
-        };
-
-        setIndexHelperState(_this.mainIndex);
-
-        _this.scheduleSearch();
-
-        _this.onInternalStateChange();
-      });
-
       _defineProperty(_assertThisInitialized(_this), "onInternalStateChange", function () {
-        var nextUiState = _this.mainIndex.getWidgetState({});
+        var nextUiState = _this.mainIndex.getWidgetUiState({});
 
         _this.middleware.forEach(function (m) {
           m.onStateChange({
@@ -9248,7 +9324,7 @@
         searchClient.addAlgoliaAgent("instantsearch.js (".concat(version$1, ")"));
       }
 
-       _warning(Boolean(insightsClient) || !hasDetectedInsightsClient(), withUsage$1("InstantSearch detected the Insights client in the global scope.\nTo connect InstantSearch to the Insights client, make sure to specify the `insightsClient` option:\n\nconst search = instantsearch({\n  /* ... */\n  insightsClient: window.aa,\n});")) ;
+       _warning(insightsClient === null, "`insightsClient` property has been deprecated. It is still supported in 4.x releases, but not further. It is replaced by the `insights` middleware.\n\nFor more information, visit https://www.algolia.com/doc/guides/getting-insights-and-analytics/search-analytics/click-through-and-conversions/how-to/send-click-and-conversion-events-with-instantsearch/js/") ;
 
       if (insightsClient && typeof insightsClient !== 'function') {
         throw new Error(withUsage$1('The `insightsClient` option should be a function.'));
@@ -9288,7 +9364,7 @@
       if (routing) {
         var routerOptions = typeof routing === 'boolean' ? undefined : routing;
 
-        _this.EXPERIMENTAL_use(createRouterMiddleware(routerOptions));
+        _this.use(createRouterMiddleware(routerOptions));
       }
 
       return _this;
@@ -9302,8 +9378,8 @@
 
 
     _createClass(InstantSearch, [{
-      key: "EXPERIMENTAL_use",
-      value: function EXPERIMENTAL_use() {
+      key: "use",
+      value: function use() {
         var _this2 = this;
 
         for (var _len = arguments.length, middleware = new Array(_len), _key = 0; _key < _len; _key++) {
@@ -9328,6 +9404,13 @@
         }
 
         return this;
+      } // @major we shipped with EXPERIMENTAL_use, but have changed that to just `use` now
+
+    }, {
+      key: "EXPERIMENTAL_use",
+      value: function EXPERIMENTAL_use() {
+         _warning(false, 'The middleware API is now considered stable, so we recommend replacing `EXPERIMENTAL_use` with `use` before upgrading to the next major version.') ;
+        return this.use.apply(this, arguments);
       }
       /**
        * Adds a widget to the search instance.
@@ -9532,6 +9615,36 @@
         }
       }
     }, {
+      key: "setUiState",
+      value: function setUiState(uiState) {
+        if (!this.mainHelper) {
+          throw new Error(withUsage$1('The `start` method needs to be called before `setUiState`.'));
+        } // We refresh the index UI state to update the local UI state that the
+        // main index passes to the function form of `setUiState`.
+
+
+        this.mainIndex.refreshUiState();
+        var nextUiState = typeof uiState === 'function' ? uiState(this.mainIndex.getWidgetUiState({})) : uiState;
+
+        var setIndexHelperState = function setIndexHelperState(indexWidget) {
+          {
+            checkIndexUiState({
+              index: indexWidget,
+              indexUiState: nextUiState[indexWidget.getIndexId()]
+            });
+          }
+
+          indexWidget.getHelper().overrideStateWithoutTriggeringChangeEvent(indexWidget.getWidgetSearchParameters(indexWidget.getHelper().state, {
+            uiState: nextUiState[indexWidget.getIndexId()]
+          }));
+          indexWidget.getWidgets().filter(isIndexWidget).forEach(setIndexHelperState);
+        };
+
+        setIndexHelperState(this.mainIndex);
+        this.scheduleSearch();
+        this.onInternalStateChange();
+      }
+    }, {
       key: "createURL",
       value: function createURL() {
         var nextState = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
@@ -9583,7 +9696,8 @@
         refine: noop,
         createURL: function createURL() {
           return '';
-        }
+        },
+        attributesToClear: []
       };
 
       var cachedRefine = function cachedRefine() {
@@ -9596,21 +9710,30 @@
 
       return {
         $$type: 'ais.clearRefinements',
-        init: function init(_ref2) {
-          var instantSearchInstance = _ref2.instantSearchInstance;
-          renderFn({
-            hasRefinements: false,
-            refine: cachedRefine,
-            createURL: cachedCreateURL,
-            instantSearchInstance: instantSearchInstance,
-            widgetParams: widgetParams
-          }, true);
+        init: function init(initOptions) {
+          var instantSearchInstance = initOptions.instantSearchInstance;
+          renderFn(_objectSpread2({}, this.getWidgetRenderState(initOptions), {
+            instantSearchInstance: instantSearchInstance
+          }), true);
         },
-        render: function render(_ref3) {
-          var scopedResults = _ref3.scopedResults,
-              createURL = _ref3.createURL,
-              instantSearchInstance = _ref3.instantSearchInstance;
-          var attributesToClear = scopedResults.reduce(function (results, scopedResult) {
+        render: function render(renderOptions) {
+          var instantSearchInstance = renderOptions.instantSearchInstance;
+          renderFn(_objectSpread2({}, this.getWidgetRenderState(renderOptions), {
+            instantSearchInstance: instantSearchInstance
+          }), false);
+        },
+        dispose: function dispose() {
+          unmountFn();
+        },
+        getRenderState: function getRenderState(renderState, renderOptions) {
+          return _objectSpread2({}, renderState, {
+            clearRefinements: this.getWidgetRenderState(renderOptions)
+          });
+        },
+        getWidgetRenderState: function getWidgetRenderState(_ref2) {
+          var createURL = _ref2.createURL,
+              scopedResults = _ref2.scopedResults;
+          connectorState.attributesToClear = scopedResults.reduce(function (results, scopedResult) {
             return results.concat(getAttributesToClear({
               scopedResult: scopedResult,
               includedAttributes: includedAttributes,
@@ -9620,9 +9743,9 @@
           }, []);
 
           connectorState.refine = function () {
-            attributesToClear.forEach(function (_ref4) {
-              var indexHelper = _ref4.helper,
-                  items = _ref4.items;
+            connectorState.attributesToClear.forEach(function (_ref3) {
+              var indexHelper = _ref3.helper,
+                  items = _ref3.items;
               indexHelper.setState(clearRefinements({
                 helper: indexHelper,
                 attributesToClear: items
@@ -9631,9 +9754,9 @@
           };
 
           connectorState.createURL = function () {
-            return createURL(merge$1.apply(void 0, _toConsumableArray(attributesToClear.map(function (_ref5) {
-              var indexHelper = _ref5.helper,
-                  items = _ref5.items;
+            return createURL(merge$1.apply(void 0, _toConsumableArray(connectorState.attributesToClear.map(function (_ref4) {
+              var indexHelper = _ref4.helper,
+                  items = _ref4.items;
               return clearRefinements({
                 helper: indexHelper,
                 attributesToClear: items
@@ -9641,28 +9764,24 @@
             }))));
           };
 
-          renderFn({
-            hasRefinements: attributesToClear.some(function (attributeToClear) {
+          return {
+            hasRefinements: connectorState.attributesToClear.some(function (attributeToClear) {
               return attributeToClear.items.length > 0;
             }),
             refine: cachedRefine,
             createURL: cachedCreateURL,
-            instantSearchInstance: instantSearchInstance,
             widgetParams: widgetParams
-          }, false);
-        },
-        dispose: function dispose() {
-          unmountFn();
+          };
         }
       };
     };
   };
 
-  function getAttributesToClear(_ref6) {
-    var scopedResult = _ref6.scopedResult,
-        includedAttributes = _ref6.includedAttributes,
-        excludedAttributes = _ref6.excludedAttributes,
-        transformItems = _ref6.transformItems;
+  function getAttributesToClear(_ref5) {
+    var scopedResult = _ref5.scopedResult,
+        includedAttributes = _ref5.includedAttributes,
+        excludedAttributes = _ref5.excludedAttributes,
+        transformItems = _ref5.transformItems;
     var clearsQuery = includedAttributes.indexOf('query') !== -1 || excludedAttributes.indexOf('query') === -1;
     return {
       helper: scopedResult.helper,
@@ -9706,65 +9825,72 @@
 
       return {
         $$type: 'ais.currentRefinements',
-        init: function init(_ref2) {
-          var helper = _ref2.helper,
+        init: function init(initOptions) {
+          var instantSearchInstance = initOptions.instantSearchInstance;
+          renderFn(_objectSpread2({}, this.getWidgetRenderState(initOptions), {
+            instantSearchInstance: instantSearchInstance
+          }), true);
+        },
+        render: function render(renderOptions) {
+          var instantSearchInstance = renderOptions.instantSearchInstance;
+          renderFn(_objectSpread2({}, this.getWidgetRenderState(renderOptions), {
+            instantSearchInstance: instantSearchInstance
+          }), false);
+        },
+        dispose: function dispose() {
+          unmountFn();
+        },
+        getRenderState: function getRenderState(renderState, renderOptions) {
+          return _objectSpread2({}, renderState, {
+            currentRefinements: this.getWidgetRenderState(renderOptions)
+          });
+        },
+        getWidgetRenderState: function getWidgetRenderState(_ref2) {
+          var results = _ref2.results,
+              scopedResults = _ref2.scopedResults,
               _createURL = _ref2.createURL,
-              instantSearchInstance = _ref2.instantSearchInstance;
-          var items = transformItems(getItems({
-            results: {},
-            helper: helper,
-            includedAttributes: includedAttributes,
-            excludedAttributes: excludedAttributes
-          }));
-          renderFn({
-            items: items,
+              helper = _ref2.helper;
+
+          function getItems() {
+            if (!results) {
+              return transformItems(getRefinementsItems({
+                results: {},
+                helper: helper,
+                includedAttributes: includedAttributes,
+                excludedAttributes: excludedAttributes
+              }));
+            }
+
+            return scopedResults.reduce(function (accResults, scopedResult) {
+              return accResults.concat(transformItems(getRefinementsItems({
+                results: scopedResult.results,
+                helper: scopedResult.helper,
+                includedAttributes: includedAttributes,
+                excludedAttributes: excludedAttributes
+              })));
+            }, []);
+          }
+
+          return {
+            items: getItems(),
             refine: function refine(refinement) {
               return clearRefinement(helper, refinement);
             },
             createURL: function createURL(refinement) {
               return _createURL(clearRefinementFromState(helper.state, refinement));
             },
-            instantSearchInstance: instantSearchInstance,
             widgetParams: widgetParams
-          }, true);
-        },
-        render: function render(_ref3) {
-          var scopedResults = _ref3.scopedResults,
-              helper = _ref3.helper,
-              _createURL2 = _ref3.createURL,
-              instantSearchInstance = _ref3.instantSearchInstance;
-          var items = scopedResults.reduce(function (results, scopedResult) {
-            return results.concat(transformItems(getItems({
-              results: scopedResult.results,
-              helper: scopedResult.helper,
-              includedAttributes: includedAttributes,
-              excludedAttributes: excludedAttributes
-            })));
-          }, []);
-          renderFn({
-            items: items,
-            refine: function refine(refinement) {
-              return clearRefinement(helper, refinement);
-            },
-            createURL: function createURL(refinement) {
-              return _createURL2(clearRefinementFromState(helper.state, refinement));
-            },
-            instantSearchInstance: instantSearchInstance,
-            widgetParams: widgetParams
-          }, false);
-        },
-        dispose: function dispose() {
-          unmountFn();
+          };
         }
       };
     };
   };
 
-  function getItems(_ref4) {
-    var results = _ref4.results,
-        helper = _ref4.helper,
-        includedAttributes = _ref4.includedAttributes,
-        excludedAttributes = _ref4.excludedAttributes;
+  function getRefinementsItems(_ref3) {
+    var results = _ref3.results,
+        helper = _ref3.helper,
+        includedAttributes = _ref3.includedAttributes,
+        excludedAttributes = _ref3.excludedAttributes;
     var clearsQuery = (includedAttributes || []).indexOf('query') !== -1 || (excludedAttributes || []).indexOf('query') === -1;
     var filterFunction = includedAttributes ? function (item) {
       return includedAttributes.indexOf(item.attribute) !== -1;
@@ -9953,16 +10079,18 @@
       var _attributes = _slicedToArray(attributes, 1),
           hierarchicalFacetName = _attributes[0];
 
-      var sendEvent;
+      var sendEvent; // Provide the same function to the `renderFn` so that way the user
+      // has to only bind it once when `isFirstRendering` for instance
+
+      var toggleShowMore = function toggleShowMore() {};
+
+      function cachedToggleShowMore() {
+        toggleShowMore();
+      }
+
       return {
         $$type: 'ais.hierarchicalMenu',
         isShowingMore: false,
-        // Provide the same function to the `renderFn` so that way the user
-        // has to only bind it once when `isFirstRendering` for instance
-        toggleShowMore: function toggleShowMore() {},
-        cachedToggleShowMore: function cachedToggleShowMore() {
-          this.toggleShowMore();
-        },
         createToggleShowMore: function createToggleShowMore(renderOptions) {
           var _this = this;
 
@@ -9975,50 +10103,22 @@
         getLimit: function getLimit() {
           return this.isShowingMore ? showMoreLimit : limit;
         },
-        init: function init(_ref) {
-          var helper = _ref.helper,
-              createURL = _ref.createURL,
-              instantSearchInstance = _ref.instantSearchInstance;
-          sendEvent = createSendEventForFacet({
-            instantSearchInstance: instantSearchInstance,
-            helper: helper,
-            attribute: hierarchicalFacetName,
-            widgetType: this.$$type
-          });
-          this.cachedToggleShowMore = this.cachedToggleShowMore.bind(this);
-
-          this._refine = function (facetValue) {
-            sendEvent('click', facetValue);
-            helper.toggleRefinement(hierarchicalFacetName, facetValue).search();
-          }; // Bind createURL to this specific attribute
-
-
-          function _createURL(facetValue) {
-            return createURL(helper.state.toggleRefinement(hierarchicalFacetName, facetValue));
-          }
-
-          renderFn({
-            items: [],
-            createURL: _createURL,
-            refine: this._refine,
-            sendEvent: sendEvent,
-            instantSearchInstance: instantSearchInstance,
-            widgetParams: widgetParams,
-            isShowingMore: false,
-            toggleShowMore: this.cachedToggleShowMore,
-            canToggleShowMore: false
-          }, true);
+        init: function init(initOptions) {
+          var instantSearchInstance = initOptions.instantSearchInstance;
+          renderFn(_objectSpread2({}, this.getWidgetRenderState(initOptions), {
+            instantSearchInstance: instantSearchInstance
+          }), true);
         },
-        _prepareFacetValues: function _prepareFacetValues(facetValues, state) {
+        _prepareFacetValues: function _prepareFacetValues(facetValues) {
           var _this2 = this;
 
-          return facetValues.slice(0, this.getLimit()).map(function (_ref2) {
-            var label = _ref2.name,
-                value = _ref2.path,
-                subValue = _objectWithoutProperties(_ref2, ["name", "path"]);
+          return facetValues.slice(0, this.getLimit()).map(function (_ref) {
+            var label = _ref.name,
+                value = _ref.path,
+                subValue = _objectWithoutProperties(_ref, ["name", "path"]);
 
             if (Array.isArray(subValue.data)) {
-              subValue.data = _this2._prepareFacetValues(subValue.data, state);
+              subValue.data = _this2._prepareFacetValues(subValue.data);
             }
 
             return _objectSpread2({}, subValue, {
@@ -10028,40 +10128,11 @@
           });
         },
         render: function render(renderOptions) {
-          var results = renderOptions.results,
-              state = renderOptions.state,
-              createURL = renderOptions.createURL,
-              instantSearchInstance = renderOptions.instantSearchInstance;
-          var facetValues = results.getFacetValues(hierarchicalFacetName, {
-            sortBy: sortBy
-          }).data || [];
-          var items = transformItems(this._prepareFacetValues(facetValues), state); // Bind createURL to this specific attribute
-
-          function _createURL(facetValue) {
-            return createURL(state.toggleRefinement(hierarchicalFacetName, facetValue));
-          }
-
-          var maxValuesPerFacetConfig = state.maxValuesPerFacet;
-          var currentLimit = this.getLimit(); // If the limit is the max number of facet retrieved it is impossible to know
-          // if the facets are exhaustive. The only moment we are sure it is exhaustive
-          // is when it is strictly under the number requested unless we know that another
-          // widget has requested more values (maxValuesPerFacet > getLimit()).
-          // Because this is used for making the search of facets unable or not, it is important
-          // to be conservative here.
-
-          var hasExhaustiveItems = maxValuesPerFacetConfig > currentLimit ? facetValues.length <= currentLimit : facetValues.length < currentLimit;
-          this.toggleShowMore = this.createToggleShowMore(renderOptions);
-          renderFn({
-            items: items,
-            refine: this._refine,
-            sendEvent: sendEvent,
-            createURL: _createURL,
-            instantSearchInstance: instantSearchInstance,
-            widgetParams: widgetParams,
-            isShowingMore: this.isShowingMore,
-            toggleShowMore: this.cachedToggleShowMore,
-            canToggleShowMore: showMore && (this.isShowingMore || !hasExhaustiveItems)
-          }, false);
+          var instantSearchInstance = renderOptions.instantSearchInstance;
+          toggleShowMore = this.createToggleShowMore(renderOptions);
+          renderFn(_objectSpread2({}, this.getWidgetRenderState(renderOptions), {
+            instantSearchInstance: instantSearchInstance
+          }), false);
         },
 
         /**
@@ -10069,12 +10140,79 @@
          * @param {any} param0.state current search parameters
          * @returns {any} next search parameters
          */
-        dispose: function dispose(_ref3) {
-          var state = _ref3.state;
+        dispose: function dispose(_ref2) {
+          var state = _ref2.state;
           unmountFn();
           return state.removeHierarchicalFacet(hierarchicalFacetName).setQueryParameter('maxValuesPerFacet', undefined);
         },
-        getWidgetState: function getWidgetState(uiState, _ref4) {
+        getRenderState: function getRenderState(renderState, renderOptions) {
+          return _objectSpread2({}, renderState, {
+            hierarchicalMenu: _objectSpread2({}, renderState.hierarchicalMenu, _defineProperty({}, hierarchicalFacetName, this.getWidgetRenderState(renderOptions)))
+          });
+        },
+        getWidgetRenderState: function getWidgetRenderState(_ref3) {
+          var _this3 = this;
+
+          var results = _ref3.results,
+              state = _ref3.state,
+              createURL = _ref3.createURL,
+              instantSearchInstance = _ref3.instantSearchInstance,
+              helper = _ref3.helper;
+
+          // Bind createURL to this specific attribute
+          function _createURL(facetValue) {
+            return createURL(state.toggleRefinement(hierarchicalFacetName, facetValue));
+          }
+
+          if (!sendEvent) {
+            sendEvent = createSendEventForFacet({
+              instantSearchInstance: instantSearchInstance,
+              helper: helper,
+              attribute: hierarchicalFacetName,
+              widgetType: this.$$type
+            });
+          }
+
+          if (!this._refine) {
+            this._refine = function (facetValue) {
+              sendEvent('click', facetValue);
+              helper.toggleRefinement(hierarchicalFacetName, facetValue).search();
+            };
+          }
+
+          var facetValues = results ? results.getFacetValues(hierarchicalFacetName, {
+            sortBy: sortBy
+          }).data || [] : [];
+          var items = transformItems(results ? this._prepareFacetValues(facetValues) : []);
+
+          var getHasExhaustiveItems = function getHasExhaustiveItems() {
+            if (!results) {
+              return false;
+            }
+
+            var currentLimit = _this3.getLimit(); // If the limit is the max number of facet retrieved it is impossible to know
+            // if the facets are exhaustive. The only moment we are sure it is exhaustive
+            // is when it is strictly under the number requested unless we know that another
+            // widget has requested more values (maxValuesPerFacet > getLimit()).
+            // Because this is used for making the search of facets unable or not, it is important
+            // to be conservative here.
+
+
+            return state.maxValuesPerFacet > currentLimit ? facetValues.length <= currentLimit : facetValues.length < currentLimit;
+          };
+
+          return {
+            items: items,
+            refine: this._refine,
+            createURL: _createURL,
+            sendEvent: sendEvent,
+            widgetParams: widgetParams,
+            isShowingMore: this.isShowingMore,
+            toggleShowMore: cachedToggleShowMore,
+            canToggleShowMore: showMore && (this.isShowingMore || !getHasExhaustiveItems())
+          };
+        },
+        getWidgetUiState: function getWidgetUiState(uiState, _ref4) {
           var searchParameters = _ref4.searchParameters;
           var path = searchParameters.getHierarchicalFacetBreadcrumb(hierarchicalFacetName);
 
@@ -10139,30 +10277,52 @@
       var bindEvent;
       return {
         $$type: 'ais.hits',
-        init: function init(_ref2) {
-          var instantSearchInstance = _ref2.instantSearchInstance,
-              helper = _ref2.helper;
-          sendEvent = createSendEventForHits({
-            instantSearchInstance: instantSearchInstance,
-            index: helper.getIndex(),
-            widgetType: this.$$type
-          });
-          bindEvent = createBindEventForHits({
-            index: helper.getIndex(),
-            widgetType: this.$$type
-          });
-          renderFn({
-            hits: [],
-            results: undefined,
-            sendEvent: sendEvent,
-            bindEvent: bindEvent,
-            instantSearchInstance: instantSearchInstance,
-            widgetParams: widgetParams
-          }, true);
+        init: function init(initOptions) {
+          renderFn(_objectSpread2({}, this.getWidgetRenderState(initOptions), {
+            instantSearchInstance: initOptions.instantSearchInstance
+          }), true);
         },
-        render: function render(_ref3) {
-          var results = _ref3.results,
-              instantSearchInstance = _ref3.instantSearchInstance;
+        render: function render(renderOptions) {
+          var renderState = this.getWidgetRenderState(renderOptions);
+          renderState.sendEvent('view', renderState.hits);
+          renderFn(_objectSpread2({}, renderState, {
+            instantSearchInstance: renderOptions.instantSearchInstance
+          }), false);
+        },
+        getRenderState: function getRenderState(renderState, renderOptions) {
+          return _objectSpread2({}, renderState, {
+            hits: this.getWidgetRenderState(renderOptions)
+          });
+        },
+        getWidgetRenderState: function getWidgetRenderState(_ref2) {
+          var results = _ref2.results,
+              helper = _ref2.helper,
+              instantSearchInstance = _ref2.instantSearchInstance;
+
+          if (!sendEvent) {
+            sendEvent = createSendEventForHits({
+              instantSearchInstance: instantSearchInstance,
+              index: helper.getIndex(),
+              widgetType: this.$$type
+            });
+          }
+
+          if (!bindEvent) {
+            bindEvent = createBindEventForHits({
+              index: helper.getIndex(),
+              widgetType: this.$$type
+            });
+          }
+
+          if (!results) {
+            return {
+              hits: [],
+              results: undefined,
+              sendEvent: sendEvent,
+              bindEvent: bindEvent,
+              widgetParams: widgetParams
+            };
+          }
 
           if (escapeHTML && results.hits.length > 0) {
             results.hits = escapeHits(results.hits);
@@ -10176,18 +10336,16 @@
           // hits widgets mounted on the page.
 
           results.hits.__escaped = initialEscaped;
-          sendEvent('view', results.hits);
-          renderFn({
+          return {
             hits: results.hits,
             results: results,
             sendEvent: sendEvent,
             bindEvent: bindEvent,
-            instantSearchInstance: instantSearchInstance,
             widgetParams: widgetParams
-          }, false);
+          };
         },
-        dispose: function dispose(_ref4) {
-          var state = _ref4.state;
+        dispose: function dispose(_ref3) {
+          var state = _ref3.state;
           unmountFn();
 
           if (!escapeHTML) {
@@ -10282,6 +10440,8 @@
 
   var wrapInsightsClient = function wrapInsightsClient(aa, results, hits) {
     return function (method, payload) {
+       _warning(false, "`insights` function has been deprecated. It is still supported in 4.x releases, but not further. It is replaced by the `insights` middleware.\n\nFor more information, visit https://www.algolia.com/doc/guides/getting-insights-and-analytics/search-analytics/click-through-and-conversions/how-to/send-click-and-conversion-events-with-instantsearch/js/") ;
+
       if (!aa) {
         var withInstantSearchUsage = createDocumentationMessageGenerator({
           name: 'instantsearch'
@@ -10302,6 +10462,11 @@
       aa(method, _objectSpread2({}, inferredPayload, {}, payload));
     };
   };
+  /**
+   * @deprecated This function will be still supported in 4.x releases, but not further. It is replaced by the `insights` middleware. For more information, visit https://www.algolia.com/doc/guides/getting-insights-and-analytics/search-analytics/click-through-and-conversions/how-to/send-click-and-conversion-events-with-instantsearch/js/
+   * It passes `insights` to `HitsWithInsightsListener` and `InfiniteHitsWithInsightsListener`.
+   */
+
 
   function withInsights(connector) {
     var wrapRenderFn = function wrapRenderFn(renderFn) {
@@ -10371,19 +10536,19 @@
             var payload = parseInsightsEvent(targetWithEvent);
             props.sendEvent(payload);
           }
-        } else {
-          // old way, e.g. instantsearch.insights("clickedObjectIDsAfterSearch", { .. })
-          var insightsTarget = findInsightsTarget(event.target, event.currentTarget, function (element) {
-            return hasDataAttributes(element);
-          });
+        } // old way, e.g. instantsearch.insights("clickedObjectIDsAfterSearch", { .. })
 
-          if (insightsTarget) {
-            var _readDataAttributes = readDataAttributes(insightsTarget),
-                method = _readDataAttributes.method,
-                _payload = _readDataAttributes.payload;
 
-            props.insights(method, _payload);
-          }
+        var insightsTarget = findInsightsTarget(event.target, event.currentTarget, function (element) {
+          return hasDataAttributes(element);
+        });
+
+        if (insightsTarget) {
+          var _readDataAttributes = readDataAttributes(insightsTarget),
+              method = _readDataAttributes.method,
+              _payload = _readDataAttributes.payload;
+
+          props.insights(method, _payload);
         }
       };
 
@@ -10442,24 +10607,31 @@
         });
       };
 
-      var connectorState = {};
+      var connectorState = {
+        getRefine: function getRefine(helper) {
+          return function (value) {
+            return !value && value !== 0 ? helper.setQueryParameter('hitsPerPage', undefined).search() : helper.setQueryParameter('hitsPerPage', value).search();
+          };
+        },
+        createURLFactory: function createURLFactory(_ref3) {
+          var state = _ref3.state,
+              createURL = _ref3.createURL;
+          return function (value) {
+            return createURL(state.setQueryParameter('hitsPerPage', !value && value !== 0 ? undefined : value));
+          };
+        }
+      };
       return {
         $$type: 'ais.hitsPerPage',
-        init: function init(_ref3) {
-          var helper = _ref3.helper,
-              createURL = _ref3.createURL,
-              state = _ref3.state,
-              instantSearchInstance = _ref3.instantSearchInstance;
+        init: function init(initOptions) {
+          var state = initOptions.state,
+              instantSearchInstance = initOptions.instantSearchInstance;
           var isCurrentInOptions = items.some(function (item) {
             return Number(state.hitsPerPage) === Number(item.value);
           });
 
-          connectorState.setHitsPerPage = function (value) {
-            return !value && value !== 0 ? helper.setQueryParameter('hitsPerPage', undefined).search() : helper.setQueryParameter('hitsPerPage', value).search();
-          };
-
           if (!isCurrentInOptions) {
-             _warning(state.hitsPerPage !== undefined, "\n`hitsPerPage` is not defined.\nThe option `hitsPerPage` needs to be set using the `configure` widget.\n\nLearn more: https://community.algolia.com/instantsearch.js/v2/widgets/configure.html\n            ") ;
+             _warning(state.hitsPerPage !== undefined, "\n`hitsPerPage` is not defined.\nThe option `hitsPerPage` needs to be set using the `configure` widget.\n\nLearn more: https://www.algolia.com/doc/api-reference/widgets/hits-per-page/js/\n            ") ;
              _warning(false, "\nThe `items` option of `hitsPerPage` does not contain the \"hits per page\" value coming from the state: ".concat(state.hitsPerPage, ".\n\nYou may want to add another entry to the `items` option with this value.")) ;
             items = [// The helper will convert the empty string to `undefined`.
             {
@@ -10468,41 +10640,43 @@
             }].concat(_toConsumableArray(items));
           }
 
-          connectorState.createURLFactory = function (helperState) {
-            return function (value) {
-              return createURL(helperState.setQueryParameter('hitsPerPage', !value && value !== 0 ? undefined : value));
-            };
-          };
-
-          renderFn({
-            items: transformItems(normalizeItems(state)),
-            refine: connectorState.setHitsPerPage,
-            createURL: connectorState.createURLFactory(helper.state),
-            hasNoResults: true,
-            widgetParams: widgetParams,
+          renderFn(_objectSpread2({}, this.getWidgetRenderState(initOptions), {
             instantSearchInstance: instantSearchInstance
-          }, true);
+          }), true);
         },
-        render: function render(_ref4) {
-          var state = _ref4.state,
-              results = _ref4.results,
-              instantSearchInstance = _ref4.instantSearchInstance;
-          var hasNoResults = results.nbHits === 0;
-          renderFn({
-            items: transformItems(normalizeItems(state)),
-            refine: connectorState.setHitsPerPage,
-            createURL: connectorState.createURLFactory(state),
-            hasNoResults: hasNoResults,
-            widgetParams: widgetParams,
+        render: function render(initOptions) {
+          var instantSearchInstance = initOptions.instantSearchInstance;
+          renderFn(_objectSpread2({}, this.getWidgetRenderState(initOptions), {
             instantSearchInstance: instantSearchInstance
-          }, false);
+          }), false);
         },
-        dispose: function dispose(_ref5) {
-          var state = _ref5.state;
+        dispose: function dispose(_ref4) {
+          var state = _ref4.state;
           unmountFn();
           return state.setQueryParameter('hitsPerPage', undefined);
         },
-        getWidgetState: function getWidgetState(uiState, _ref6) {
+        getRenderState: function getRenderState(renderState, renderOptions) {
+          return _objectSpread2({}, renderState, {
+            hitsPerPage: this.getWidgetRenderState(renderOptions)
+          });
+        },
+        getWidgetRenderState: function getWidgetRenderState(_ref5) {
+          var state = _ref5.state,
+              results = _ref5.results,
+              createURL = _ref5.createURL,
+              helper = _ref5.helper;
+          return {
+            items: transformItems(normalizeItems(state)),
+            refine: connectorState.getRefine(helper),
+            createURL: connectorState.createURLFactory({
+              state: state,
+              createURL: createURL
+            }),
+            hasNoResults: results ? results.nbHits === 0 : true,
+            widgetParams: widgetParams
+          };
+        },
+        getWidgetUiState: function getWidgetUiState(uiState, _ref6) {
           var searchParameters = _ref6.searchParameters;
           var hitsPerPage = searchParameters.hitsPerPage;
 
@@ -10576,154 +10750,141 @@
           _ref4$cache = _ref4.cache,
           cache = _ref4$cache === void 0 ? getInMemoryCache() : _ref4$cache;
 
-      var cachedHits = undefined;
-      var prevState;
       var showPrevious;
       var showMore;
       var sendEvent;
       var bindEvent;
 
-      var getFirstReceivedPage = function getFirstReceivedPage() {
-        return Math.min.apply(Math, _toConsumableArray(Object.keys(cachedHits || {}).map(Number)));
+      var getFirstReceivedPage = function getFirstReceivedPage(state, cachedHits) {
+        var _state$page = state.page,
+            page = _state$page === void 0 ? 0 : _state$page;
+        var pages = Object.keys(cachedHits).map(Number);
+
+        if (pages.length === 0) {
+          return page;
+        } else {
+          return Math.min.apply(Math, [page].concat(_toConsumableArray(pages)));
+        }
       };
 
-      var getLastReceivedPage = function getLastReceivedPage() {
-        return Math.max.apply(Math, _toConsumableArray(Object.keys(cachedHits || {}).map(Number)));
+      var getLastReceivedPage = function getLastReceivedPage(state, cachedHits) {
+        var _state$page2 = state.page,
+            page = _state$page2 === void 0 ? 0 : _state$page2;
+        var pages = Object.keys(cachedHits).map(Number);
+
+        if (pages.length === 0) {
+          return page;
+        } else {
+          return Math.max.apply(Math, [page].concat(_toConsumableArray(pages)));
+        }
       };
 
-      var getShowPrevious = function getShowPrevious(helper) {
+      var getShowPrevious = function getShowPrevious(helper, cachedHits) {
         return function () {
           // Using the helper's `overrideStateWithoutTriggeringChangeEvent` method
           // avoid updating the browser URL when the user displays the previous page.
           helper.overrideStateWithoutTriggeringChangeEvent(_objectSpread2({}, helper.state, {
-            page: getFirstReceivedPage() - 1
+            page: getFirstReceivedPage(helper.state, cachedHits) - 1
           })).searchWithoutTriggeringOnStateChange();
         };
       };
 
-      var getShowMore = function getShowMore(helper) {
+      var getShowMore = function getShowMore(helper, cachedHits) {
         return function () {
-          helper.setPage(getLastReceivedPage() + 1).search();
+          helper.setPage(getLastReceivedPage(helper.state, cachedHits) + 1).search();
         };
-      };
-
-      var filterEmptyRefinements = function filterEmptyRefinements() {
-        var refinements = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-        return Object.keys(refinements).filter(function (key) {
-          return Array.isArray(refinements[key]) ? refinements[key].length : Object.keys(refinements[key]).length;
-        }).reduce(function (obj, key) {
-          obj[key] = refinements[key];
-          return obj;
-        }, {});
       };
 
       return {
         $$type: 'ais.infiniteHits',
-        init: function init(_ref5) {
-          var instantSearchInstance = _ref5.instantSearchInstance,
-              helper = _ref5.helper;
-          showPrevious = getShowPrevious(helper);
-          showMore = getShowMore(helper);
-          sendEvent = createSendEventForHits({
-            instantSearchInstance: instantSearchInstance,
-            index: helper.getIndex(),
-            widgetType: this.$$type
-          });
-          bindEvent = createBindEventForHits({
-            index: helper.getIndex(),
-            widgetType: this.$$type
-          });
-          renderFn({
-            hits: extractHitsFromCachedHits(cache.read({
-              state: helper.state
-            }) || {}),
-            results: undefined,
-            sendEvent: sendEvent,
-            bindEvent: bindEvent,
-            showPrevious: showPrevious,
-            showMore: showMore,
-            isFirstPage: getFirstReceivedPage() === 0 || helper.state.page === undefined,
-            isLastPage: true,
-            instantSearchInstance: instantSearchInstance,
-            widgetParams: widgetParams
-          }, true);
+        init: function init(initOptions) {
+          renderFn(_objectSpread2({}, this.getWidgetRenderState(initOptions), {
+            instantSearchInstance: initOptions.instantSearchInstance
+          }), true);
         },
-        render: function render(_ref6) {
-          var results = _ref6.results,
-              state = _ref6.state,
-              instantSearchInstance = _ref6.instantSearchInstance;
+        render: function render(renderOptions) {
+          var instantSearchInstance = renderOptions.instantSearchInstance;
+          var widgetRenderState = this.getWidgetRenderState(renderOptions);
+          sendEvent('view', widgetRenderState.currentPageHits);
+          renderFn(_objectSpread2({}, widgetRenderState, {
+            instantSearchInstance: instantSearchInstance
+          }), false);
+        },
+        getRenderState: function getRenderState(renderState, renderOptions) {
+          return _objectSpread2({}, renderState, {
+            infiniteHits: this.getWidgetRenderState(renderOptions)
+          });
+        },
+        getWidgetRenderState: function getWidgetRenderState(_ref5) {
+          var results = _ref5.results,
+              helper = _ref5.helper,
+              state = _ref5.state,
+              instantSearchInstance = _ref5.instantSearchInstance;
+          var isFirstPage;
+          var currentPageHits = [];
+          var cachedHits = cache.read({
+            state: state
+          }) || {};
 
-          // Reset cache and received pages if anything changes in the
-          // search state, except for the page.
-          //
-          // We're doing this to "reset" the widget if a refinement or the
-          // query changes between renders, but we want to keep it as is
-          // if we only change pages.
-          var _state$page = state.page,
-              page = _state$page === void 0 ? 0 : _state$page,
-              facets = state.facets,
-              hierarchicalFacets = state.hierarchicalFacets,
-              disjunctiveFacets = state.disjunctiveFacets,
-              maxValuesPerFacet = state.maxValuesPerFacet,
-              currentState = _objectWithoutProperties(state, ["page", "facets", "hierarchicalFacets", "disjunctiveFacets", "maxValuesPerFacet"]);
-
-          currentState.facetsRefinements = filterEmptyRefinements(currentState.facetsRefinements);
-          currentState.hierarchicalFacetsRefinements = filterEmptyRefinements(currentState.hierarchicalFacetsRefinements);
-          currentState.disjunctiveFacetsRefinements = filterEmptyRefinements(currentState.disjunctiveFacetsRefinements);
-          currentState.numericRefinements = filterEmptyRefinements(currentState.numericRefinements);
-
-          if (!isEqual(currentState, prevState)) {
-            cachedHits = cache.read({
-              state: state
-            }) || {};
-            prevState = currentState;
-          }
-
-          if (escapeHTML && results.hits.length > 0) {
-            results.hits = escapeHits(results.hits);
-          }
-
-          var initialEscaped = results.hits.__escaped;
-          results.hits = addAbsolutePosition(results.hits, results.page, results.hitsPerPage);
-          results.hits = addQueryID(results.hits, results.queryID);
-          results.hits = transformItems(results.hits); // Make sure the escaped tag stays after mapping over the hits.
-          // This prevents the hits from being double-escaped if there are multiple
-          // hits widgets mounted on the page.
-
-          results.hits.__escaped = initialEscaped;
-
-          if (cachedHits === undefined) {
-            cachedHits = cache.read({
-              state: state
-            }) || {};
-          }
-
-          if (cachedHits[page] === undefined) {
-            cachedHits[page] = results.hits;
-            cache.write({
-              state: state,
-              hits: cachedHits
+          if (!results) {
+            showPrevious = getShowPrevious(helper, cachedHits);
+            showMore = getShowMore(helper, cachedHits);
+            sendEvent = createSendEventForHits({
+              instantSearchInstance: instantSearchInstance,
+              index: helper.getIndex(),
+              widgetType: this.$$type
             });
+            bindEvent = createBindEventForHits({
+              index: helper.getIndex(),
+              widgetType: this.$$type
+            });
+            isFirstPage = helper.state.page === undefined || getFirstReceivedPage(helper.state, cachedHits) === 0;
+          } else {
+            var _state$page3 = state.page,
+                _page = _state$page3 === void 0 ? 0 : _state$page3;
+
+            if (escapeHTML && results.hits.length > 0) {
+              results.hits = escapeHits(results.hits);
+            }
+
+            var initialEscaped = results.hits.__escaped;
+            results.hits = addAbsolutePosition(results.hits, results.page, results.hitsPerPage);
+            results.hits = addQueryID(results.hits, results.queryID);
+            results.hits = transformItems(results.hits); // Make sure the escaped tag stays after mapping over the hits.
+            // This prevents the hits from being double-escaped if there are multiple
+            // hits widgets mounted on the page.
+
+            results.hits.__escaped = initialEscaped;
+
+            if (cachedHits[_page] === undefined) {
+              cachedHits[_page] = results.hits;
+              cache.write({
+                state: state,
+                hits: cachedHits
+              });
+            }
+
+            currentPageHits = results.hits;
+            isFirstPage = getFirstReceivedPage(state, cachedHits) === 0;
           }
 
-          var isFirstPage = getFirstReceivedPage() === 0;
-          var isLastPage = results.nbPages <= results.page + 1;
-          sendEvent('view', cachedHits[page]);
-          renderFn({
-            hits: extractHitsFromCachedHits(cachedHits),
-            results: results,
+          var hits = extractHitsFromCachedHits(cachedHits);
+          var isLastPage = results ? results.nbPages <= getLastReceivedPage(state, cachedHits) + 1 : true;
+          return {
+            hits: hits,
+            currentPageHits: currentPageHits,
             sendEvent: sendEvent,
             bindEvent: bindEvent,
+            results: results,
             showPrevious: showPrevious,
             showMore: showMore,
             isFirstPage: isFirstPage,
             isLastPage: isLastPage,
-            instantSearchInstance: instantSearchInstance,
             widgetParams: widgetParams
-          }, false);
+          };
         },
-        dispose: function dispose(_ref7) {
-          var state = _ref7.state;
+        dispose: function dispose(_ref6) {
+          var state = _ref6.state;
           unmountFn();
           var stateWithoutPage = state.setQueryParameter('page', undefined);
 
@@ -10735,8 +10896,8 @@
             return _objectSpread2({}, acc, _defineProperty({}, key, undefined));
           }, {}));
         },
-        getWidgetState: function getWidgetState(uiState, _ref8) {
-          var searchParameters = _ref8.searchParameters;
+        getWidgetUiState: function getWidgetUiState(uiState, _ref7) {
+          var searchParameters = _ref7.searchParameters;
           var page = searchParameters.page || 0;
 
           if (!page) {
@@ -10751,8 +10912,8 @@
             page: page + 1
           });
         },
-        getWidgetSearchParameters: function getWidgetSearchParameters(searchParameters, _ref9) {
-          var uiState = _ref9.uiState;
+        getWidgetSearchParameters: function getWidgetSearchParameters(searchParameters, _ref8) {
+          var uiState = _ref8.uiState;
           var widgetSearchParameters = searchParameters;
 
           if (escapeHTML) {
@@ -10884,16 +11045,18 @@
         throw new Error(withUsage$8('The `showMoreLimit` option must be greater than `limit`.'));
       }
 
-      var sendEvent;
+      var sendEvent; // Provide the same function to the `renderFn` so that way the user
+      // has to only bind it once when `isFirstRendering` for instance
+
+      var toggleShowMore = function toggleShowMore() {};
+
+      function cachedToggleShowMore() {
+        toggleShowMore();
+      }
+
       return {
         $$type: 'ais.menu',
         isShowingMore: false,
-        // Provide the same function to the `renderFn` so that way the user
-        // has to only bind it once when `isFirstRendering` for instance
-        toggleShowMore: function toggleShowMore() {},
-        cachedToggleShowMore: function cachedToggleShowMore() {
-          this.toggleShowMore();
-        },
         createToggleShowMore: function createToggleShowMore(_ref) {
           var _this = this;
 
@@ -10911,87 +11074,99 @@
         getLimit: function getLimit() {
           return this.isShowingMore ? showMoreLimit : limit;
         },
-        refine: function refine(helper) {
-          return function (facetValue) {
-            var _helper$getHierarchic = helper.getHierarchicalFacetBreadcrumb(attribute),
-                _helper$getHierarchic2 = _slicedToArray(_helper$getHierarchic, 1),
-                refinedItem = _helper$getHierarchic2[0];
-
-            sendEvent('click', facetValue ? facetValue : refinedItem);
-            helper.toggleRefinement(attribute, facetValue ? facetValue : refinedItem).search();
-          };
+        init: function init(initOptions) {
+          var instantSearchInstance = initOptions.instantSearchInstance;
+          renderFn(_objectSpread2({}, this.getWidgetRenderState(initOptions), {
+            instantSearchInstance: instantSearchInstance
+          }), true);
         },
-        init: function init(_ref2) {
-          var helper = _ref2.helper,
-              createURL = _ref2.createURL,
-              instantSearchInstance = _ref2.instantSearchInstance;
-          sendEvent = createSendEventForFacet({
-            instantSearchInstance: instantSearchInstance,
-            helper: helper,
-            attribute: attribute,
-            widgetType: this.$$type
+        render: function render(renderOptions) {
+          var instantSearchInstance = renderOptions.instantSearchInstance;
+          renderFn(_objectSpread2({}, this.getWidgetRenderState(renderOptions), {
+            instantSearchInstance: instantSearchInstance
+          }), false);
+        },
+        dispose: function dispose(_ref2) {
+          var state = _ref2.state;
+          unmountFn();
+          return state.removeHierarchicalFacet(attribute).setQueryParameter('maxValuesPerFacet', undefined);
+        },
+        getRenderState: function getRenderState(renderState, renderOptions) {
+          return _objectSpread2({}, renderState, {
+            menu: this.getWidgetRenderState(renderOptions)
           });
-          this.cachedToggleShowMore = this.cachedToggleShowMore.bind(this);
-
-          this._createURL = function (facetValue) {
-            return createURL(helper.state.toggleRefinement(attribute, facetValue));
-          };
-
-          this._refine = this.refine(helper);
-          renderFn({
-            items: [],
-            createURL: this._createURL,
-            refine: this._refine,
-            sendEvent: sendEvent,
-            instantSearchInstance: instantSearchInstance,
-            canRefine: false,
-            widgetParams: widgetParams,
-            isShowingMore: this.isShowingMore,
-            toggleShowMore: this.cachedToggleShowMore,
-            canToggleShowMore: false
-          }, true);
         },
-        render: function render(_ref3) {
+        getWidgetRenderState: function getWidgetRenderState(_ref3) {
           var results = _ref3.results,
-              instantSearchInstance = _ref3.instantSearchInstance;
-          var facetValues = results.getFacetValues(attribute, {
-            sortBy: sortBy
-          });
-          var facetItems = facetValues && facetValues.data ? facetValues.data : [];
-          var items = transformItems(facetItems.slice(0, this.getLimit()).map(function (_ref4) {
-            var label = _ref4.name,
-                value = _ref4.path,
-                item = _objectWithoutProperties(_ref4, ["name", "path"]);
+              createURL = _ref3.createURL,
+              instantSearchInstance = _ref3.instantSearchInstance,
+              helper = _ref3.helper;
+          var items = [];
+          var canToggleShowMore = false;
 
-            return _objectSpread2({}, item, {
-              label: label,
-              value: value
+          if (!sendEvent) {
+            sendEvent = createSendEventForFacet({
+              instantSearchInstance: instantSearchInstance,
+              helper: helper,
+              attribute: attribute,
+              widgetType: this.$$type
             });
-          }));
-          this.toggleShowMore = this.createToggleShowMore({
+          }
+
+          if (!this._createURL) {
+            this._createURL = function (facetValue) {
+              return createURL(helper.state.toggleRefinement(attribute, facetValue));
+            };
+          }
+
+          if (!this._refine) {
+            this._refine = function (facetValue) {
+              var _helper$getHierarchic = helper.getHierarchicalFacetBreadcrumb(attribute),
+                  _helper$getHierarchic2 = _slicedToArray(_helper$getHierarchic, 1),
+                  refinedItem = _helper$getHierarchic2[0];
+
+              sendEvent('click', facetValue ? facetValue : refinedItem);
+              helper.toggleRefinement(attribute, facetValue ? facetValue : refinedItem).search();
+            };
+          }
+
+          toggleShowMore = this.createToggleShowMore({
             results: results,
             instantSearchInstance: instantSearchInstance
           });
-          renderFn({
+
+          if (results) {
+            var facetValues = results.getFacetValues(attribute, {
+              sortBy: sortBy
+            });
+            var facetItems = facetValues && facetValues.data ? facetValues.data : [];
+            canToggleShowMore = showMore && (this.isShowingMore || facetItems.length > this.getLimit());
+            items = transformItems(facetItems.slice(0, this.getLimit()).map(function (_ref4) {
+              var label = _ref4.name,
+                  value = _ref4.path,
+                  item = _objectWithoutProperties(_ref4, ["name", "path"]);
+
+              return _objectSpread2({}, item, {
+                label: label,
+                value: value
+              });
+            }));
+          }
+
+          return {
             items: items,
             createURL: this._createURL,
             refine: this._refine,
             sendEvent: sendEvent,
-            instantSearchInstance: instantSearchInstance,
             canRefine: items.length > 0,
             widgetParams: widgetParams,
             isShowingMore: this.isShowingMore,
-            toggleShowMore: this.cachedToggleShowMore,
-            canToggleShowMore: showMore && (this.isShowingMore || facetItems.length > this.getLimit())
-          }, false);
+            toggleShowMore: cachedToggleShowMore,
+            canToggleShowMore: canToggleShowMore
+          };
         },
-        dispose: function dispose(_ref5) {
-          var state = _ref5.state;
-          unmountFn();
-          return state.removeHierarchicalFacet(attribute).setQueryParameter('maxValuesPerFacet', undefined);
-        },
-        getWidgetState: function getWidgetState(uiState, _ref6) {
-          var searchParameters = _ref6.searchParameters;
+        getWidgetUiState: function getWidgetUiState(uiState, _ref5) {
+          var searchParameters = _ref5.searchParameters;
 
           var _searchParameters$get = searchParameters.getHierarchicalFacetBreadcrumb(attribute),
               _searchParameters$get2 = _slicedToArray(_searchParameters$get, 1),
@@ -11005,8 +11180,8 @@
             menu: _objectSpread2({}, uiState.menu, _defineProperty({}, attribute, value))
           });
         },
-        getWidgetSearchParameters: function getWidgetSearchParameters(searchParameters, _ref7) {
-          var uiState = _ref7.uiState;
+        getWidgetSearchParameters: function getWidgetSearchParameters(searchParameters, _ref6) {
+          var uiState = _ref6.uiState;
           var value = uiState.menu && uiState.menu[attribute];
           var withFacetConfiguration = searchParameters.removeHierarchicalFacet(attribute).addHierarchicalFacet({
             name: attribute,
@@ -11123,59 +11298,25 @@
       var connectorState = {};
       return {
         $$type: $$type,
-        init: function init(_ref4) {
-          var helper = _ref4.helper,
-              createURL = _ref4.createURL,
-              instantSearchInstance = _ref4.instantSearchInstance;
-          connectorState.sendEvent = createSendEvent({
-            instantSearchInstance: instantSearchInstance,
-            helper: helper,
-            attribute: attribute
-          });
-
-          connectorState.refine = function (facetValue) {
-            var refinedState = getRefinedState(helper.state, attribute, facetValue);
-            connectorState.sendEvent('click', facetValue);
-            helper.setState(refinedState).search();
-          };
-
-          connectorState.createURL = function (state) {
-            return function (facetValue) {
-              return createURL(getRefinedState(state, attribute, facetValue));
-            };
-          };
-
-          renderFn({
-            createURL: connectorState.createURL(helper.state),
-            items: transformItems(prepareItems(helper.state)),
-            hasNoResults: true,
-            refine: connectorState.refine,
-            sendEvent: connectorState.sendEvent,
-            instantSearchInstance: instantSearchInstance,
-            widgetParams: widgetParams
-          }, true);
+        init: function init(initOptions) {
+          var instantSearchInstance = initOptions.instantSearchInstance;
+          renderFn(_objectSpread2({}, this.getWidgetRenderState(initOptions), {
+            instantSearchInstance: instantSearchInstance
+          }), true);
         },
-        render: function render(_ref5) {
-          var results = _ref5.results,
-              state = _ref5.state,
-              instantSearchInstance = _ref5.instantSearchInstance;
-          renderFn({
-            createURL: connectorState.createURL(state),
-            items: transformItems(prepareItems(state)),
-            hasNoResults: results.nbHits === 0,
-            refine: connectorState.refine,
-            sendEvent: connectorState.sendEvent,
-            instantSearchInstance: instantSearchInstance,
-            widgetParams: widgetParams
-          }, false);
+        render: function render(renderOptions) {
+          var instantSearchInstance = renderOptions.instantSearchInstance;
+          renderFn(_objectSpread2({}, this.getWidgetRenderState(renderOptions), {
+            instantSearchInstance: instantSearchInstance
+          }), false);
         },
-        dispose: function dispose(_ref6) {
-          var state = _ref6.state;
+        dispose: function dispose(_ref4) {
+          var state = _ref4.state;
           unmountFn();
           return state.clearRefinements(attribute);
         },
-        getWidgetState: function getWidgetState(uiState, _ref7) {
-          var searchParameters = _ref7.searchParameters;
+        getWidgetUiState: function getWidgetUiState(uiState, _ref5) {
+          var searchParameters = _ref5.searchParameters;
           var values = searchParameters.getNumericRefinements(attribute);
           var equal = values['='] && values['='][0];
 
@@ -11196,8 +11337,8 @@
             numericMenu: _objectSpread2({}, uiState.numericMenu, _defineProperty({}, attribute, "".concat(min, ":").concat(max)))
           });
         },
-        getWidgetSearchParameters: function getWidgetSearchParameters(searchParameters, _ref8) {
-          var uiState = _ref8.uiState;
+        getWidgetSearchParameters: function getWidgetSearchParameters(searchParameters, _ref6) {
+          var uiState = _ref6.uiState;
           var value = uiState.numericMenu && uiState.numericMenu[attribute];
           var withoutRefinements = searchParameters.clearRefinements(attribute);
 
@@ -11221,6 +11362,51 @@
           var withMinRefinement = isFiniteNumber(min) ? withoutRefinements.addNumericRefinement(attribute, '>=', min) : withoutRefinements;
           var withMaxRefinement = isFiniteNumber(max) ? withMinRefinement.addNumericRefinement(attribute, '<=', max) : withMinRefinement;
           return withMaxRefinement;
+        },
+        getRenderState: function getRenderState(renderState, renderOptions) {
+          return _objectSpread2({}, renderState, {
+            numericMenu: _objectSpread2({}, renderState.numericMenu, _defineProperty({}, attribute, this.getWidgetRenderState(renderOptions)))
+          });
+        },
+        getWidgetRenderState: function getWidgetRenderState(_ref7) {
+          var results = _ref7.results,
+              state = _ref7.state,
+              instantSearchInstance = _ref7.instantSearchInstance,
+              helper = _ref7.helper,
+              createURL = _ref7.createURL;
+
+          if (!connectorState.refine) {
+            connectorState.refine = function (facetValue) {
+              var refinedState = getRefinedState(helper.state, attribute, facetValue);
+              connectorState.sendEvent('click', facetValue);
+              helper.setState(refinedState).search();
+            };
+          }
+
+          if (!connectorState.createURL) {
+            connectorState.createURL = function (newState) {
+              return function (facetValue) {
+                return createURL(getRefinedState(newState, attribute, facetValue));
+              };
+            };
+          }
+
+          if (!connectorState.sendEvent) {
+            connectorState.sendEvent = createSendEvent({
+              instantSearchInstance: instantSearchInstance,
+              helper: helper,
+              attribute: attribute
+            });
+          }
+
+          return {
+            createURL: connectorState.createURL(state),
+            items: transformItems(prepareItems(state)),
+            hasNoResults: results ? results.nbHits === 0 : true,
+            refine: connectorState.refine,
+            sendEvent: connectorState.sendEvent,
+            widgetParams: widgetParams
+          };
         }
       };
     };
@@ -11316,6 +11502,12 @@
     function Paginator(params) {
       _classCallCheck(this, Paginator);
 
+      _defineProperty(this, "currentPage", void 0);
+
+      _defineProperty(this, "total", void 0);
+
+      _defineProperty(this, "padding", void 0);
+
       this.currentPage = params.currentPage;
       this.total = params.total;
       this.padding = params.padding;
@@ -11382,24 +11574,6 @@
     name: 'pagination',
     connector: true
   });
-  /**
-   * @typedef {Object} CustomPaginationWidgetOptions
-   * @property {number} [totalPages] The total number of pages to browse.
-   * @property {number} [padding = 3] The padding of pages to show around the current page
-   */
-
-  /**
-   * @typedef {Object} PaginationRenderingOptions
-   * @property {function(page): string} createURL Creates URLs for the next state, the number is the page to generate the URL for.
-   * @property {number} currentRefinement The number of the page currently displayed.
-   * @property {number} nbHits The number of hits computed for the last query (can be approximated).
-   * @property {number} nbPages The number of pages for the result set.
-   * @property {number[]} pages The actual pages relevant to the current situation and padding
-   * @property {boolean} isFirstPage true if the current page is also the first page
-   * @property {boolean} isLastPage true if the current page is also the last page
-   * @property {function(page)} refine Sets the current page and trigger a search.
-   * @property {Object} widgetParams All original `CustomPaginationWidgetOptions` forwarded to the `renderFn`.
-   */
 
   /**
    * **Pagination** connector provides the logic to build a widget that will let the user
@@ -11407,133 +11581,49 @@
    *
    * When using the pagination with Algolia, you should be aware that the engine won't provide you pages
    * beyond the 1000th hits by default. You can find more information on the [Algolia documentation](https://www.algolia.com/doc/guides/searching/pagination/#pagination-limitations).
-   *
-   * @type {Connector}
-   * @param {function(PaginationRenderingOptions, boolean)} renderFn Rendering function for the custom **Pagination** widget.
-   * @param {function} unmountFn Unmount function called when the widget is disposed.
-   * @return {function(CustomPaginationWidgetOptions)} Re-usable widget factory for a custom **Pagination** widget.
-   * @example
-   * // custom `renderFn` to render the custom Pagination widget
-   * function renderFn(PaginationRenderingOptions, isFirstRendering) {
-   *   if (isFirstRendering) {
-   *     PaginationRenderingOptions.widgetParams.containerNode.html('<ul></ul>');
-   *   }
-   *
-   *   // remove event listeners before replacing markup
-   *   PaginationRenderingOptions.widgetParams.containerNode
-   *     .find('a[data-page]')
-   *     .each(function() { $(this).off('click'); });
-   *
-   *   var pages = PaginationRenderingOptions.pages
-   *     .map(function(page) {
-   *       return '<li style="display: inline-block; margin-right: 10px;">' +
-   *         '<a href="' + PaginationRenderingOptions.createURL(page) + '" data-page="' + page + '">' +
-   *         (parseInt(page) + 1) + '</a></li>';
-   *     });
-   *
-   *   PaginationRenderingOptions.widgetParams.containerNode
-   *     .find('ul')
-   *     .html(pages);
-   *
-   *   PaginationRenderingOptions.widgetParams.containerNode
-   *     .find('a[data-page]')
-   *     .each(function() {
-   *       $(this).on('click', function(event) {
-   *         event.preventDefault();
-   *         PaginationRenderingOptions.refine($(this).data('page'));
-   *       });
-   *     });
-   * }
-   *
-   * // connect `renderFn` to Pagination logic
-   * var customPagination = instantsearch.connectors.connectPagination(renderFn);
-   *
-   * // mount widget on the page
-   * search.addWidgets([
-   *   customPagination({
-   *     containerNode: $('#custom-pagination-container'),
-   *     totalPages: 20,
-   *     padding: 4,
-   *   })
-   * ]);
    */
-
-  function connectPagination(renderFn) {
+  var connectPagination = function connectPagination(renderFn) {
     var unmountFn = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : noop;
     checkRendering(renderFn, withUsage$a());
-    return function () {
-      var widgetParams = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-      var totalPages = widgetParams.totalPages,
-          _widgetParams$padding = widgetParams.padding,
-          padding = _widgetParams$padding === void 0 ? 3 : _widgetParams$padding;
+    return function (widgetParams) {
+      var _ref = widgetParams || {},
+          totalPages = _ref.totalPages,
+          _ref$padding = _ref.padding,
+          padding = _ref$padding === void 0 ? 3 : _ref$padding;
+
       var pager = new Paginator({
         currentPage: 0,
         total: 0,
         padding: padding
       });
+      var connectorState = {};
+
+      function getMaxPage(_ref2) {
+        var nbPages = _ref2.nbPages;
+        return totalPages !== undefined ? Math.min(totalPages, nbPages) : nbPages;
+      }
+
       return {
         $$type: 'ais.pagination',
-        init: function init(_ref) {
-          var helper = _ref.helper,
-              createURL = _ref.createURL,
-              instantSearchInstance = _ref.instantSearchInstance;
-
-          this.refine = function (page) {
-            helper.setPage(page);
-            helper.search();
-          };
-
-          this.createURL = function (state) {
-            return function (page) {
-              return createURL(state.setPage(page));
-            };
-          };
-
-          renderFn({
-            createURL: this.createURL(helper.state),
-            currentRefinement: helper.state.page || 0,
-            nbHits: 0,
-            nbPages: 0,
-            pages: [],
-            isFirstPage: true,
-            isLastPage: true,
-            refine: this.refine,
-            widgetParams: widgetParams,
+        init: function init(initOptions) {
+          var instantSearchInstance = initOptions.instantSearchInstance;
+          renderFn(_objectSpread2({}, this.getWidgetRenderState(initOptions), {
             instantSearchInstance: instantSearchInstance
-          }, true);
+          }), true);
         },
-        getMaxPage: function getMaxPage(_ref2) {
-          var nbPages = _ref2.nbPages;
-          return totalPages !== undefined ? Math.min(totalPages, nbPages) : nbPages;
-        },
-        render: function render(_ref3) {
-          var results = _ref3.results,
-              state = _ref3.state,
-              instantSearchInstance = _ref3.instantSearchInstance;
-          var page = state.page || 0;
-          var nbPages = this.getMaxPage(results);
-          pager.currentPage = page;
-          pager.total = nbPages;
-          renderFn({
-            createURL: this.createURL(state),
-            currentRefinement: page,
-            refine: this.refine,
-            nbHits: results.nbHits,
-            nbPages: nbPages,
-            pages: pager.pages(),
-            isFirstPage: pager.isFirstPage(),
-            isLastPage: pager.isLastPage(),
-            widgetParams: widgetParams,
+        render: function render(renderOptions) {
+          var instantSearchInstance = renderOptions.instantSearchInstance;
+          renderFn(_objectSpread2({}, this.getWidgetRenderState(renderOptions), {
             instantSearchInstance: instantSearchInstance
-          }, false);
+          }), false);
         },
-        dispose: function dispose(_ref4) {
-          var state = _ref4.state;
+        dispose: function dispose(_ref3) {
+          var state = _ref3.state;
           unmountFn();
           return state.setQueryParameter('page', undefined);
         },
-        getWidgetState: function getWidgetState(uiState, _ref5) {
-          var searchParameters = _ref5.searchParameters;
+        getWidgetUiState: function getWidgetUiState(uiState, _ref4) {
+          var searchParameters = _ref4.searchParameters;
           var page = searchParameters.page || 0;
 
           if (!page) {
@@ -11544,14 +11634,58 @@
             page: page + 1
           });
         },
-        getWidgetSearchParameters: function getWidgetSearchParameters(searchParameters, _ref6) {
-          var uiState = _ref6.uiState;
+        getWidgetSearchParameters: function getWidgetSearchParameters(searchParameters, _ref5) {
+          var uiState = _ref5.uiState;
           var page = uiState.page ? uiState.page - 1 : 0;
           return searchParameters.setQueryParameter('page', page);
+        },
+        getWidgetRenderState: function getWidgetRenderState(_ref6) {
+          var results = _ref6.results,
+              helper = _ref6.helper,
+              createURL = _ref6.createURL;
+
+          if (!connectorState.refine) {
+            connectorState.refine = function (page) {
+              helper.setPage(page);
+              helper.search();
+            };
+          }
+
+          if (!connectorState.createURL) {
+            connectorState.createURL = function (state) {
+              return function (page) {
+                return createURL(state.setPage(page));
+              };
+            };
+          }
+
+          var state = helper.state;
+          var page = state.page || 0;
+          var nbPages = getMaxPage(results || {
+            nbPages: 0
+          });
+          pager.currentPage = page;
+          pager.total = nbPages;
+          return {
+            createURL: connectorState.createURL(state),
+            refine: connectorState.refine,
+            currentRefinement: page,
+            nbHits: (results === null || results === void 0 ? void 0 : results.nbHits) || 0,
+            nbPages: nbPages,
+            pages: results ? pager.pages() : [],
+            isFirstPage: pager.isFirstPage(),
+            isLastPage: pager.isLastPage(),
+            widgetParams: widgetParams
+          };
+        },
+        getRenderState: function getRenderState(renderState, renderOptions) {
+          return _objectSpread2({}, renderState, {
+            pagination: this.getWidgetRenderState(renderOptions)
+          });
         }
       };
     };
-  }
+  };
 
   var withUsage$b = createDocumentationMessageGenerator({
     name: 'range-input',
@@ -11561,56 +11695,42 @@
     connector: true
   });
   var $$type$1 = 'ais.range';
-  /**
-   * @typedef {Object} CustomRangeWidgetOptions
-   * @property {string} attribute Name of the attribute for faceting.
-   * @property {number} [min = undefined] Minimal range value, default to automatically computed from the result set.
-   * @property {number} [max = undefined] Maximal range value, default to automatically computed from the result set.
-   * @property {number} [precision = 2] Number of digits after decimal point to use.
-   */
 
-  /**
-   * @typedef {Object} RangeRenderingOptions
-   * @property {function(Array<number, number>)} refine Sets a range to filter the results on. Both values
-   * are optional, and will default to the higher and lower bounds. You can use `undefined` to remove a
-   * previously set bound or to set an infinite bound.
-   * @property {{min: number, max: number}} range Results bounds without the current range filter.
-   * @property {Array<number, number>} start Current numeric bounds of the search.
-   * @property {{from: function, to: function}} formatter Transform for the rendering `from` and/or `to` values.
-   * Both functions take a `number` as input and should output a `string`.
-   * @property {Object} widgetParams All original `CustomRangeWidgetOptions` forwarded to the `renderFn`.
-   */
-
+  function toPrecision(_ref) {
+    var min = _ref.min,
+        max = _ref.max,
+        precision = _ref.precision;
+    var pow = Math.pow(10, precision);
+    return {
+      min: min ? Math.floor(min * pow) / pow : min,
+      max: max ? Math.ceil(max * pow) / pow : max
+    };
+  }
   /**
    * **Range** connector provides the logic to create custom widget that will let
    * the user refine results using a numeric range.
    *
    * This connectors provides a `refine()` function that accepts bounds. It will also provide
    * information about the min and max bounds for the current result set.
-   * @type {Connector}
-   * @param {function(RangeRenderingOptions, boolean)} renderFn Rendering function for the custom **Range** widget.
-   * @param {function} unmountFn Unmount function called when the widget is disposed.
-   * @return {function(CustomRangeWidgetOptions)} Re-usable widget factory for a custom **Range** widget.
    */
 
-  function connectRange(renderFn) {
+
+  var connectRange = function connectRange(renderFn) {
     var unmountFn = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : noop;
     checkRendering(renderFn, withUsage$b());
-    return function () {
-      var widgetParams = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-      var attribute = widgetParams.attribute,
-          minBound = widgetParams.min,
-          maxBound = widgetParams.max,
-          _widgetParams$precisi = widgetParams.precision,
-          precision = _widgetParams$precisi === void 0 ? 0 : _widgetParams$precisi;
-      var hasMinBound = isFiniteNumber(minBound);
-      var hasMaxBound = isFiniteNumber(maxBound);
+    return function (widgetParams) {
+      var _ref2 = widgetParams || {},
+          attribute = _ref2.attribute,
+          minBound = _ref2.min,
+          maxBound = _ref2.max,
+          _ref2$precision = _ref2.precision,
+          precision = _ref2$precision === void 0 ? 0 : _ref2$precision;
 
       if (!attribute) {
         throw new Error(withUsage$b('The `attribute` option is required.'));
       }
 
-      if (hasMinBound && hasMaxBound && minBound > maxBound) {
+      if (isFiniteNumber(minBound) && isFiniteNumber(maxBound) && minBound > maxBound) {
         throw new Error(withUsage$b("The `max` option can't be lower than `min`."));
       }
 
@@ -11620,7 +11740,7 @@
 
       var rangeFormatter = {
         from: function from(v) {
-          return v;
+          return v.toLocaleString();
         },
         to: function to(v) {
           return formatToNumber(v).toLocaleString();
@@ -11632,23 +11752,30 @@
         var currentRangeMin = currentRange.min,
             currentRangeMax = currentRange.max;
 
-        var _ref = resolvedState.getNumericRefinement(attribute, '>=') || [],
-            _ref2 = _slicedToArray(_ref, 1),
-            min = _ref2[0];
-
-        var _ref3 = resolvedState.getNumericRefinement(attribute, '<=') || [],
+        var _ref3 = resolvedState.getNumericRefinement(attribute, '>=') || [],
             _ref4 = _slicedToArray(_ref3, 1),
-            max = _ref4[0];
+            min = _ref4[0];
+
+        var _ref5 = resolvedState.getNumericRefinement(attribute, '<=') || [],
+            _ref6 = _slicedToArray(_ref5, 1),
+            max = _ref6[0];
 
         var isResetMin = nextMin === undefined || nextMin === '';
         var isResetMax = nextMax === undefined || nextMax === '';
-        var nextMinAsNumber = !isResetMin ? parseFloat(nextMin) : undefined;
-        var nextMaxAsNumber = !isResetMax ? parseFloat(nextMax) : undefined;
+
+        var _toPrecision = toPrecision({
+          min: !isResetMin ? parseFloat(nextMin) : undefined,
+          max: !isResetMax ? parseFloat(nextMax) : undefined,
+          precision: precision
+        }),
+            nextMinAsNumber = _toPrecision.min,
+            nextMaxAsNumber = _toPrecision.max;
+
         var newNextMin;
 
-        if (!hasMinBound && currentRangeMin === nextMinAsNumber) {
+        if (!isFiniteNumber(minBound) && currentRangeMin === nextMinAsNumber) {
           newNextMin = undefined;
-        } else if (hasMinBound && isResetMin) {
+        } else if (isFiniteNumber(minBound) && isResetMin) {
           newNextMin = minBound;
         } else {
           newNextMin = nextMinAsNumber;
@@ -11656,36 +11783,32 @@
 
         var newNextMax;
 
-        if (!hasMaxBound && currentRangeMax === nextMaxAsNumber) {
+        if (!isFiniteNumber(maxBound) && currentRangeMax === nextMaxAsNumber) {
           newNextMax = undefined;
-        } else if (hasMaxBound && isResetMax) {
+        } else if (isFiniteNumber(maxBound) && isResetMax) {
           newNextMax = maxBound;
         } else {
           newNextMax = nextMaxAsNumber;
         }
 
         var isResetNewNextMin = newNextMin === undefined;
-        var isValidNewNextMin = isFiniteNumber(newNextMin);
-        var isValidMinCurrentRange = isFiniteNumber(currentRangeMin);
-        var isGreaterThanCurrentRange = isValidMinCurrentRange && currentRangeMin <= newNextMin;
-        var isMinValid = isResetNewNextMin || isValidNewNextMin && (!isValidMinCurrentRange || isGreaterThanCurrentRange);
+        var isGreaterThanCurrentRange = isFiniteNumber(currentRangeMin) && currentRangeMin <= newNextMin;
+        var isMinValid = isResetNewNextMin || isFiniteNumber(newNextMin) && (!isFiniteNumber(currentRangeMin) || isGreaterThanCurrentRange);
         var isResetNewNextMax = newNextMax === undefined;
-        var isValidNewNextMax = isFiniteNumber(newNextMax);
-        var isValidMaxCurrentRange = isFiniteNumber(currentRangeMax);
-        var isLowerThanRange = isValidMaxCurrentRange && currentRangeMax >= newNextMax;
-        var isMaxValid = isResetNewNextMax || isValidNewNextMax && (!isValidMaxCurrentRange || isLowerThanRange);
+        var isLowerThanRange = isFiniteNumber(newNextMax) && currentRangeMax >= newNextMax;
+        var isMaxValid = isResetNewNextMax || isFiniteNumber(newNextMax) && (!isFiniteNumber(currentRangeMax) || isLowerThanRange);
         var hasMinChange = min !== newNextMin;
         var hasMaxChange = max !== newNextMax;
 
         if ((hasMinChange || hasMaxChange) && isMinValid && isMaxValid) {
           resolvedState = resolvedState.removeNumericRefinement(attribute);
 
-          if (isValidNewNextMin) {
-            resolvedState = resolvedState.addNumericRefinement(attribute, '>=', formatToNumber(newNextMin));
+          if (isFiniteNumber(newNextMin)) {
+            resolvedState = resolvedState.addNumericRefinement(attribute, '>=', newNextMin);
           }
 
-          if (isValidNewNextMax) {
-            resolvedState = resolvedState.addNumericRefinement(attribute, '<=', formatToNumber(newNextMax));
+          if (isFiniteNumber(newNextMax)) {
+            resolvedState = resolvedState.addNumericRefinement(attribute, '<=', newNextMax);
           }
 
           return resolvedState;
@@ -11740,126 +11863,130 @@
         };
       };
 
+      function _getCurrentRange(stats) {
+        var min;
+
+        if (isFiniteNumber(minBound)) {
+          min = minBound;
+        } else if (isFiniteNumber(stats.min)) {
+          min = stats.min;
+        } else {
+          min = 0;
+        }
+
+        var max;
+
+        if (isFiniteNumber(maxBound)) {
+          max = maxBound;
+        } else if (isFiniteNumber(stats.max)) {
+          max = stats.max;
+        } else {
+          max = 0;
+        }
+
+        return toPrecision({
+          min: min,
+          max: max,
+          precision: precision
+        });
+      }
+
+      function _getCurrentRefinement(helper) {
+        var _ref7 = helper.getNumericRefinement(attribute, '>=') || [],
+            _ref8 = _slicedToArray(_ref7, 1),
+            minValue = _ref8[0];
+
+        var _ref9 = helper.getNumericRefinement(attribute, '<=') || [],
+            _ref10 = _slicedToArray(_ref9, 1),
+            maxValue = _ref10[0];
+
+        var min = isFiniteNumber(minValue) ? minValue : -Infinity;
+        var max = isFiniteNumber(maxValue) ? maxValue : Infinity;
+        return [min, max];
+      }
+
+      function _refine(instantSearchInstance, helper, currentRange) {
+        return function () {
+          var _ref11 = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [undefined, undefined],
+              _ref12 = _slicedToArray(_ref11, 2),
+              nextMin = _ref12[0],
+              nextMax = _ref12[1];
+
+          var refinedState = getRefinedState(helper, currentRange, nextMin, nextMax);
+
+          if (refinedState) {
+            sendEventWithRefinedState(refinedState, instantSearchInstance, helper);
+            helper.setState(refinedState).search();
+          }
+        };
+      }
+
       return {
         $$type: $$type$1,
-        _getCurrentRange: function _getCurrentRange(stats) {
-          var pow = Math.pow(10, precision);
-          var min;
-
-          if (hasMinBound) {
-            min = minBound;
-          } else if (isFiniteNumber(stats.min)) {
-            min = stats.min;
-          } else {
-            min = 0;
-          }
-
-          var max;
-
-          if (hasMaxBound) {
-            max = maxBound;
-          } else if (isFiniteNumber(stats.max)) {
-            max = stats.max;
-          } else {
-            max = 0;
-          }
-
-          return {
-            min: Math.floor(min * pow) / pow,
-            max: Math.ceil(max * pow) / pow
-          };
+        init: function init(initOptions) {
+          renderFn(_objectSpread2({}, this.getWidgetRenderState(initOptions), {
+            instantSearchInstance: initOptions.instantSearchInstance
+          }), true);
         },
-        _getCurrentRefinement: function _getCurrentRefinement(helper) {
-          var _ref5 = helper.getNumericRefinement(attribute, '>=') || [],
-              _ref6 = _slicedToArray(_ref5, 1),
-              minValue = _ref6[0];
-
-          var _ref7 = helper.getNumericRefinement(attribute, '<=') || [],
-              _ref8 = _slicedToArray(_ref7, 1),
-              maxValue = _ref8[0];
-
-          var min = isFiniteNumber(minValue) ? minValue : -Infinity;
-          var max = isFiniteNumber(maxValue) ? maxValue : Infinity;
-          return [min, max];
+        render: function render(renderOptions) {
+          renderFn(_objectSpread2({}, this.getWidgetRenderState(renderOptions), {
+            instantSearchInstance: renderOptions.instantSearchInstance
+          }), false);
         },
-        _refine: function _refine(instantSearchInstance, helper, currentRange) {
-          // eslint-disable-next-line complexity
-          return function () {
-            var _ref9 = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [],
-                _ref10 = _slicedToArray(_ref9, 2),
-                nextMin = _ref10[0],
-                nextMax = _ref10[1];
-
-            var refinedState = getRefinedState(helper, currentRange, nextMin, nextMax);
-
-            if (refinedState) {
-              sendEventWithRefinedState(refinedState, instantSearchInstance, helper);
-              helper.setState(refinedState).search();
-            }
-          };
+        getRenderState: function getRenderState(renderState, renderOptions) {
+          return _objectSpread2({}, renderState, {
+            range: _objectSpread2({}, renderState.range, _defineProperty({}, attribute, this.getWidgetRenderState(renderOptions)))
+          });
         },
-        init: function init(_ref11) {
-          var helper = _ref11.helper,
-              instantSearchInstance = _ref11.instantSearchInstance;
-          var stats = {};
-
-          var currentRange = this._getCurrentRange(stats);
-
-          var start = this._getCurrentRefinement(helper);
-
-          renderFn({
-            // On first render pass an empty range
-            // to be able to bypass the validation
-            // related to it
-            refine: this._refine(instantSearchInstance, helper, {}),
-            sendEvent: createSendEvent(instantSearchInstance, helper, {}),
-            format: rangeFormatter,
-            range: currentRange,
-            widgetParams: _objectSpread2({}, widgetParams, {
-              precision: precision
-            }),
-            start: start,
-            instantSearchInstance: instantSearchInstance
-          }, true);
-        },
-        render: function render(_ref12) {
-          var results = _ref12.results,
-              helper = _ref12.helper,
-              instantSearchInstance = _ref12.instantSearchInstance;
-          var facetsFromResults = results.disjunctiveFacets || [];
+        getWidgetRenderState: function getWidgetRenderState(_ref13) {
+          var results = _ref13.results,
+              helper = _ref13.helper,
+              instantSearchInstance = _ref13.instantSearchInstance;
+          var facetsFromResults = results && results.disjunctiveFacets || [];
           var facet = find$1(facetsFromResults, function (facetResult) {
             return facetResult.name === attribute;
           });
-          var stats = facet && facet.stats || {};
+          var stats = facet && facet.stats || {
+            min: undefined,
+            max: undefined
+          };
 
-          var currentRange = this._getCurrentRange(stats);
+          var currentRange = _getCurrentRange(stats);
 
-          var start = this._getCurrentRefinement(helper);
+          var start = _getCurrentRefinement(helper);
 
-          renderFn({
-            refine: this._refine(instantSearchInstance, helper, currentRange),
-            sendEvent: createSendEvent(instantSearchInstance, helper, currentRange),
+          var refine;
+
+          if (!results) {
+            // On first render pass an empty range
+            // to be able to bypass the validation
+            // related to it
+            refine = _refine(instantSearchInstance, helper, {
+              min: undefined,
+              max: undefined
+            });
+          } else {
+            refine = _refine(instantSearchInstance, helper, currentRange);
+          }
+
+          return {
+            refine: refine,
             format: rangeFormatter,
             range: currentRange,
+            sendEvent: createSendEvent(instantSearchInstance, helper, currentRange),
             widgetParams: _objectSpread2({}, widgetParams, {
               precision: precision
             }),
-            start: start,
-            instantSearchInstance: instantSearchInstance
-          }, false);
+            start: start
+          };
         },
-        dispose: function dispose(_ref13) {
-          var state = _ref13.state;
+        dispose: function dispose(_ref14) {
+          var state = _ref14.state;
           unmountFn();
-          var stateWithoutDisjunctive = state.removeDisjunctiveFacet(attribute); // can not use setQueryParameters || removeNumericRefinement, because
-          // they both keep the old value. This isn't immutable, but it is fine
-          // since it's already a copy.
-
-          stateWithoutDisjunctive.numericRefinements = _objectSpread2({}, state.numericRefinements, _defineProperty({}, attribute, undefined));
-          return stateWithoutDisjunctive;
+          return state.removeDisjunctiveFacet(attribute).removeNumericRefinement(attribute);
         },
-        getWidgetState: function getWidgetState(uiState, _ref14) {
-          var searchParameters = _ref14.searchParameters;
+        getWidgetUiState: function getWidgetUiState(uiState, _ref15) {
+          var searchParameters = _ref15.searchParameters;
 
           var _searchParameters$get = searchParameters.getNumericRefinements(attribute),
               _searchParameters$get2 = _searchParameters$get['>='],
@@ -11875,17 +12002,17 @@
             range: _objectSpread2({}, uiState.range, _defineProperty({}, attribute, "".concat(min, ":").concat(max)))
           });
         },
-        getWidgetSearchParameters: function getWidgetSearchParameters(searchParameters, _ref15) {
-          var uiState = _ref15.uiState;
+        getWidgetSearchParameters: function getWidgetSearchParameters(searchParameters, _ref16) {
+          var uiState = _ref16.uiState;
           var widgetSearchParameters = searchParameters.addDisjunctiveFacet(attribute).setQueryParameters({
             numericRefinements: _objectSpread2({}, searchParameters.numericRefinements, _defineProperty({}, attribute, {}))
           });
 
-          if (hasMinBound) {
+          if (isFiniteNumber(minBound)) {
             widgetSearchParameters = widgetSearchParameters.addNumericRefinement(attribute, '>=', minBound);
           }
 
-          if (hasMaxBound) {
+          if (isFiniteNumber(maxBound)) {
             widgetSearchParameters = widgetSearchParameters.addNumericRefinement(attribute, '<=', maxBound);
           }
 
@@ -11912,7 +12039,7 @@
         }
       };
     };
-  }
+  };
 
   var withUsage$c = createDocumentationMessageGenerator({
     name: 'refinement-list',
@@ -12068,100 +12195,58 @@
         return isShowingMore ? showMoreLimit : limit;
       };
 
-      var lastResultsFromMainSearch = [];
+      var lastResultsFromMainSearch;
+      var lastItemsFromMainSearch = [];
       var hasExhaustiveItems = true;
       var searchForFacetValues;
       var triggerRefine;
       var sendEvent;
-
-      var _render = function render(_ref2) {
-        var items = _ref2.items,
-            state = _ref2.state,
-            createURL = _ref2.createURL,
-            helperSpecializedSearchFacetValues = _ref2.helperSpecializedSearchFacetValues,
-            refine = _ref2.refine,
-            isFromSearch = _ref2.isFromSearch,
-            isFirstSearch = _ref2.isFirstSearch,
-            isShowingMore = _ref2.isShowingMore,
-            toggleShowMore = _ref2.toggleShowMore,
-            instantSearchInstance = _ref2.instantSearchInstance;
-
-        // Compute a specific createURL method able to link to any facet value state change
-        var _createURL = function _createURL(facetValue) {
-          return createURL(state.toggleRefinement(attribute, facetValue));
-        }; // Do not mistake searchForFacetValues and searchFacetValues which is the actual search
-        // function
-
-
-        var searchFacetValues = helperSpecializedSearchFacetValues && helperSpecializedSearchFacetValues(state, createURL, helperSpecializedSearchFacetValues, refine, instantSearchInstance, isShowingMore);
-        var canShowLess = isShowingMore && lastResultsFromMainSearch.length > limit;
-        var canShowMore = showMore && !isFromSearch && !hasExhaustiveItems;
-        var canToggleShowMore = canShowLess || canShowMore;
-        renderFn({
-          createURL: _createURL,
-          items: items,
-          refine: refine,
-          searchForItems: searchFacetValues,
-          instantSearchInstance: instantSearchInstance,
-          isFromSearch: isFromSearch,
-          canRefine: isFromSearch || items.length > 0,
-          widgetParams: widgetParams,
-          isShowingMore: isShowingMore,
-          canToggleShowMore: canToggleShowMore,
-          toggleShowMore: toggleShowMore,
-          hasExhaustiveItems: hasExhaustiveItems
-        }, isFirstSearch);
-      };
+      var toggleShowMore;
       /* eslint-disable max-params */
 
+      var createSearchForFacetValues = function createSearchForFacetValues(helper) {
+        var _this = this;
 
-      var createSearchForFacetValues = function createSearchForFacetValues(helper, toggleShowMore) {
-        return function (state, createURL, helperSpecializedSearchFacetValues, toggleRefinement, instantSearchInstance, isShowingMore) {
+        return function (renderOptions) {
           return function (query) {
-            if (query === '' && lastResultsFromMainSearch) {
-              // render with previous data from the helper.
-              _render({
-                items: lastResultsFromMainSearch,
-                state: state,
-                createURL: createURL,
-                helperSpecializedSearchFacetValues: helperSpecializedSearchFacetValues,
-                refine: toggleRefinement,
-                isFromSearch: false,
-                isFirstSearch: false,
-                instantSearchInstance: instantSearchInstance,
-                toggleShowMore: toggleShowMore,
-                // and yet it will be
-                isShowingMore: isShowingMore // so we need to restore in the state of show more as well
+            var instantSearchInstance = renderOptions.instantSearchInstance;
 
-              });
+            if (query === '' && lastItemsFromMainSearch) {
+              // render with previous data from the helper.
+              renderFn(_objectSpread2({}, _this.getWidgetRenderState(_objectSpread2({}, renderOptions, {
+                results: lastResultsFromMainSearch
+              })), {
+                instantSearchInstance: instantSearchInstance
+              }));
             } else {
               var tags = {
                 highlightPreTag: escapeFacetValues ? TAG_PLACEHOLDER.highlightPreTag : TAG_REPLACEMENT.highlightPreTag,
                 highlightPostTag: escapeFacetValues ? TAG_PLACEHOLDER.highlightPostTag : TAG_REPLACEMENT.highlightPostTag
               };
-              helper.searchForFacetValues(attribute, query, _getLimit(isShowingMore), tags).then(function (results) {
+              helper.searchForFacetValues(attribute, query, // We cap the `maxFacetHits` value to 100 because the Algolia API
+              // doesn't support a greater number.
+              // See https://www.algolia.com/doc/api-reference/api-parameters/maxFacetHits/
+              Math.min(_getLimit(_this.isShowingMore), 100), tags).then(function (results) {
                 var facetValues = escapeFacetValues ? escapeFacets(results.facetHits) : results.facetHits;
-                var normalizedFacetValues = transformItems(facetValues.map(function (_ref3) {
-                  var value = _ref3.value,
-                      item = _objectWithoutProperties(_ref3, ["value"]);
+                var normalizedFacetValues = transformItems(facetValues.map(function (_ref2) {
+                  var value = _ref2.value,
+                      item = _objectWithoutProperties(_ref2, ["value"]);
 
                   return _objectSpread2({}, item, {
                     value: value,
                     label: value
                   });
                 }));
-
-                _render({
+                var canToggleShowMore = _this.isShowingMore && lastItemsFromMainSearch.length > limit;
+                renderFn(_objectSpread2({}, _this.getWidgetRenderState(_objectSpread2({}, renderOptions, {
+                  results: lastResultsFromMainSearch
+                })), {
                   items: normalizedFacetValues,
-                  state: state,
-                  createURL: createURL,
-                  helperSpecializedSearchFacetValues: helperSpecializedSearchFacetValues,
-                  refine: toggleRefinement,
-                  isFromSearch: true,
-                  isFirstSearch: false,
+                  canToggleShowMore: canToggleShowMore,
+                  canRefine: true,
                   instantSearchInstance: instantSearchInstance,
-                  isShowingMore: isShowingMore
-                });
+                  isFromSearch: true
+                }));
               });
             }
           };
@@ -12177,90 +12262,123 @@
         // has to only bind it once when `isFirstRendering` for instance
         toggleShowMore: function toggleShowMore() {},
         cachedToggleShowMore: function cachedToggleShowMore() {
-          this.toggleShowMore();
+          toggleShowMore();
         },
         createToggleShowMore: function createToggleShowMore(renderOptions) {
-          var _this = this;
+          var _this2 = this;
 
           return function () {
-            _this.isShowingMore = !_this.isShowingMore;
+            _this2.isShowingMore = !_this2.isShowingMore;
 
-            _this.render(renderOptions);
+            _this2.render(renderOptions);
           };
         },
         getLimit: function getLimit() {
           return _getLimit(this.isShowingMore);
         },
-        init: function init(_ref4) {
-          var helper = _ref4.helper,
-              createURL = _ref4.createURL,
-              instantSearchInstance = _ref4.instantSearchInstance;
-          this.cachedToggleShowMore = this.cachedToggleShowMore.bind(this);
-          sendEvent = createSendEventForFacet({
-            instantSearchInstance: instantSearchInstance,
-            helper: helper,
-            attribute: attribute,
-            widgetType: this.$$type
-          });
-
-          triggerRefine = function triggerRefine(facetValue) {
-            sendEvent('click', facetValue);
-            helper.toggleRefinement(attribute, facetValue).search();
-          };
-
-          searchForFacetValues = createSearchForFacetValues(helper, this.cachedToggleShowMore);
-
-          _render({
-            items: [],
-            state: helper.state,
-            createURL: createURL,
-            helperSpecializedSearchFacetValues: searchForFacetValues,
-            refine: triggerRefine,
-            isFromSearch: false,
-            isFirstSearch: true,
-            instantSearchInstance: instantSearchInstance,
-            isShowingMore: this.isShowingMore,
-            toggleShowMore: this.cachedToggleShowMore,
-            sendEvent: sendEvent
-          });
+        init: function init(initOptions) {
+          renderFn(_objectSpread2({}, this.getWidgetRenderState(initOptions), {
+            instantSearchInstance: initOptions.instantSearchInstance
+          }), true);
         },
         render: function render(renderOptions) {
+          renderFn(_objectSpread2({}, this.getWidgetRenderState(renderOptions), {
+            instantSearchInstance: renderOptions.instantSearchInstance
+          }), false);
+        },
+        getRenderState: function getRenderState(renderState, renderOptions) {
+          return _objectSpread2({}, renderState, {
+            refinementList: _objectSpread2({}, renderState.refinementList, _defineProperty({}, attribute, this.getWidgetRenderState(renderOptions)))
+          });
+        },
+        getWidgetRenderState: function getWidgetRenderState(renderOptions) {
           var results = renderOptions.results,
               state = renderOptions.state,
               createURL = renderOptions.createURL,
-              instantSearchInstance = renderOptions.instantSearchInstance;
-          var facetValues = results.getFacetValues(attribute, {
-            sortBy: sortBy
-          }) || [];
-          var items = transformItems(facetValues.slice(0, this.getLimit()).map(formatItems));
-          var maxValuesPerFacetConfig = state.maxValuesPerFacet;
-          var currentLimit = this.getLimit(); // If the limit is the max number of facet retrieved it is impossible to know
-          // if the facets are exhaustive. The only moment we are sure it is exhaustive
-          // is when it is strictly under the number requested unless we know that another
-          // widget has requested more values (maxValuesPerFacet > getLimit()).
-          // Because this is used for making the search of facets unable or not, it is important
-          // to be conservative here.
+              instantSearchInstance = renderOptions.instantSearchInstance,
+              _renderOptions$isFrom = renderOptions.isFromSearch,
+              isFromSearch = _renderOptions$isFrom === void 0 ? false : _renderOptions$isFrom,
+              helper = renderOptions.helper;
+          var items = [];
+          var facetValues;
 
-          hasExhaustiveItems = maxValuesPerFacetConfig > currentLimit ? facetValues.length <= currentLimit : facetValues.length < currentLimit;
-          lastResultsFromMainSearch = items;
-          this.toggleShowMore = this.createToggleShowMore(renderOptions);
+          if (!sendEvent || !triggerRefine || !searchForFacetValues) {
+            sendEvent = createSendEventForFacet({
+              instantSearchInstance: instantSearchInstance,
+              helper: helper,
+              attribute: attribute,
+              widgetType: this.$$type
+            });
 
-          _render({
+            triggerRefine = function triggerRefine(facetValue) {
+              sendEvent('click', facetValue);
+              helper.toggleRefinement(attribute, facetValue).search();
+            };
+
+            searchForFacetValues = createSearchForFacetValues.call(this, helper);
+          }
+
+          if (results) {
+            if (!isFromSearch) {
+              facetValues = results.getFacetValues(attribute, {
+                sortBy: sortBy
+              }) || [];
+              items = transformItems(facetValues.slice(0, this.getLimit()).map(formatItems));
+            } else {
+              facetValues = escapeFacetValues ? escapeFacets(results.facetHits) : results.facetHits;
+              items = transformItems(facetValues.map(function (_ref3) {
+                var value = _ref3.value,
+                    item = _objectWithoutProperties(_ref3, ["value"]);
+
+                return _objectSpread2({}, item, {
+                  value: value,
+                  label: value
+                });
+              }));
+            }
+
+            var maxValuesPerFacetConfig = state.maxValuesPerFacet;
+            var currentLimit = this.getLimit(); // If the limit is the max number of facet retrieved it is impossible to know
+            // if the facets are exhaustive. The only moment we are sure it is exhaustive
+            // is when it is strictly under the number requested unless we know that another
+            // widget has requested more values (maxValuesPerFacet > getLimit()).
+            // Because this is used for making the search of facets unable or not, it is important
+            // to be conservative here.
+
+            hasExhaustiveItems = maxValuesPerFacetConfig > currentLimit ? facetValues.length <= currentLimit : facetValues.length < currentLimit;
+            lastResultsFromMainSearch = results;
+            lastItemsFromMainSearch = items;
+            toggleShowMore = this.createToggleShowMore(renderOptions);
+          } // Compute a specific createURL method able to link to any facet value state change
+
+
+          var _createURL = function _createURL(facetValue) {
+            return createURL(state.toggleRefinement(attribute, facetValue));
+          }; // Do not mistake searchForFacetValues and searchFacetValues which is the actual search
+          // function
+
+
+          var searchFacetValues = searchForFacetValues && searchForFacetValues(renderOptions);
+          var canShowLess = this.isShowingMore && lastItemsFromMainSearch.length > limit;
+          var canShowMore = showMore && !isFromSearch && !hasExhaustiveItems;
+          var canToggleShowMore = canShowLess || canShowMore;
+          return {
+            createURL: _createURL,
             items: items,
-            state: state,
-            createURL: createURL,
-            helperSpecializedSearchFacetValues: searchForFacetValues,
             refine: triggerRefine,
-            isFromSearch: false,
-            isFirstSearch: false,
-            instantSearchInstance: instantSearchInstance,
+            searchForItems: searchFacetValues,
+            isFromSearch: isFromSearch,
+            canRefine: isFromSearch || items.length > 0,
+            widgetParams: widgetParams,
             isShowingMore: this.isShowingMore,
+            canToggleShowMore: canToggleShowMore,
             toggleShowMore: this.cachedToggleShowMore,
-            sendEvent: sendEvent
-          });
+            sendEvent: sendEvent,
+            hasExhaustiveItems: hasExhaustiveItems
+          };
         },
-        dispose: function dispose(_ref5) {
-          var state = _ref5.state;
+        dispose: function dispose(_ref4) {
+          var state = _ref4.state;
           unmountFn();
           var withoutMaxValuesPerFacet = state.setQueryParameter('maxValuesPerFacet', undefined);
 
@@ -12270,8 +12388,8 @@
 
           return withoutMaxValuesPerFacet.removeDisjunctiveFacet(attribute);
         },
-        getWidgetState: function getWidgetState(uiState, _ref6) {
-          var searchParameters = _ref6.searchParameters;
+        getWidgetUiState: function getWidgetUiState(uiState, _ref5) {
+          var searchParameters = _ref5.searchParameters;
           var values = operator === 'or' ? searchParameters.getDisjunctiveRefinements(attribute) : searchParameters.getConjunctiveRefinements(attribute);
 
           if (!values.length) {
@@ -12282,8 +12400,8 @@
             refinementList: _objectSpread2({}, uiState.refinementList, _defineProperty({}, attribute, values))
           });
         },
-        getWidgetSearchParameters: function getWidgetSearchParameters(searchParameters, _ref7) {
-          var uiState = _ref7.uiState;
+        getWidgetSearchParameters: function getWidgetSearchParameters(searchParameters, _ref6) {
+          var uiState = _ref6.uiState;
           var isDisjunctive = operator === 'or';
           var values = uiState.refinementList && uiState.refinementList[attribute];
           var withoutRefinements = searchParameters.clearRefinements(attribute);
@@ -12374,67 +12492,72 @@
 
       function clear(helper) {
         return function () {
-          helper.setQuery('');
-          helper.search();
+          helper.setQuery('').search();
         };
+      }
+
+      var _clear = function _clear() {};
+
+      function _cachedClear() {
+        _clear();
       }
 
       return {
         $$type: 'ais.searchBox',
-        _clear: function _clear() {},
-        _cachedClear: function _cachedClear() {
-          this._clear();
-        },
-        init: function init(_ref) {
-          var helper = _ref.helper,
-              instantSearchInstance = _ref.instantSearchInstance;
-          this._cachedClear = this._cachedClear.bind(this);
-          this._clear = clear(helper);
-
-          var setQueryAndSearch = function setQueryAndSearch(query) {
-            if (query !== helper.state.query) {
-              helper.setQuery(query).search();
-            }
-          };
-
-          this._refine = function (query) {
-            if (queryHook) {
-              queryHook(query, setQueryAndSearch);
-              return;
-            }
-
-            setQueryAndSearch(query);
-          };
-
-          renderFn({
-            query: helper.state.query || '',
-            refine: this._refine,
-            clear: this._cachedClear,
-            widgetParams: widgetParams,
+        init: function init(initOptions) {
+          var instantSearchInstance = initOptions.instantSearchInstance;
+          renderFn(_objectSpread2({}, this.getWidgetRenderState(initOptions), {
             instantSearchInstance: instantSearchInstance
-          }, true);
+          }), true);
         },
-        render: function render(_ref2) {
-          var helper = _ref2.helper,
-              instantSearchInstance = _ref2.instantSearchInstance,
-              searchMetadata = _ref2.searchMetadata;
-          this._clear = clear(helper);
-          renderFn({
-            query: helper.state.query || '',
-            refine: this._refine,
-            clear: this._cachedClear,
-            widgetParams: widgetParams,
-            instantSearchInstance: instantSearchInstance,
-            isSearchStalled: searchMetadata.isSearchStalled
-          }, false);
+        render: function render(renderOptions) {
+          var instantSearchInstance = renderOptions.instantSearchInstance;
+          renderFn(_objectSpread2({}, this.getWidgetRenderState(renderOptions), {
+            instantSearchInstance: instantSearchInstance
+          }), false);
         },
-        dispose: function dispose(_ref3) {
-          var state = _ref3.state;
+        dispose: function dispose(_ref) {
+          var state = _ref.state;
           unmountFn();
           return state.setQueryParameter('query', undefined);
         },
-        getWidgetState: function getWidgetState(uiState, _ref4) {
-          var searchParameters = _ref4.searchParameters;
+        getRenderState: function getRenderState(renderState, renderOptions) {
+          return _objectSpread2({}, renderState, {
+            searchBox: this.getWidgetRenderState(renderOptions)
+          });
+        },
+        getWidgetRenderState: function getWidgetRenderState(_ref2) {
+          var helper = _ref2.helper,
+              searchMetadata = _ref2.searchMetadata;
+
+          if (!this._refine) {
+            var setQueryAndSearch = function setQueryAndSearch(query) {
+              if (query !== helper.state.query) {
+                helper.setQuery(query).search();
+              }
+            };
+
+            this._refine = function (query) {
+              if (queryHook) {
+                queryHook(query, setQueryAndSearch);
+                return;
+              }
+
+              setQueryAndSearch(query);
+            };
+          }
+
+          _clear = clear(helper);
+          return {
+            query: helper.state.query || '',
+            refine: this._refine,
+            clear: _cachedClear,
+            widgetParams: widgetParams,
+            isSearchStalled: searchMetadata.isSearchStalled
+          };
+        },
+        getWidgetUiState: function getWidgetUiState(uiState, _ref3) {
+          var searchParameters = _ref3.searchParameters;
           var query = searchParameters.query || '';
 
           if (query === '' || uiState && uiState.query === query) {
@@ -12445,8 +12568,8 @@
             query: query
           });
         },
-        getWidgetSearchParameters: function getWidgetSearchParameters(searchParameters, _ref5) {
-          var uiState = _ref5.uiState;
+        getWidgetSearchParameters: function getWidgetSearchParameters(searchParameters, _ref4) {
+          var uiState = _ref4.uiState;
           return searchParameters.setQueryParameter('query', uiState.query || '');
         }
       };
@@ -12552,50 +12675,59 @@
 
       return {
         $$type: 'ais.sortBy',
-        init: function init(_ref) {
-          var helper = _ref.helper,
-              instantSearchInstance = _ref.instantSearchInstance,
-              parent = _ref.parent;
-          var currentIndex = helper.state.index;
+        init: function init(initOptions) {
+          var instantSearchInstance = initOptions.instantSearchInstance;
+          var widgetRenderState = this.getWidgetRenderState(initOptions);
+          var currentIndex = widgetRenderState.currentRefinement;
           var isCurrentIndexInItems = find$1(items, function (item) {
             return item.value === currentIndex;
           });
-          this.initialIndex = parent.getIndexName();
-
-          this.setIndex = function (indexName) {
-            helper.setIndex(indexName).search();
-          };
-
            _warning(isCurrentIndexInItems, "The index named \"".concat(currentIndex, "\" is not listed in the `items` of `sortBy`.")) ;
-          renderFn({
-            currentRefinement: currentIndex,
-            options: transformItems(items),
-            refine: this.setIndex,
-            hasNoResults: true,
-            widgetParams: widgetParams,
+          renderFn(_objectSpread2({}, widgetRenderState, {
             instantSearchInstance: instantSearchInstance
-          }, true);
+          }), true);
         },
-        render: function render(_ref2) {
-          var helper = _ref2.helper,
-              results = _ref2.results,
-              instantSearchInstance = _ref2.instantSearchInstance;
-          renderFn({
-            currentRefinement: helper.state.index,
-            options: transformItems(items),
-            refine: this.setIndex,
-            hasNoResults: results.nbHits === 0,
-            widgetParams: widgetParams,
+        render: function render(renderOptions) {
+          var instantSearchInstance = renderOptions.instantSearchInstance;
+          renderFn(_objectSpread2({}, this.getWidgetRenderState(renderOptions), {
             instantSearchInstance: instantSearchInstance
-          }, false);
+          }), false);
         },
-        dispose: function dispose(_ref3) {
-          var state = _ref3.state;
+        dispose: function dispose(_ref) {
+          var state = _ref.state;
           unmountFn();
           return state.setIndex(this.initialIndex);
         },
-        getWidgetState: function getWidgetState(uiState, _ref4) {
-          var searchParameters = _ref4.searchParameters;
+        getRenderState: function getRenderState(renderState, renderOptions) {
+          return _objectSpread2({}, renderState, {
+            sortBy: this.getWidgetRenderState(renderOptions)
+          });
+        },
+        getWidgetRenderState: function getWidgetRenderState(_ref2) {
+          var results = _ref2.results,
+              helper = _ref2.helper,
+              parent = _ref2.parent;
+
+          if (!this.initialIndex) {
+            this.initialIndex = parent.getIndexName();
+          }
+
+          if (!this.setIndex) {
+            this.setIndex = function (indexName) {
+              helper.setIndex(indexName).search();
+            };
+          }
+
+          return {
+            currentRefinement: helper.state.index,
+            options: transformItems(items),
+            refine: this.setIndex,
+            hasNoResults: results ? results.nbHits === 0 : true,
+            widgetParams: widgetParams
+          };
+        },
+        getWidgetUiState: function getWidgetUiState(uiState, _ref3) {
+          var searchParameters = _ref3.searchParameters;
           var currentIndex = searchParameters.index;
           var isInitialIndex = currentIndex === this.initialIndex;
 
@@ -12607,8 +12739,8 @@
             sortBy: currentIndex
           });
         },
-        getWidgetSearchParameters: function getWidgetSearchParameters(searchParameters, _ref5) {
-          var uiState = _ref5.uiState;
+        getWidgetSearchParameters: function getWidgetSearchParameters(searchParameters, _ref4) {
+          var uiState = _ref4.uiState;
           return searchParameters.setQueryParameter('index', uiState.sortBy || this.initialIndex || searchParameters.index);
         }
       };
@@ -12748,6 +12880,8 @@
 
 
   function connectRatingMenu(renderFn) {
+    var _this = this;
+
     var unmountFn = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : noop;
     checkRendering(renderFn, withUsage$f());
     return function () {
@@ -12755,115 +12889,153 @@
       var attribute = widgetParams.attribute,
           _widgetParams$max = widgetParams.max,
           max = _widgetParams$max === void 0 ? 5 : _widgetParams$max;
+      var sendEvent;
 
       if (!attribute) {
         throw new Error(withUsage$f('The `attribute` option is required.'));
       }
 
-      var sendEvent;
+      var _getRefinedStar = function getRefinedStar(state) {
+        var refinements = state.getDisjunctiveRefinements(attribute);
+
+        if (!refinements.length) {
+          return undefined;
+        }
+
+        return Math.min.apply(Math, _toConsumableArray(refinements.map(Number)));
+      };
+
+      var toggleRefinement = function toggleRefinement(helper, facetValue) {
+        sendEvent('click', facetValue);
+        var isRefined = _getRefinedStar(helper.state) === Number(facetValue);
+        helper.removeDisjunctiveFacetRefinement(attribute);
+
+        if (!isRefined) {
+          for (var val = Number(facetValue); val <= max; ++val) {
+            helper.addDisjunctiveFacetRefinement(attribute, val);
+          }
+        }
+
+        helper.search();
+      };
+
+      var connectorState = {
+        toggleRefinementFactory: function toggleRefinementFactory(helper) {
+          return toggleRefinement.bind(_this, helper);
+        },
+        createURLFactory: function createURLFactory(_ref2) {
+          var state = _ref2.state,
+              createURL = _ref2.createURL;
+          return function (value) {
+            return createURL(state.toggleRefinement(attribute, value));
+          };
+        }
+      };
       return {
         $$type: $$type$2,
-        init: function init(_ref2) {
-          var _this = this;
-
-          var helper = _ref2.helper,
-              createURL = _ref2.createURL,
-              instantSearchInstance = _ref2.instantSearchInstance;
-          this._toggleRefinement = this._toggleRefinement.bind(this, helper);
-
-          this._createURL = function (state) {
-            return function (facetValue) {
-              return createURL(state.toggleRefinement(attribute, facetValue));
-            };
-          };
-
-          sendEvent = createSendEvent$1({
-            instantSearchInstance: instantSearchInstance,
-            helper: helper,
-            getRefinedStar: function getRefinedStar() {
-              return _this._getRefinedStar(helper.state);
-            },
-            attribute: attribute
-          });
-          renderFn({
-            instantSearchInstance: instantSearchInstance,
-            items: [],
-            hasNoResults: true,
-            refine: this._toggleRefinement,
-            sendEvent: sendEvent,
-            createURL: this._createURL(helper.state),
-            widgetParams: widgetParams
-          }, true);
+        init: function init(initOptions) {
+          var instantSearchInstance = initOptions.instantSearchInstance;
+          renderFn(_objectSpread2({}, this.getWidgetRenderState(initOptions), {
+            instantSearchInstance: instantSearchInstance
+          }), true);
         },
-        render: function render(_ref3) {
+        render: function render(renderOptions) {
+          var instantSearchInstance = renderOptions.instantSearchInstance;
+          renderFn(_objectSpread2({}, this.getWidgetRenderState(renderOptions), {
+            instantSearchInstance: instantSearchInstance
+          }), false);
+        },
+        getRenderState: function getRenderState(renderState, renderOptions) {
+          return _objectSpread2({}, renderState, {
+            ratingMenu: _objectSpread2({}, renderState.ratingMenu, _defineProperty({}, attribute, this.getWidgetRenderState(renderOptions)))
+          });
+        },
+        getWidgetRenderState: function getWidgetRenderState(_ref3) {
           var helper = _ref3.helper,
               results = _ref3.results,
               state = _ref3.state,
-              instantSearchInstance = _ref3.instantSearchInstance;
+              instantSearchInstance = _ref3.instantSearchInstance,
+              createURL = _ref3.createURL;
           var facetValues = [];
-          var allValues = {};
 
-          for (var v = max; v >= 0; --v) {
-            allValues[v] = 0;
-          }
-
-          (results.getFacetValues(attribute) || []).forEach(function (facet) {
-            var val = Math.round(facet.name);
-
-            if (!val || val > max) {
-              return;
-            }
-
-            for (var _v = val; _v >= 1; --_v) {
-              allValues[_v] += facet.count;
-            }
-          });
-
-          var refinedStar = this._getRefinedStar(helper.state);
-
-          for (var star = max - 1; star >= 1; --star) {
-            var count = allValues[star];
-
-            if (refinedStar && star !== refinedStar && count === 0) {
-              // skip count==0 when at least 1 refinement is enabled
-              // eslint-disable-next-line no-continue
-              continue;
-            }
-
-            var stars = [];
-
-            for (var i = 1; i <= max; ++i) {
-              stars.push(i <= star);
-            }
-
-            facetValues.push({
-              stars: stars,
-              name: String(star),
-              value: String(star),
-              count: count,
-              isRefined: refinedStar === star
+          if (!sendEvent) {
+            sendEvent = createSendEvent$1({
+              instantSearchInstance: instantSearchInstance,
+              helper: helper,
+              getRefinedStar: function getRefinedStar() {
+                return _getRefinedStar(helper.state);
+              },
+              attribute: attribute
             });
           }
 
-          renderFn({
-            instantSearchInstance: instantSearchInstance,
+          if (results) {
+            var allValues = {};
+
+            for (var v = max; v >= 0; --v) {
+              allValues[v] = 0;
+            }
+
+            (results.getFacetValues(attribute) || []).forEach(function (facet) {
+              var val = Math.round(facet.name);
+
+              if (!val || val > max) {
+                return;
+              }
+
+              for (var _v = val; _v >= 1; --_v) {
+                allValues[_v] += facet.count;
+              }
+            });
+
+            var refinedStar = _getRefinedStar(state);
+
+            for (var star = max - 1; star >= 1; --star) {
+              var count = allValues[star];
+
+              if (refinedStar && star !== refinedStar && count === 0) {
+                // skip count==0 when at least 1 refinement is enabled
+                // eslint-disable-next-line no-continue
+                continue;
+              }
+
+              var stars = [];
+
+              for (var i = 1; i <= max; ++i) {
+                stars.push(i <= star);
+              }
+
+              facetValues.push({
+                stars: stars,
+                name: String(star),
+                value: String(star),
+                count: count,
+                isRefined: refinedStar === star
+              });
+            }
+          }
+
+          return {
             items: facetValues,
-            hasNoResults: results.nbHits === 0,
-            refine: this._toggleRefinement,
+            hasNoResults: results ? results.nbHits === 0 : true,
+            refine: connectorState.toggleRefinementFactory(helper),
             sendEvent: sendEvent,
-            createURL: this._createURL(state),
+            createURL: connectorState.createURLFactory({
+              state: state,
+              createURL: createURL
+            }),
             widgetParams: widgetParams
-          }, false);
+          };
         },
         dispose: function dispose(_ref4) {
           var state = _ref4.state;
           unmountFn();
           return state.removeDisjunctiveFacet(attribute);
         },
-        getWidgetState: function getWidgetState(uiState, _ref5) {
+        getWidgetUiState: function getWidgetUiState(uiState, _ref5) {
           var searchParameters = _ref5.searchParameters;
 
-          var value = this._getRefinedStar(searchParameters);
+          var value = _getRefinedStar(searchParameters);
 
           if (typeof value !== 'number') {
             return uiState;
@@ -12891,28 +13063,6 @@
           }).reduce(function (parameters, number) {
             return parameters.addDisjunctiveFacetRefinement(attribute, number);
           }, withDisjunctiveFacet);
-        },
-        _toggleRefinement: function _toggleRefinement(helper, facetValue) {
-          sendEvent('click', facetValue);
-          var isRefined = this._getRefinedStar(helper.state) === Number(facetValue);
-          helper.removeDisjunctiveFacetRefinement(attribute);
-
-          if (!isRefined) {
-            for (var val = Number(facetValue); val <= max; ++val) {
-              helper.addDisjunctiveFacetRefinement(attribute, val);
-            }
-          }
-
-          helper.search();
-        },
-        _getRefinedStar: function _getRefinedStar(state) {
-          var refinements = state.getDisjunctiveRefinements(attribute);
-
-          if (!refinements.length) {
-            return undefined;
-          }
-
-          return Math.min.apply(Math, _toConsumableArray(refinements.map(Number)));
         }
       };
     };
@@ -12972,25 +13122,43 @@
       var widgetParams = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
       return {
         $$type: 'ais.stats',
-        init: function init(_ref) {
-          var helper = _ref.helper,
-              instantSearchInstance = _ref.instantSearchInstance;
-          renderFn({
-            instantSearchInstance: instantSearchInstance,
-            hitsPerPage: helper.state.hitsPerPage,
-            nbHits: 0,
-            nbPages: 0,
-            page: helper.state.page || 0,
-            processingTimeMS: -1,
-            query: helper.state.query || '',
-            widgetParams: widgetParams
-          }, true);
+        init: function init(initOptions) {
+          var instantSearchInstance = initOptions.instantSearchInstance;
+          renderFn(_objectSpread2({}, this.getWidgetRenderState(initOptions), {
+            instantSearchInstance: instantSearchInstance
+          }), true);
         },
-        render: function render(_ref2) {
-          var results = _ref2.results,
-              instantSearchInstance = _ref2.instantSearchInstance;
-          renderFn({
-            instantSearchInstance: instantSearchInstance,
+        render: function render(renderOptions) {
+          var instantSearchInstance = renderOptions.instantSearchInstance;
+          renderFn(_objectSpread2({}, this.getWidgetRenderState(renderOptions), {
+            instantSearchInstance: instantSearchInstance
+          }), false);
+        },
+        dispose: function dispose() {
+          unmountFn();
+        },
+        getRenderState: function getRenderState(renderState, renderOptions) {
+          return _objectSpread2({}, renderState, {
+            stats: this.getWidgetRenderState(renderOptions)
+          });
+        },
+        getWidgetRenderState: function getWidgetRenderState(_ref) {
+          var results = _ref.results,
+              helper = _ref.helper;
+
+          if (!results) {
+            return {
+              hitsPerPage: helper.state.hitsPerPage,
+              nbHits: 0,
+              nbPages: 0,
+              page: helper.state.page || 0,
+              processingTimeMS: -1,
+              query: helper.state.query || '',
+              widgetParams: widgetParams
+            };
+          }
+
+          return {
             hitsPerPage: results.hitsPerPage,
             nbHits: results.nbHits,
             nbPages: results.nbPages,
@@ -12998,10 +13166,7 @@
             processingTimeMS: results.processingTimeMS,
             query: results.query,
             widgetParams: widgetParams
-          }, false);
-        },
-        dispose: function dispose() {
-          unmountFn();
+          };
         }
       };
     };
@@ -13150,10 +13315,10 @@
       var on = hasAnOnValue ? toArray(userOn).map(escapeRefinement) : undefined;
       var off = hasAnOffValue ? toArray(userOff).map(escapeRefinement) : undefined;
       var sendEvent;
-      return {
-        $$type: $$type$3,
-        _toggleRefinement: function _toggleRefinement(helper) {
-          var _ref2 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
+
+      var toggleRefinementFactory = function toggleRefinementFactory(helper) {
+        return function () {
+          var _ref2 = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
               isRefined = _ref2.isRefined;
 
           // Checking
@@ -13183,66 +13348,69 @@
           }
 
           helper.search();
-        },
-        init: function init(_ref3) {
-          var _this = this;
+        };
+      };
 
+      var connectorState = {
+        createURLFactory: function createURLFactory(isRefined, _ref3) {
           var state = _ref3.state,
-              helper = _ref3.helper,
-              createURL = _ref3.createURL,
-              instantSearchInstance = _ref3.instantSearchInstance;
-          sendEvent = createSendEvent$2({
-            instantSearchInstance: instantSearchInstance,
-            attribute: attribute,
-            on: on,
-            helper: helper
-          });
+              createURL = _ref3.createURL;
+          return function () {
+            var valuesToRemove = isRefined ? on : off;
 
-          this._createURL = function (isCurrentlyRefined) {
-            return function () {
-              var valuesToRemove = isCurrentlyRefined ? on : off;
-
-              if (valuesToRemove) {
-                valuesToRemove.forEach(function (v) {
-                  state.removeDisjunctiveFacetRefinement(attribute, v);
-                });
-              }
-
-              var valuesToAdd = isCurrentlyRefined ? off : on;
-
-              if (valuesToAdd) {
-                valuesToAdd.forEach(function (v) {
-                  state.addDisjunctiveFacetRefinement(attribute, v);
-                });
-              }
-
-              return createURL(state);
-            };
-          };
-
-          this.toggleRefinement = function (opts) {
-            _this._toggleRefinement(helper, opts);
-          };
-
-          var isRefined = on && on.every(function (v) {
-            return state.isDisjunctiveFacetRefined(attribute, v);
-          }); // no need to refine anything at init if no custom off values
-
-          if (hasAnOffValue) {
-            // Add filtering on the 'off' value if set
-            if (!isRefined) {
-              var currentPage = helper.state.page;
-
-              if (off) {
-                off.forEach(function (v) {
-                  return helper.addDisjunctiveFacetRefinement(attribute, v);
-                });
-              }
-
-              helper.setPage(currentPage);
+            if (valuesToRemove) {
+              valuesToRemove.forEach(function (v) {
+                state.removeDisjunctiveFacetRefinement(attribute, v);
+              });
             }
-          }
 
+            var valuesToAdd = isRefined ? off : on;
+
+            if (valuesToAdd) {
+              valuesToAdd.forEach(function (v) {
+                state.addDisjunctiveFacetRefinement(attribute, v);
+              });
+            }
+
+            return createURL(state);
+          };
+        }
+      };
+      return {
+        $$type: $$type$3,
+        init: function init(initOptions) {
+          var instantSearchInstance = initOptions.instantSearchInstance;
+          renderFn(_objectSpread2({}, this.getWidgetRenderState(initOptions), {
+            instantSearchInstance: instantSearchInstance
+          }), true);
+        },
+        render: function render(renderOptions) {
+          var instantSearchInstance = renderOptions.instantSearchInstance;
+          renderFn(_objectSpread2({}, this.getWidgetRenderState(renderOptions), {
+            instantSearchInstance: instantSearchInstance
+          }), false);
+        },
+        dispose: function dispose(_ref4) {
+          var state = _ref4.state;
+          unmountFn();
+          return state.removeDisjunctiveFacet(attribute);
+        },
+        getRenderState: function getRenderState(renderState, renderOptions) {
+          return _objectSpread2({}, renderState, {
+            toggleRefinement: this.getWidgetRenderState(renderOptions)
+          });
+        },
+        getWidgetRenderState: function getWidgetRenderState(_ref5) {
+          var state = _ref5.state,
+              helper = _ref5.helper,
+              results = _ref5.results,
+              createURL = _ref5.createURL,
+              instantSearchInstance = _ref5.instantSearchInstance;
+          var isRefined = results ? on === null || on === void 0 ? void 0 : on.every(function (v) {
+            return helper.state.isDisjunctiveFacetRefined(attribute, v);
+          }) : on === null || on === void 0 ? void 0 : on.every(function (v) {
+            return state.isDisjunctiveFacetRefined(attribute, v);
+          });
           var onFacetValue = {
             isRefined: isRefined,
             count: 0
@@ -13251,95 +13419,84 @@
             isRefined: hasAnOffValue && !isRefined,
             count: 0
           };
-          var value = {
-            name: attribute,
-            isRefined: isRefined,
-            count: null,
-            onFacetValue: onFacetValue,
-            offFacetValue: offFacetValue
-          };
-          renderFn({
-            value: value,
-            createURL: this._createURL(value.isRefined),
-            refine: this.toggleRefinement,
-            sendEvent: sendEvent,
-            instantSearchInstance: instantSearchInstance,
-            widgetParams: widgetParams
-          }, true);
-        },
-        render: function render(_ref4) {
-          var helper = _ref4.helper,
-              results = _ref4.results,
-              state = _ref4.state,
-              instantSearchInstance = _ref4.instantSearchInstance;
-          var isRefined = on && on.every(function (v) {
-            return helper.state.isDisjunctiveFacetRefined(attribute, v);
-          });
-          var offValue = toArray(off === undefined ? false : off);
-          var allFacetValues = results.getFacetValues(attribute) || [];
-          var onData = on && on.map(function (v) {
-            return find$1(allFacetValues, function (_ref5) {
-              var name = _ref5.name;
-              return name === unescapeRefinement(v);
+
+          if (results) {
+            var offValue = toArray(off || false);
+            var allFacetValues = results.getFacetValues(attribute) || [];
+            var onData = on === null || on === void 0 ? void 0 : on.map(function (v) {
+              return find$1(allFacetValues, function (_ref6) {
+                var name = _ref6.name;
+                return name === unescapeRefinement(v);
+              });
+            }).filter(function (v) {
+              return v !== undefined;
             });
-          }).filter(function (v) {
-            return v !== undefined;
-          });
-          var onFacetValue = {
-            isRefined: onData.length > 0 ? onData.every(function (v) {
-              return v.isRefined;
-            }) : false,
-            count: onData.length === 0 ? null : onData.reduce(function (acc, v) {
-              return acc + v.count;
-            }, 0)
-          };
-          var offData = hasAnOffValue ? offValue.map(function (v) {
-            return find$1(allFacetValues, function (_ref6) {
-              var name = _ref6.name;
-              return name === unescapeRefinement(v);
+            var offData = hasAnOffValue ? offValue.map(function (v) {
+              return find$1(allFacetValues, function (_ref7) {
+                var name = _ref7.name;
+                return name === unescapeRefinement(v);
+              });
+            }).filter(function (v) {
+              return v !== undefined;
+            }) : [];
+            onFacetValue = {
+              isRefined: onData.length ? onData.every(function (v) {
+                return v.isRefined;
+              }) : false,
+              count: onData.reduce(function (acc, v) {
+                return acc + v.count;
+              }, 0) || null
+            };
+            offFacetValue = {
+              isRefined: offData.length ? offData.every(function (v) {
+                return v.isRefined;
+              }) : false,
+              count: offData.reduce(function (acc, v) {
+                return acc + v.count;
+              }, 0) || allFacetValues.reduce(function (total, _ref8) {
+                var count = _ref8.count;
+                return total + count;
+              }, 0)
+            };
+          } else if (hasAnOffValue && !isRefined) {
+            if (off) {
+              off.forEach(function (v) {
+                return helper.addDisjunctiveFacetRefinement(attribute, v);
+              });
+            }
+
+            helper.setPage(helper.state.page);
+          }
+
+          if (!sendEvent) {
+            sendEvent = createSendEvent$2({
+              instantSearchInstance: instantSearchInstance,
+              attribute: attribute,
+              on: on,
+              helper: helper
             });
-          }).filter(function (v) {
-            return v !== undefined;
-          }) : [];
-          var offFacetValue = {
-            isRefined: offData.length > 0 ? offData.every(function (v) {
-              return v.isRefined;
-            }) : false,
-            count: offData.length === 0 ? allFacetValues.reduce(function (total, _ref7) {
-              var count = _ref7.count;
-              return total + count;
-            }, 0) : offData.reduce(function (acc, v) {
-              return acc + v.count;
-            }, 0)
-          }; // what will we show by default,
-          // if checkbox is not checked, show: [ ] free shipping (countWhenChecked)
-          // if checkbox is checked, show: [x] free shipping (countWhenNotChecked)
+          }
 
           var nextRefinement = isRefined ? offFacetValue : onFacetValue;
-          var value = {
-            name: attribute,
-            isRefined: isRefined,
-            count: nextRefinement === undefined ? null : nextRefinement.count,
-            onFacetValue: onFacetValue,
-            offFacetValue: offFacetValue
-          };
-          renderFn({
-            value: value,
+          return {
+            value: {
+              name: attribute,
+              isRefined: isRefined,
+              count: results ? nextRefinement.count : null,
+              onFacetValue: onFacetValue,
+              offFacetValue: offFacetValue
+            },
             state: state,
-            createURL: this._createURL(value.isRefined),
-            refine: this.toggleRefinement,
+            createURL: connectorState.createURLFactory(isRefined, {
+              state: state,
+              createURL: createURL
+            }),
             sendEvent: sendEvent,
-            helper: helper,
-            instantSearchInstance: instantSearchInstance,
+            refine: toggleRefinementFactory(helper),
             widgetParams: widgetParams
-          }, false);
+          };
         },
-        dispose: function dispose(_ref8) {
-          var state = _ref8.state;
-          unmountFn();
-          return state.removeDisjunctiveFacet(attribute);
-        },
-        getWidgetState: function getWidgetState(uiState, _ref9) {
+        getWidgetUiState: function getWidgetUiState(uiState, _ref9) {
           var searchParameters = _ref9.searchParameters;
           var isRefined = on && on.every(function (v) {
             return searchParameters.isDisjunctiveFacetRefined(attribute, v);
@@ -13418,66 +13575,81 @@
 
       return {
         $$type: 'ais.breadcrumb',
-        init: function init(_ref2) {
-          var createURL = _ref2.createURL,
-              helper = _ref2.helper,
-              instantSearchInstance = _ref2.instantSearchInstance;
-
-          connectorState.createURL = function (facetValue) {
-            if (!facetValue) {
-              var breadcrumb = helper.getHierarchicalFacetBreadcrumb(hierarchicalFacetName);
-
-              if (breadcrumb.length > 0) {
-                return createURL(helper.state.toggleFacetRefinement(hierarchicalFacetName, breadcrumb[0]));
-              }
-            }
-
-            return createURL(helper.state.toggleFacetRefinement(hierarchicalFacetName, facetValue));
-          };
-
-          connectorState.refine = function (facetValue) {
-            if (!facetValue) {
-              var breadcrumb = helper.getHierarchicalFacetBreadcrumb(hierarchicalFacetName);
-
-              if (breadcrumb.length > 0) {
-                helper.toggleRefinement(hierarchicalFacetName, breadcrumb[0]).search();
-              }
-            } else {
-              helper.toggleRefinement(hierarchicalFacetName, facetValue).search();
-            }
-          };
-
-          renderFn({
-            createURL: connectorState.createURL,
-            canRefine: false,
-            instantSearchInstance: instantSearchInstance,
-            items: [],
-            refine: connectorState.refine,
-            widgetParams: widgetParams
-          }, true);
+        init: function init(initOptions) {
+          renderFn(_objectSpread2({}, this.getWidgetRenderState(initOptions), {
+            instantSearchInstance: initOptions.instantSearchInstance
+          }), true);
         },
-        render: function render(_ref3) {
-          var instantSearchInstance = _ref3.instantSearchInstance,
-              results = _ref3.results,
-              state = _ref3.state;
-
-          var _state$hierarchicalFa = _slicedToArray(state.hierarchicalFacets, 1),
-              facetName = _state$hierarchicalFa[0].name;
-
-          var facetValues = results.getFacetValues(facetName, {});
-          var data = Array.isArray(facetValues.data) ? facetValues.data : [];
-          var items = transformItems(shiftItemsValues(prepareItems(data)));
-          renderFn({
-            canRefine: items.length > 0,
-            createURL: connectorState.createURL,
-            instantSearchInstance: instantSearchInstance,
-            items: items,
-            refine: connectorState.refine,
-            widgetParams: widgetParams
-          }, false);
+        render: function render(renderOptions) {
+          renderFn(_objectSpread2({}, this.getWidgetRenderState(renderOptions), {
+            instantSearchInstance: renderOptions.instantSearchInstance
+          }), false);
         },
         dispose: function dispose() {
           unmountFn();
+        },
+        getRenderState: function getRenderState(renderState, renderOptions) {
+          return _objectSpread2({}, renderState, {
+            breadcrumb: _objectSpread2({}, renderState.breadcrumb, _defineProperty({}, hierarchicalFacetName, this.getWidgetRenderState(renderOptions)))
+          });
+        },
+        getWidgetRenderState: function getWidgetRenderState(_ref2) {
+          var helper = _ref2.helper,
+              createURL = _ref2.createURL,
+              results = _ref2.results,
+              state = _ref2.state;
+
+          function getItems() {
+            if (!results) {
+              return [];
+            }
+
+            var _state$hierarchicalFa = _slicedToArray(state.hierarchicalFacets, 1),
+                facetName = _state$hierarchicalFa[0].name;
+
+            var facetValues = results.getFacetValues(facetName, {});
+            var data = Array.isArray(facetValues.data) ? facetValues.data : [];
+            var items = transformItems(shiftItemsValues(prepareItems(data)));
+            return items;
+          }
+
+          var items = getItems();
+
+          if (!connectorState.createURL) {
+            connectorState.createURL = function (facetValue) {
+              if (!facetValue) {
+                var breadcrumb = helper.getHierarchicalFacetBreadcrumb(hierarchicalFacetName);
+
+                if (breadcrumb.length > 0) {
+                  return createURL(helper.state.toggleFacetRefinement(hierarchicalFacetName, breadcrumb[0]));
+                }
+              }
+
+              return createURL(helper.state.toggleFacetRefinement(hierarchicalFacetName, facetValue));
+            };
+          }
+
+          if (!connectorState.refine) {
+            connectorState.refine = function (facetValue) {
+              if (!facetValue) {
+                var breadcrumb = helper.getHierarchicalFacetBreadcrumb(hierarchicalFacetName);
+
+                if (breadcrumb.length > 0) {
+                  helper.toggleRefinement(hierarchicalFacetName, breadcrumb[0]).search();
+                }
+              } else {
+                helper.toggleRefinement(hierarchicalFacetName, facetValue).search();
+              }
+            };
+          }
+
+          return {
+            canRefine: items.length > 0,
+            createURL: connectorState.createURL,
+            items: items,
+            refine: connectorState.refine,
+            widgetParams: widgetParams
+          };
         },
         getWidgetSearchParameters: function getWidgetSearchParameters(searchParameters) {
           if (searchParameters.isHierarchicalFacet(hierarchicalFacetName)) {
@@ -13705,86 +13877,84 @@
       };
 
       var sendEvent;
-
-      var init = function init(initArgs) {
-        var state = initArgs.state,
-            helper = initArgs.helper,
-            instantSearchInstance = initArgs.instantSearchInstance;
-        var isFirstRendering = true;
-        sendEvent = createSendEventForHits({
-          instantSearchInstance: instantSearchInstance,
-          index: helper.getIndex(),
-          widgetType: $$type$4
-        });
-        widgetState.internalToggleRefineOnMapMove = createInternalToggleRefinementOnMapMove(noop, initArgs);
-        widgetState.internalSetMapMoveSinceLastRefine = createInternalSetMapMoveSinceLastRefine(noop, initArgs);
-        renderFn({
-          items: [],
-          position: getPositionFromState(state),
-          currentRefinement: getCurrentRefinementFromState(state),
-          refine: refine(helper),
-          sendEvent: sendEvent,
-          clearMapRefinement: clearMapRefinement(helper),
-          isRefinedWithMap: isRefinedWithMap(state),
-          toggleRefineOnMapMove: toggleRefineOnMapMove,
-          isRefineOnMapMove: isRefineOnMapMove,
-          setMapMoveSinceLastRefine: setMapMoveSinceLastRefine,
-          hasMapMoveSinceLastRefine: hasMapMoveSinceLastRefine,
-          widgetParams: widgetParams,
-          instantSearchInstance: instantSearchInstance
-        }, isFirstRendering);
-      };
-
-      var render = function render(renderArgs) {
-        var results = renderArgs.results,
-            helper = renderArgs.helper,
-            instantSearchInstance = renderArgs.instantSearchInstance;
-        var isFirstRendering = false; // We don't use the state provided by the render function because we need
-        // to be sure that the state is the latest one for the following condition
-
-        var state = helper.state;
-        var positionChangedSinceLastRefine = Boolean(state.aroundLatLng) && Boolean(widgetState.lastRefinePosition) && state.aroundLatLng !== widgetState.lastRefinePosition;
-        var boundingBoxChangedSinceLastRefine = !state.insideBoundingBox && Boolean(widgetState.lastRefineBoundingBox) && state.insideBoundingBox !== widgetState.lastRefineBoundingBox;
-
-        if (positionChangedSinceLastRefine || boundingBoxChangedSinceLastRefine) {
-          widgetState.hasMapMoveSinceLastRefine = false;
-        }
-
-        widgetState.lastRefinePosition = state.aroundLatLng || '';
-        widgetState.lastRefineBoundingBox = state.insideBoundingBox || '';
-        widgetState.internalToggleRefineOnMapMove = createInternalToggleRefinementOnMapMove(render, renderArgs);
-        widgetState.internalSetMapMoveSinceLastRefine = createInternalSetMapMoveSinceLastRefine(render, renderArgs);
-        var items = transformItems(results.hits.filter(function (hit) {
-          return hit._geoloc;
-        }));
-        sendEvent('view', items);
-        renderFn({
-          items: items,
-          position: getPositionFromState(state),
-          currentRefinement: getCurrentRefinementFromState(state),
-          refine: refine(helper),
-          sendEvent: sendEvent,
-          clearMapRefinement: clearMapRefinement(helper),
-          isRefinedWithMap: isRefinedWithMap(state),
-          toggleRefineOnMapMove: toggleRefineOnMapMove,
-          isRefineOnMapMove: isRefineOnMapMove,
-          setMapMoveSinceLastRefine: setMapMoveSinceLastRefine,
-          hasMapMoveSinceLastRefine: hasMapMoveSinceLastRefine,
-          widgetParams: widgetParams,
-          instantSearchInstance: instantSearchInstance
-        }, isFirstRendering);
-      };
-
       return {
         $$type: $$type$4,
-        init: init,
-        render: render,
+        init: function init(initArgs) {
+          var instantSearchInstance = initArgs.instantSearchInstance;
+          var isFirstRendering = true;
+          widgetState.internalToggleRefineOnMapMove = createInternalToggleRefinementOnMapMove(noop, initArgs);
+          widgetState.internalSetMapMoveSinceLastRefine = createInternalSetMapMoveSinceLastRefine(noop, initArgs);
+          renderFn(_objectSpread2({}, this.getWidgetRenderState(initArgs), {
+            instantSearchInstance: instantSearchInstance
+          }), isFirstRendering);
+        },
+        render: function render(renderArgs) {
+          var helper = renderArgs.helper,
+              instantSearchInstance = renderArgs.instantSearchInstance;
+          var isFirstRendering = false; // We don't use the state provided by the render function because we need
+          // to be sure that the state is the latest one for the following condition
+
+          var state = helper.state;
+          var positionChangedSinceLastRefine = Boolean(state.aroundLatLng) && Boolean(widgetState.lastRefinePosition) && state.aroundLatLng !== widgetState.lastRefinePosition;
+          var boundingBoxChangedSinceLastRefine = !state.insideBoundingBox && Boolean(widgetState.lastRefineBoundingBox) && state.insideBoundingBox !== widgetState.lastRefineBoundingBox;
+
+          if (positionChangedSinceLastRefine || boundingBoxChangedSinceLastRefine) {
+            widgetState.hasMapMoveSinceLastRefine = false;
+          }
+
+          widgetState.lastRefinePosition = state.aroundLatLng || '';
+          widgetState.lastRefineBoundingBox = state.insideBoundingBox || '';
+          widgetState.internalToggleRefineOnMapMove = createInternalToggleRefinementOnMapMove(this.render.bind(this), renderArgs);
+          widgetState.internalSetMapMoveSinceLastRefine = createInternalSetMapMoveSinceLastRefine(this.render.bind(this), renderArgs);
+          var widgetRenderState = this.getWidgetRenderState(renderArgs);
+          sendEvent('view', widgetRenderState.items);
+          renderFn(_objectSpread2({}, widgetRenderState, {
+            instantSearchInstance: instantSearchInstance
+          }), isFirstRendering);
+        },
+        getWidgetRenderState: function getWidgetRenderState(renderOptions) {
+          var helper = renderOptions.helper,
+              results = renderOptions.results,
+              instantSearchInstance = renderOptions.instantSearchInstance;
+          var state = helper.state;
+          var items = results ? transformItems(results.hits.filter(function (hit) {
+            return hit._geoloc;
+          })) : [];
+
+          if (!sendEvent) {
+            sendEvent = createSendEventForHits({
+              instantSearchInstance: instantSearchInstance,
+              index: helper.getIndex(),
+              widgetType: $$type$4
+            });
+          }
+
+          return {
+            items: items,
+            position: getPositionFromState(state),
+            currentRefinement: getCurrentRefinementFromState(state),
+            refine: refine(helper),
+            sendEvent: sendEvent,
+            clearMapRefinement: clearMapRefinement(helper),
+            isRefinedWithMap: isRefinedWithMap(state),
+            toggleRefineOnMapMove: toggleRefineOnMapMove,
+            isRefineOnMapMove: isRefineOnMapMove,
+            setMapMoveSinceLastRefine: setMapMoveSinceLastRefine,
+            hasMapMoveSinceLastRefine: hasMapMoveSinceLastRefine,
+            widgetParams: widgetParams
+          };
+        },
+        getRenderState: function getRenderState(renderState, renderOptions) {
+          return _objectSpread2({}, renderState, {
+            geoSearch: this.getWidgetRenderState(renderOptions)
+          });
+        },
         dispose: function dispose(_ref2) {
           var state = _ref2.state;
           unmountFn();
           return state.setQueryParameter('insideBoundingBox', undefined);
         },
-        getWidgetState: function getWidgetState(uiState, _ref3) {
+        getWidgetUiState: function getWidgetUiState(uiState, _ref3) {
           var searchParameters = _ref3.searchParameters;
           var boundingBox = searchParameters.insideBoundingBox;
 
@@ -13815,55 +13985,51 @@
     name: 'powered-by',
     connector: true
   });
-  /**
-   * @typedef {Object} PoweredByWidgetOptions
-   * @property {string} [theme] The theme of the logo ("light" or "dark").
-   * @property {string} [url] The URL to redirect to.
-   */
-
-  /**
-   * @typedef {Object} PoweredByRenderingOptions
-   * @property {Object} widgetParams All original `PoweredByWidgetOptions` forwarded to the `renderFn`.
-   */
 
   /**
    * **PoweredBy** connector provides the logic to build a custom widget that will displays
    * the logo to redirect to Algolia.
-   *
-   * @type {Connector}
-   * @param {function(PoweredByRenderingOptions, boolean)} renderFn Rendering function for the custom **PoweredBy** widget.
-   * @param {function} unmountFn Unmount function called when the widget is disposed.
-   * @return {function} Re-usable widget factory for a custom **PoweredBy** widget.
    */
-
-  function connectPoweredBy(renderFn) {
+  var connectPoweredBy = function connectPoweredBy(renderFn) {
     var unmountFn = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : noop;
     checkRendering(renderFn, withUsage$k());
     var defaultUrl = 'https://www.algolia.com/?' + 'utm_source=instantsearch.js&' + 'utm_medium=website&' + "utm_content=".concat(typeof window !== 'undefined' && window.location ? window.location.hostname : '', "&") + 'utm_campaign=poweredby';
-    return function () {
-      var widgetParams = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-      var _widgetParams$url = widgetParams.url,
-          url = _widgetParams$url === void 0 ? defaultUrl : _widgetParams$url;
+    return function (widgetParams) {
+      var _ref = widgetParams || {},
+          _ref$url = _ref.url,
+          url = _ref$url === void 0 ? defaultUrl : _ref$url;
+
       return {
         $$type: 'ais.poweredBy',
-        init: function init() {
-          renderFn({
-            url: url,
-            widgetParams: widgetParams
-          }, true);
+        init: function init(initOptions) {
+          var instantSearchInstance = initOptions.instantSearchInstance;
+          renderFn(_objectSpread2({}, this.getWidgetRenderState(initOptions), {
+            instantSearchInstance: instantSearchInstance
+          }), true);
         },
-        render: function render() {
-          renderFn({
+        render: function render(renderOptions) {
+          var instantSearchInstance = renderOptions.instantSearchInstance;
+          renderFn(_objectSpread2({}, this.getWidgetRenderState(renderOptions), {
+            instantSearchInstance: instantSearchInstance
+          }), false);
+        },
+        getRenderState: function getRenderState(renderState, renderOptions) {
+          return _objectSpread2({}, renderState, {
+            poweredBy: this.getWidgetRenderState(renderOptions)
+          });
+        },
+        getWidgetRenderState: function getWidgetRenderState() {
+          return {
             url: url,
             widgetParams: widgetParams
-          }, false);
+          };
         },
         dispose: function dispose() {
           unmountFn();
         }
       };
     };
-  }
+  };
 
   /**
    * Refine the given search parameters.
@@ -13897,44 +14063,62 @@
         return function (searchParameters) {
           // Merge new `searchParameters` with the ones set from other widgets
           var actualState = getInitialSearchParameters(helper.state, widgetParams);
-          var nextSearchParameters = merge$1(actualState, new algoliasearchHelper_1.SearchParameters(searchParameters)); // Trigger a search with the resolved search parameters
+          var nextSearchParameters = merge$1(actualState, new algoliasearchHelper_1.SearchParameters(searchParameters)); // Update original `widgetParams.searchParameters` to the new refined one
 
-          helper.setState(nextSearchParameters).search(); // Update original `widgetParams.searchParameters` to the new refined one
+          widgetParams.searchParameters = searchParameters; // Trigger a search with the resolved search parameters
 
-          widgetParams.searchParameters = searchParameters;
+          helper.setState(nextSearchParameters).search();
         };
       }
 
       return {
         $$type: 'ais.configure',
-        init: function init(_ref) {
-          var instantSearchInstance = _ref.instantSearchInstance,
-              helper = _ref.helper;
-          connectorState.refine = refine(helper);
-          renderFn({
-            refine: connectorState.refine,
-            instantSearchInstance: instantSearchInstance,
-            widgetParams: widgetParams
-          }, true);
+        init: function init(initOptions) {
+          var instantSearchInstance = initOptions.instantSearchInstance;
+          renderFn(_objectSpread2({}, this.getWidgetRenderState(initOptions), {
+            instantSearchInstance: instantSearchInstance
+          }), true);
         },
-        render: function render(_ref2) {
-          var instantSearchInstance = _ref2.instantSearchInstance;
-          renderFn({
-            refine: connectorState.refine,
-            instantSearchInstance: instantSearchInstance,
-            widgetParams: widgetParams
-          }, false);
+        render: function render(renderOptions) {
+          var instantSearchInstance = renderOptions.instantSearchInstance;
+          renderFn(_objectSpread2({}, this.getWidgetRenderState(renderOptions), {
+            instantSearchInstance: instantSearchInstance
+          }), false);
         },
-        dispose: function dispose(_ref3) {
-          var state = _ref3.state;
+        dispose: function dispose(_ref) {
+          var state = _ref.state;
           unmountFn();
           return getInitialSearchParameters(state, widgetParams);
         },
-        getWidgetSearchParameters: function getWidgetSearchParameters(state, _ref4) {
-          var uiState = _ref4.uiState;
+        getRenderState: function getRenderState(renderState, renderOptions) {
+          var _renderState$configur;
+
+          var widgetRenderState = this.getWidgetRenderState(renderOptions);
+          return _objectSpread2({}, renderState, {
+            configure: _objectSpread2({}, widgetRenderState, {
+              widgetParams: _objectSpread2({}, widgetRenderState.widgetParams, {
+                searchParameters: merge$1(new algoliasearchHelper_1.SearchParameters((_renderState$configur = renderState.configure) === null || _renderState$configur === void 0 ? void 0 : _renderState$configur.widgetParams.searchParameters), new algoliasearchHelper_1.SearchParameters(widgetRenderState.widgetParams.searchParameters)).getQueryParams()
+              })
+            })
+          });
+        },
+        getWidgetRenderState: function getWidgetRenderState(_ref2) {
+          var helper = _ref2.helper;
+
+          if (!connectorState.refine) {
+            connectorState.refine = refine(helper);
+          }
+
+          return {
+            refine: connectorState.refine,
+            widgetParams: widgetParams
+          };
+        },
+        getWidgetSearchParameters: function getWidgetSearchParameters(state, _ref3) {
+          var uiState = _ref3.uiState;
           return merge$1(state, new algoliasearchHelper_1.SearchParameters(_objectSpread2({}, uiState.configure, {}, widgetParams.searchParameters)));
         },
-        getWidgetState: function getWidgetState(uiState) {
+        getWidgetUiState: function getWidgetUiState(uiState) {
           return _objectSpread2({}, uiState, {
             configure: _objectSpread2({}, uiState.configure, {}, widgetParams.searchParameters)
           });
@@ -14035,28 +14219,42 @@
       var connectorState = {};
       return {
         $$type: 'ais.autocomplete',
-        init: function init(_ref3) {
-          var instantSearchInstance = _ref3.instantSearchInstance,
-              helper = _ref3.helper;
-
-          connectorState.refine = function (query) {
-            helper.setQuery(query).search();
-          };
-
-          renderFn({
-            widgetParams: widgetParams,
-            currentRefinement: helper.state.query || '',
-            indices: [],
-            refine: connectorState.refine,
+        init: function init(initOptions) {
+          var instantSearchInstance = initOptions.instantSearchInstance;
+          renderFn(_objectSpread2({}, this.getWidgetRenderState(initOptions), {
             instantSearchInstance: instantSearchInstance
-          }, true);
+          }), true);
         },
-        render: function render(_ref4) {
+        render: function render(renderOptions) {
+          var instantSearchInstance = renderOptions.instantSearchInstance;
+          var renderState = this.getWidgetRenderState(renderOptions);
+          renderState.indices.forEach(function (_ref3) {
+            var sendEvent = _ref3.sendEvent,
+                hits = _ref3.hits;
+            sendEvent('view', hits);
+          });
+          renderFn(_objectSpread2({}, renderState, {
+            instantSearchInstance: instantSearchInstance
+          }), false);
+        },
+        getRenderState: function getRenderState(renderState, renderOptions) {
+          return _objectSpread2({}, renderState, {
+            autocomplete: this.getWidgetRenderState(renderOptions)
+          });
+        },
+        getWidgetRenderState: function getWidgetRenderState(_ref4) {
           var _this = this;
 
           var helper = _ref4.helper,
               scopedResults = _ref4.scopedResults,
               instantSearchInstance = _ref4.instantSearchInstance;
+
+          if (!connectorState.refine) {
+            connectorState.refine = function (query) {
+              helper.setQuery(query).search();
+            };
+          }
+
           var indices = scopedResults.map(function (scopedResult) {
             // We need to escape the hits because highlighting
             // exposes HTML tags to the end-user.
@@ -14066,7 +14264,6 @@
               index: scopedResult.results.index,
               widgetType: _this.$$type
             });
-            sendEvent('view', scopedResult.results.hits);
             return {
               indexId: scopedResult.indexId,
               indexName: scopedResult.results.index,
@@ -14075,15 +14272,14 @@
               sendEvent: sendEvent
             };
           });
-          renderFn({
-            widgetParams: widgetParams,
+          return {
             currentRefinement: helper.state.query || '',
             indices: indices,
             refine: connectorState.refine,
-            instantSearchInstance: instantSearchInstance
-          }, false);
+            widgetParams: widgetParams
+          };
         },
-        getWidgetState: function getWidgetState(uiState, _ref5) {
+        getWidgetUiState: function getWidgetUiState(uiState, _ref5) {
           var searchParameters = _ref5.searchParameters;
           var query = searchParameters.query || '';
 
@@ -14215,10 +14411,10 @@
       var onHelperChange;
       return {
         $$type: 'ais.queryRules',
-        init: function init(_ref3) {
-          var helper = _ref3.helper,
-              state = _ref3.state,
-              instantSearchInstance = _ref3.instantSearchInstance;
+        init: function init(initOptions) {
+          var helper = initOptions.helper,
+              state = initOptions.state,
+              instantSearchInstance = initOptions.instantSearchInstance;
           initialRuleContexts = state.ruleContexts || [];
           onHelperChange = applyRuleContexts.bind({
             helper: helper,
@@ -14243,24 +14439,34 @@
             helper.on('change', onHelperChange);
           }
 
-          _render({
-            items: [],
-            instantSearchInstance: instantSearchInstance,
-            widgetParams: widgetParams
-          }, true);
+          _render(_objectSpread2({}, this.getWidgetRenderState(initOptions), {
+            instantSearchInstance: instantSearchInstance
+          }), true);
         },
-        render: function render(_ref4) {
-          var results = _ref4.results,
-              instantSearchInstance = _ref4.instantSearchInstance;
-          var _results$userData = results.userData,
-              userData = _results$userData === void 0 ? [] : _results$userData;
-          var items = transformItems(userData);
+        render: function render(renderOptions) {
+          var instantSearchInstance = renderOptions.instantSearchInstance;
 
-          _render({
+          _render(_objectSpread2({}, this.getWidgetRenderState(renderOptions), {
+            instantSearchInstance: instantSearchInstance
+          }), false);
+        },
+        getWidgetRenderState: function getWidgetRenderState(_ref3) {
+          var results = _ref3.results;
+
+          var _ref4 = results || {},
+              _ref4$userData = _ref4.userData,
+              userData = _ref4$userData === void 0 ? [] : _ref4$userData;
+
+          var items = transformItems(userData);
+          return {
             items: items,
-            instantSearchInstance: instantSearchInstance,
             widgetParams: widgetParams
-          }, false);
+          };
+        },
+        getRenderState: function getRenderState(renderState, renderOptions) {
+          return _objectSpread2({}, renderState, {
+            queryRules: this.getWidgetRenderState(renderOptions)
+          });
         },
         dispose: function dispose(_ref5) {
           var helper = _ref5.helper,
@@ -14418,35 +14624,6 @@
     var unmountFn = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : noop;
     checkRendering(renderFn, withUsage$p());
     return function (widgetParams) {
-      var _render = function render(_ref) {
-        var isFirstRendering = _ref.isFirstRendering,
-            instantSearchInstance = _ref.instantSearchInstance,
-            _ref$voiceSearchHelpe = _ref.voiceSearchHelper,
-            isBrowserSupported = _ref$voiceSearchHelpe.isBrowserSupported,
-            isListening = _ref$voiceSearchHelpe.isListening,
-            startListening = _ref$voiceSearchHelpe.startListening,
-            stopListening = _ref$voiceSearchHelpe.stopListening,
-            getState = _ref$voiceSearchHelpe.getState;
-        renderFn({
-          isBrowserSupported: isBrowserSupported(),
-          isListening: isListening(),
-          toggleListening: function toggleListening() {
-            if (!isBrowserSupported()) {
-              return;
-            }
-
-            if (isListening()) {
-              stopListening();
-            } else {
-              startListening();
-            }
-          },
-          voiceListeningState: getState(),
-          widgetParams: widgetParams,
-          instantSearchInstance: instantSearchInstance
-        }, isFirstRendering);
-      };
-
       var _widgetParams$searchA = widgetParams.searchAsYouSpeak,
           searchAsYouSpeak = _widgetParams$searchA === void 0 ? false : _widgetParams$searchA,
           language = widgetParams.language,
@@ -14455,64 +14632,92 @@
           createVoiceSearchHelper$1 = _widgetParams$createV === void 0 ? createVoiceSearchHelper : _widgetParams$createV;
       return {
         $$type: 'ais.voiceSearch',
-        init: function init(_ref2) {
+        init: function init(initOptions) {
+          var instantSearchInstance = initOptions.instantSearchInstance;
+          renderFn(_objectSpread2({}, this.getWidgetRenderState(initOptions), {
+            instantSearchInstance: instantSearchInstance
+          }), true);
+        },
+        render: function render(renderOptions) {
+          var instantSearchInstance = renderOptions.instantSearchInstance;
+          renderFn(_objectSpread2({}, this.getWidgetRenderState(renderOptions), {
+            instantSearchInstance: instantSearchInstance
+          }), false);
+        },
+        getRenderState: function getRenderState(renderState, renderOptions) {
+          return _objectSpread2({}, renderState, {
+            voiceSearch: this.getWidgetRenderState(renderOptions)
+          });
+        },
+        getWidgetRenderState: function getWidgetRenderState(renderOptions) {
           var _this = this;
 
-          var helper = _ref2.helper,
-              instantSearchInstance = _ref2.instantSearchInstance;
+          var helper = renderOptions.helper,
+              instantSearchInstance = renderOptions.instantSearchInstance;
 
-          this._refine = function (query) {
-            if (query !== helper.state.query) {
-              var queryLanguages = language ? [language.split('-')[0]] : undefined;
-              helper.setQueryParameter('queryLanguages', queryLanguages);
+          if (!this._refine) {
+            this._refine = function (query) {
+              if (query !== helper.state.query) {
+                var queryLanguages = language ? [language.split('-')[0]] : undefined;
+                helper.setQueryParameter('queryLanguages', queryLanguages);
 
-              if (typeof additionalQueryParameters === 'function') {
-                helper.setState(helper.state.setQueryParameters(_objectSpread2({
-                  ignorePlurals: true,
-                  removeStopWords: true,
-                  // @ts-ignore (optionalWords only allows array, while string is also valid)
-                  optionalWords: query
-                }, additionalQueryParameters({
-                  query: query
-                }))));
+                if (typeof additionalQueryParameters === 'function') {
+                  helper.setState(helper.state.setQueryParameters(_objectSpread2({
+                    ignorePlurals: true,
+                    removeStopWords: true,
+                    // @ts-ignore (optionalWords only allows array, while string is also valid)
+                    optionalWords: query
+                  }, additionalQueryParameters({
+                    query: query
+                  }))));
+                }
+
+                helper.setQuery(query).search();
+              }
+            };
+          }
+
+          if (!this._voiceSearchHelper) {
+            this._voiceSearchHelper = createVoiceSearchHelper$1({
+              searchAsYouSpeak: searchAsYouSpeak,
+              language: language,
+              onQueryChange: function onQueryChange(query) {
+                return _this._refine(query);
+              },
+              onStateChange: function onStateChange() {
+                renderFn(_objectSpread2({}, _this.getWidgetRenderState(renderOptions), {
+                  instantSearchInstance: instantSearchInstance
+                }), false);
+              }
+            });
+          }
+
+          var _voiceSearchHelper = this._voiceSearchHelper,
+              isBrowserSupported = _voiceSearchHelper.isBrowserSupported,
+              isListening = _voiceSearchHelper.isListening,
+              startListening = _voiceSearchHelper.startListening,
+              stopListening = _voiceSearchHelper.stopListening,
+              getState = _voiceSearchHelper.getState;
+          return {
+            isBrowserSupported: isBrowserSupported(),
+            isListening: isListening(),
+            toggleListening: function toggleListening() {
+              if (!isBrowserSupported()) {
+                return;
               }
 
-              helper.setQuery(query).search();
-            }
-          };
-
-          this._voiceSearchHelper = createVoiceSearchHelper$1({
-            searchAsYouSpeak: searchAsYouSpeak,
-            language: language,
-            onQueryChange: function onQueryChange(query) {
-              return _this._refine(query);
+              if (isListening()) {
+                stopListening();
+              } else {
+                startListening();
+              }
             },
-            onStateChange: function onStateChange() {
-              _render({
-                isFirstRendering: false,
-                instantSearchInstance: instantSearchInstance,
-                voiceSearchHelper: _this._voiceSearchHelper
-              });
-            }
-          });
-
-          _render({
-            isFirstRendering: true,
-            instantSearchInstance: instantSearchInstance,
-            voiceSearchHelper: this._voiceSearchHelper
-          });
+            voiceListeningState: getState(),
+            widgetParams: widgetParams
+          };
         },
-        render: function render(_ref3) {
-          var instantSearchInstance = _ref3.instantSearchInstance;
-
-          _render({
-            isFirstRendering: false,
-            instantSearchInstance: instantSearchInstance,
-            voiceSearchHelper: this._voiceSearchHelper
-          });
-        },
-        dispose: function dispose(_ref4) {
-          var state = _ref4.state;
+        dispose: function dispose(_ref) {
+          var state = _ref.state;
 
           this._voiceSearchHelper.dispose();
 
@@ -14538,8 +14743,8 @@
 
           return newState.setQueryParameter('query', undefined);
         },
-        getWidgetState: function getWidgetState(uiState, _ref5) {
-          var searchParameters = _ref5.searchParameters;
+        getWidgetUiState: function getWidgetUiState(uiState, _ref2) {
+          var searchParameters = _ref2.searchParameters;
           var query = searchParameters.query || '';
 
           if (!query) {
@@ -14550,8 +14755,8 @@
             query: query
           });
         },
-        getWidgetSearchParameters: function getWidgetSearchParameters(searchParameters, _ref6) {
-          var uiState = _ref6.uiState;
+        getWidgetSearchParameters: function getWidgetSearchParameters(searchParameters, _ref3) {
+          var uiState = _ref3.uiState;
           return searchParameters.setQueryParameter('query', uiState.query || '');
         }
       };
@@ -19785,6 +19990,7 @@
     name: 'analytics'
   });
 
+  // @major this widget will be removed from the next major version.
   var analytics = function analytics(widgetParams) {
     var _ref = widgetParams || {},
         pushFunction = _ref.pushFunction,
@@ -19801,6 +20007,7 @@
       throw new Error(withUsage$I('The `pushFunction` option is required.'));
     }
 
+     _warning(false, "`analytics` widget has been deprecated. It is still supported in 4.x releases, but not further. It is replaced by the `insights` middleware.\n\nFor the migration, visit https://www.algolia.com/doc/guides/building-search-ui/upgrade-guides/js/#analytics-widget") ;
     var cachedState = null;
 
     var serializeRefinements = function serializeRefinements(parameters) {
@@ -19932,6 +20139,16 @@
           document.removeEventListener('click', onClick);
           window.removeEventListener('beforeunload', onUnload);
         }
+      },
+      getRenderState: function getRenderState(renderState, renderOptions) {
+        return _objectSpread2({}, renderState, {
+          analytics: this.getWidgetRenderState(renderOptions)
+        });
+      },
+      getWidgetRenderState: function getWidgetRenderState() {
+        return {
+          widgetParams: widgetParams
+        };
       }
     };
   };
@@ -20593,7 +20810,10 @@
               args[_key2] = arguments[_key2];
             }
 
-            var options = args[0];
+            var renderOptions = args[0];
+
+            var options = _objectSpread2({}, widget.getWidgetRenderState ? widget.getWidgetRenderState(renderOptions) : {}, {}, renderOptions);
+
             renderPanel({
               options: options,
               hidden: Boolean(hidden(options)),
@@ -20834,18 +21054,13 @@
   });
 
   var queryRuleContext = function queryRuleContext() {
-    var _ref = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
-        trackedFilters = _ref.trackedFilters,
-        transformRuleContexts = _ref.transformRuleContexts;
+    var widgetParams = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
 
-    if (!trackedFilters) {
+    if (!widgetParams.trackedFilters) {
       throw new Error(withUsage$P('The `trackedFilters` option is required.'));
     }
 
-    return _objectSpread2({}, connectQueryRules(noop)({
-      trackedFilters: trackedFilters,
-      transformRuleContexts: transformRuleContexts
-    }), {
+    return _objectSpread2({}, connectQueryRules(noop)(widgetParams), {
       $$type: 'ais.queryRuleContext'
     });
   };
@@ -20854,10 +21069,9 @@
    * This widget sets the geolocation value for the search based on the selected
    * result in the Algolia Places autocomplete.
    */
-  var placesWidget = function placesWidget(widgetOptions) {
-    var _ref = widgetOptions || {},
-        _ref$placesReference = _ref.placesReference,
-        placesReference = _ref$placesReference === void 0 ? undefined : _ref$placesReference,
+  var placesWidget = function placesWidget(widgetParams) {
+    var _ref = widgetParams || {},
+        placesReference = _ref.placesReference,
         _ref$defaultPosition = _ref.defaultPosition,
         defaultPosition = _ref$defaultPosition === void 0 ? [] : _ref$defaultPosition,
         placesOptions = _objectWithoutProperties(_ref, ["placesReference", "defaultPosition"]);
@@ -20898,7 +21112,7 @@
           helper.search();
         });
       },
-      getWidgetState: function getWidgetState(uiState, _ref3) {
+      getWidgetUiState: function getWidgetUiState(uiState, _ref3) {
         var searchParameters = _ref3.searchParameters;
         var position = searchParameters.aroundLatLng || defaultPosition.join(',');
         var hasPositionSet = position !== defaultPosition.join(',');
@@ -20936,6 +21150,16 @@
         placesAutocomplete.setVal(query);
         placesAutocomplete.close();
         return searchParameters.setQueryParameter('insideBoundingBox', undefined).setQueryParameter('aroundLatLngViaIP', false).setQueryParameter('aroundLatLng', position || undefined);
+      },
+      getRenderState: function getRenderState(renderState, renderOptions) {
+        return _objectSpread2({}, renderState, {
+          places: this.getWidgetRenderState(renderOptions)
+        });
+      },
+      getWidgetRenderState: function getWidgetRenderState() {
+        return {
+          widgetParams: widgetParams
+        };
       }
     };
   };
@@ -20991,21 +21215,49 @@
     var insightsClient = _insightsClient === null ? noop : _insightsClient;
     return function (_ref2) {
       var instantSearchInstance = _ref2.instantSearchInstance;
-      insightsClient('_get', '_hasCredentials', function (hasCredentials) {
-        if (!hasCredentials) {
-          var _getAppIdAndApiKey = getAppIdAndApiKey(instantSearchInstance.client),
-              _getAppIdAndApiKey2 = _slicedToArray(_getAppIdAndApiKey, 2),
-              appId = _getAppIdAndApiKey2[0],
-              apiKey = _getAppIdAndApiKey2[1];
 
-          insightsClient('_get', '_userToken', function (userToken) {
-             _warning(!userToken, "You set userToken before `createInsightsMiddleware()` and it is ignored.\nPlease set the token after the `createInsightsMiddleware()` call.\n\ncreateInsightsMiddleware({ /* ... */ });\n\ninsightsClient('setUserToken', 'your-user-token');\n// or\naa('setUserToken', 'your-user-token');\n            ") ;
-          });
-          insightsClient('init', {
-            appId: appId,
-            apiKey: apiKey
-          });
-        }
+      var _getAppIdAndApiKey = getAppIdAndApiKey(instantSearchInstance.client),
+          _getAppIdAndApiKey2 = _slicedToArray(_getAppIdAndApiKey, 2),
+          appId = _getAppIdAndApiKey2[0],
+          apiKey = _getAppIdAndApiKey2[1];
+
+      var queuedUserToken = undefined;
+      var userTokenBeforeInit = undefined;
+
+      if (Array.isArray(insightsClient.queue)) {
+        // Context: The umd build of search-insights is asynchronously loaded by the snippet.
+        //
+        // When user calls `aa('setUserToken', 'my-user-token')` before `search-insights` is loaded,
+        // ['setUserToken', 'my-user-token'] gets stored in `aa.queue`.
+        // Whenever `search-insights` is finally loaded, it will process the queue.
+        //
+        // But here's the reason why we handle it here:
+        // At this point, even though `search-insights` is not loaded yet,
+        // we still want to read the token from the queue.
+        // Otherwise, the first search call will be fired without the token.
+        var _ref3 = find$1(insightsClient.queue.slice().reverse(), function (_ref5) {
+          var _ref6 = _slicedToArray(_ref5, 1),
+              method = _ref6[0];
+
+          return method === 'setUserToken';
+        }) || [];
+
+        var _ref4 = _slicedToArray(_ref3, 2);
+
+        queuedUserToken = _ref4[1];
+      }
+
+      insightsClient('_get', '_userToken', function (userToken) {
+        // If user has called `aa('setUserToken', 'my-user-token')` before creating
+        // the `insights` middleware, we store them temporarily and
+        // set it later on.
+        //
+        // Otherwise, the `init` call might override it with anonymous user token.
+        userTokenBeforeInit = userToken;
+      });
+      insightsClient('init', {
+        appId: appId,
+        apiKey: apiKey
       });
       return {
         onStateChange: function onStateChange() {},
@@ -21019,33 +21271,20 @@
           };
 
           instantSearchInstance.mainIndex.getHelper().setQueryParameter('clickAnalytics', true);
+          var anonymousUserToken = getInsightsAnonymousUserTokenInternal();
 
-          if (hasInsightsClient) {
+          if (hasInsightsClient && anonymousUserToken) {
             // When `aa('init', { ... })` is called, it creates an anonymous user token in cookie.
             // We can set it as userToken.
-            setUserTokenToSearch(getInsightsAnonymousUserToken());
-          }
+            setUserTokenToSearch(anonymousUserToken);
+          } // We consider the `userToken` coming from a `init` call to have a higher
+          // importance than the one coming from the queue.
 
-          if (Array.isArray(insightsClient.queue)) {
-            // Context: The umd build of search-insights is asynchronously loaded by the snippet.
-            //
-            // When user calls `aa('setUserToken', 'my-user-token')` before `search-insights` is loaded,
-            // ['setUserToken', 'my-user-token'] gets stored in `aa.queue`.
-            // Whenever `search-insights` is finally loaded, it will process the queue.
-            //
-            // But here's the reason why we handle it here:
-            // At this point, even though `search-insights` is not loaded yet,
-            // we still want to read the token from the queue.
-            // Otherwise, the first search call will be fired without the token.
-            insightsClient.queue.forEach(function (_ref3) {
-              var _ref4 = _slicedToArray(_ref3, 2),
-                  method = _ref4[0],
-                  firstArgument = _ref4[1];
 
-              if (method === 'setUserToken') {
-                setUserTokenToSearch(firstArgument);
-              }
-            });
+          if (userTokenBeforeInit) {
+            insightsClient('setUserToken', userTokenBeforeInit);
+          } else if (queuedUserToken) {
+            insightsClient('setUserToken', queuedUserToken);
           } // This updates userToken which is set explicitly by `aa('setUserToken', userToken)`
 
 
