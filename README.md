@@ -33,7 +33,7 @@ By default, a dark and responsive Hugo theme. Typography used is Space Mono, mon
 - Suitable for researchers, PhD candidates, personal website and bloggers
 - Disqus support
 - Google Ads support (Only for blogs) and AMP blogs
-- Google analytics support with event tracking
+- Google Analytics support with event tracking
 - Uses SASS/SCSS, no NodeJS needed
 - Can change the colour of the theme
 - Education and experience data files
@@ -51,6 +51,8 @@ By default, a dark and responsive Hugo theme. Typography used is Space Mono, mon
 - Uses FiraCode with font ligatures for code block
 - Option to convert JS/CSS to inline code
 - You can add global banner to HTML page
+- Support for cloudflare insights
+- Customised sponsor link
 
 ## 1.2. Quick Start
 
