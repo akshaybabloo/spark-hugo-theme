@@ -54,6 +54,10 @@ By default, a dark and responsive Hugo theme. Typography used is Space Mono, mon
 - Support for cloudflare insights
 - Customised sponsor link
 - Support for adding Videos using video.js
+- Sign up user can be added to newsletter
+- Added new alert message
+- Support for no indexing of pages
+- 
 
 ## 1.2. Quick Start
 
@@ -143,6 +147,9 @@ enableEmoji = true
         labelBackgroundColor = "#e2e8f0"
         labelTextColor = "#1a202c"
         headers = "#fc8181"
+    [params.seo]
+        noIndexTags = true
+        noIndexCategories = true
 ```
 
 ### 1.3.2. Front Matter
