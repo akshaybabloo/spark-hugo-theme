@@ -2,7 +2,7 @@
 
 <h1 hidden>{{ .Title }}</h1>
 
-<div class="uk-section uk-section-default gol-links">
+<div class="uk-section uk-section-default gol-links {{ if eq .Params.title "Publications" }}name-highlight{{ end }}">
     <div class="uk-container uk-container-large uk-text-justify">
 
         {{.Content}}
