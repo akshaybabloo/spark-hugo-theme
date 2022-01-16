@@ -53,6 +53,7 @@ By default, a dark and responsive Hugo theme. Typography used is Space Mono, mon
 - You can add global banner to HTML page
 - Support for cloudflare insights
 - Customised sponsor link
+- Support for adding Videos using video.js
 
 ## 1.2. Quick Start
 

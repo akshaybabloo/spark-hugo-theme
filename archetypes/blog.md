@@ -7,6 +7,7 @@ categories: []
 description: ""
 images: []
 ads: false
+video: false
 # htmlScripts: []
 author:
   prefix: ""
