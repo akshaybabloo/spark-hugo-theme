@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html amp>
+<html amp lang="en">
 <head>
 
     {{- partial "amp/head.html" . -}}
@@ -28,16 +28,10 @@
             </script>
         </amp-analytics>
     {{ end }}
-    <header class="main-header">
-        <nav class="blog-title">
-            {{ if .Site.Params.namedLogo }}
-                <amp-img width="150" height="36" layout="fixed" src="{{ .Site.Params.namedLogo | relURL}}"></amp-img>
-            {{ else }}
-                <a href="{{ .Site.BaseURL }}">
-                    {{ .Site.Title }}
-                </a>
-            {{ end }}
-        </nav>
+    <header class="page-header">
+        <a href="{{ .Site.BaseURL }}">
+            {{ .Site.Title }}
+        </a>
     </header>
 
     <main class="content" role="main">
@@ -61,7 +55,7 @@
             </section>
         </article>
     </main>
-    <footer class="site-footer clearfix">
+    <footer class="page-footer">
         <section class="copyright"><a href="{{ .Site.BaseURL }}">{{ .Site.Title }}</a> &copy; {{.Site.Params.year}}
         </section>
         {{if .Site.Params.acknowledge }}
