@@ -2,7 +2,7 @@
     <div class="uk-navbar-center">
         <div class="uk-navbar-item">
             Copyright &copy; {{ if .Site.Params.namedLogo }}<img src="{{ .Site.Params.namedLogo | relURL }}" class="uk-margin-left uk-margin-right" alt="Akshay Raj Gollahalli's logo" width="150" height="36" uk-svg>{{ else }} {{ .Site.Title }} {{end}} {{.Site.Params.year}}
-            {{if .Site.Params.acknowledge }} | Theme by <a class="uk-link-text uk-margin-small-left" onclick="ga('send', 'event', 'Footer', 'click', 'spark-hugo-theme')" href="https://github.com/akshaybabloo/spark-hugo-theme">Akshay Raj Gollahalli</a>, generated using <a class="uk-link-text uk-margin-small-left" onclick="ga('send', 'event', 'Footer', 'click', 'Hugo Website')" href="http://hugo.io">Hugo</a>
+            {{if .Site.Params.acknowledge }} | Theme by <a class="uk-link-text uk-margin-small-left" href="https://github.com/akshaybabloo/spark-hugo-theme">Akshay Raj Gollahalli</a>, generated using <a class="uk-link-text uk-margin-small-left" href="http://hugo.io">Hugo</a>
             {{ end }}
         </div>
     </div>

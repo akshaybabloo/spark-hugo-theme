@@ -20,7 +20,7 @@
 
         <ul class="uk-subnav uk-subnav-divider uk-flex-center uk-visible@m gol-subnav">
             {{ range .Site.Menus.main }}
-                <li><a onclick="ga('send', 'event', 'Menu', 'click', '{{ .Name }}')" href="{{ .URL }}">{{ .Name }}</a>
+                <li><a href="{{ .URL }}">{{ .Name }}</a>
                 </li>
             {{ end }}
         </ul>
@@ -44,31 +44,33 @@
         <p>
             {{ if .Site.Params.github }}
                 <a href="{{ .Site.Params.github }}" class="uk-margin-small-right"
-                   onclick="ga('send', 'event', 'Social', 'click', 'Github')"
+                   onclick="getOutboundLink('outbound', {{ .Site.Params.github }})"
                    uk-icon="icon: github; ratio: 1.5"></a>
             {{end}}
             {{ if .Site.Params.linkedin }}
                 <a href="{{ .Site.Params.linkedin }}" class="uk-margin-small-right"
-                   onclick="ga('send', 'event', 'Menu', 'click', 'LinkedIn')"
+                   onclick="getOutboundLink('outbound', {{ .Site.Params.linkedin }})"
                    uk-icon="icon: linkedin; ratio: 1.5"></a>
             {{end}}
             {{ if .Site.Params.twitter }}
                 <a href="{{ .Site.Params.twitter }}" class="uk-margin-small-right"
-                   onclick="ga('send', 'event', 'Menu', 'click', 'Twitter')"
+                   onclick="getOutboundLink('outbound', {{ .Site.Params.twitter }})"
                    uk-icon="icon: twitter; ratio: 1.5"></a>
             {{end}}
             {{ if .Site.Params.email }}
                 <a href="mailto:{{ .Site.Params.email }}" class="uk-margin-small-right"
-                   onclick="ga('send', 'event', 'Menu', 'click', 'Email')"
+                   onclick="getOutboundLink('outbound', {{ .Site.Params.email }})"
                    uk-icon="icon: mail; ratio: 1.5"></a>
             {{end}}
+            <a href="#model-sendgrid" class="uk-button uk-button-secondary news-letter" uk-toggle><span class="uk-margin-small-right" uk-icon="icon: mail"></span> News Letter</a>
             {{ if .Site.Params.sponsor.enable }}
-                <a href="{{ .Site.Params.sponsor.link }}" class="uk-button uk-button-danger sponsor" onclick="ga('send', 'event', 'Menu', 'click', 'Sponsor')"><span class="uk-margin-small-right uk-icon" uk-icon="icon: heart"></span> Sponsor</a>
+                <a href="{{ .Site.Params.sponsor.link }}" class="uk-button uk-button-danger sponsor" onclick="getOutboundLink('outbound', {{ .Site.Params.sponsor.link }})"><span class="uk-margin-small-right uk-icon" uk-icon="icon: heart"></span> Sponsor</a>
             {{ end }}
         </p>
     </div>
 </div>
 
+{{partial "sendgrid.html" . }}
 
 <!--search console-->
 <div class="uk-position-medium uk-position-top-right uk-visible@m">
@@ -96,8 +98,7 @@
 
         <ul class="uk-nav uk-nav-default">
             {{ range .Site.Menus.main }}
-                <li><a onclick="ga('send', 'event', 'OffcanvasMenu', 'click', '{{ .Name }}')"
-                       href="{{ .URL }}" class="uk-link-text uk-text-large">{{ .Name }}</a></li>
+                <li><a href="{{ .URL }}" class="uk-link-text uk-text-large">{{ .Name }}</a></li>
             {{ end }}
             <li><a class="uk-navbar-toggle uk-text-large" href="#modal-full" uk-search-icon uk-toggle></a></li>
         </ul>

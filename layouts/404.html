@@ -13,7 +13,7 @@
         <ul class="uk-subnav uk-subnav-divider uk-flex-center uk-visible@m gol-subnav">
             {{ range .Site.Menus.main }}
                 <li>
-                    <a onclick="ga('send', 'event', 'Menu', 'click', '{{ .Name }}')" href="{{ .URL }}">{{ .Name }}</a>
+                    <a href="{{ .URL }}">{{ .Name }}</a>
                 </li>
             {{ end }}
         </ul>
@@ -49,7 +49,7 @@
         <ul class="uk-nav uk-nav-default">
             {{ range .Site.Menus.main }}
                 <li>
-                    <a onclick="ga('send', 'event', 'Menu', 'click', '{{ .Name }}')" href="{{ .URL }}">{{ .Name }}</a>
+                    <a href="{{ .URL }}">{{ .Name }}</a>
                 </li>
             {{ end }}
         </ul>

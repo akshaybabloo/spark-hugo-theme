@@ -10,7 +10,7 @@
         <div class="uk-container uk-container-expand">
             <div class="uk-grid">
                 <div class="uk-width-expand">
-                    <article class="uk-article gol-links uk-text-justify">
+                    <article class="uk-article gol-links uk-text-justify uk-text-break">
                         <link itemprop="mainEntityOfPage" href="{{ .Permalink }}"/>
                         <link itemprop="author" content="{{ .Params.author.firstName }} {{ .Params.author.lastName }}"/>
 
@@ -25,19 +25,19 @@
                         <div>
                             <ul class="uk-iconnav">
                                 <li><a href="https://www.facebook.com/sharer.php?u={{ .Permalink }}"
-                                       uk-icon="icon: facebook" onclick="ga('send', 'event', 'Social', 'click', 'Sharing to Facebook');window.open(this.href,
-  '', 'menubar=no,toolbar=no,resizable=yes,scrollbars=yes,height=600,width=600');return false;"></a></li>
+                                       uk-icon="icon: facebook" onclick='getOutboundLink("outbound", {{printf "%s%s" "https://www.facebook.com/sharer.php?u=" .Permalink }});window.open(this.href,
+  "", "menubar=no,toolbar=no,resizable=yes,scrollbars=yes,height=600,width=600");return false;'></a></li>
                                 <li>
                                     <a href="https://www.linkedin.com/shareArticle?mini=true&url={{ .Permalink }}"
-                                       uk-icon="icon: linkedin" onclick="ga('send', 'event', 'Social', 'click', 'Sharing to LinkedIn');window.open(this.href,
-  '', 'menubar=no,toolbar=no,resizable=yes,scrollbars=yes,height=600,width=600');return false;"></a></li>
+                                       uk-icon="icon: linkedin" onclick='getOutboundLink("outbound", {{printf "%s%s" "https://www.linkedin.com/shareArticle?mini=true&url=" .Permalink }});window.open(this.href,
+  "", "menubar=no,toolbar=no,resizable=yes,scrollbars=yes,height=600,width=600");return false;'></a></li>
                                 <li><a href="https://twitter.com/intent/tweet?url={{ .Permalink }}"
-                                       uk-icon="icon: twitter" onclick="ga('send', 'event', 'Social', 'click', 'Sharing to Twitter');window.open(this.href,
-  '', 'menubar=no,toolbar=no,resizable=yes,scrollbars=yes,height=600,width=600');return false;"></a></li>
-                                <li><a href="http://pinterest.com/pin/create/link/?url={{ .Permalink }}"
+                                       uk-icon="icon: twitter" onclick='getOutboundLink("outbound", {{printf "%s%s" "https://twitter.com/intent/tweet?url=" .Permalink }});window.open(this.href,
+  "", "menubar=no,toolbar=no,resizable=yes,scrollbars=yes,height=600,width=600");return false;'></a></li>
+                                <li><a href="https://pinterest.com/pin/create/link/?url={{ .Permalink }}"
                                        uk-icon="icon: pinterest"
-                                       onclick="ga('send', 'event', 'Social', 'click', 'Sharing to Pinterest');window.open(this.href,
-  '', 'menubar=no,toolbar=no,resizable=yes,scrollbars=yes,height=600,width=600');return false;"></a></li>
+                                       onclick='getOutboundLink("outbound", {{printf "%s%s" "https://pinterest.com/pin/create/link/?url=" .Permalink }});window.open(this.href,
+  "", "menubar=no,toolbar=no,resizable=yes,scrollbars=yes,height=600,width=600");return false;'></a></li>
                             </ul>
                         </div>
 

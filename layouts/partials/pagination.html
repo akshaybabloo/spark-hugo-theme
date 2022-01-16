@@ -3,14 +3,14 @@
     <ul class="uk-pagination uk-flex-center" uk-margin>
         {{ with $pag.First }}
             <li>
-                <a onclick="ga('send', 'event', 'Pagination', 'click', 'Go to first')" href="{{ .URL }}"
+                <a href="{{ .URL }}"
                    class="page-link" aria-label="First"><span aria-hidden="true">&laquo;&laquo; first</span></a>
             </li>
         {{ end }}
 
         {{ if $pag.HasPrev }}
             <li>
-                <a onclick="ga('send', 'event', 'Pagination', 'click', 'Go back')" href="{{ $pag.Prev.URL }}"
+                <a href="{{ $pag.Prev.URL }}"
                    aria-label="Previous"><span aria-hidden="true">&laquo; prev</span></a>
             </li>
         {{ else }}
@@ -33,10 +33,9 @@
             {{ end }}
             {{ if $showNumber }}
                 {{ if eq . $pag }}
-                    <li class="uk-active"><span class="uk-badge">{{ .PageNumber }}</span></li>
+                    <li class="uk-active"><span style="text-decoration: underline">{{ .PageNumber }}</span></li>
                 {{ else }}
-                    <li><a onclick="ga('send', 'event', 'Pagination', 'click', 'Go to page: {{ .PageNumber }}')"
-                           href="{{ .URL }}"><span>{{ .PageNumber }}</span></a></li>
+                    <li><a href="{{ .URL }}"><span>{{ .PageNumber }}</span></a></li>
                 {{ end }}
             {{ else if ($.Scratch.Get "__paginator.shouldEllipse") }}
                 <li class="uk-disabled"><span aria-hidden="true">&nbsp;&hellip;&nbsp;</span></li>
@@ -46,7 +45,7 @@
 
         {{ if $pag.HasNext }}
             <li>
-                <a onclick="ga('send', 'event', 'Pagination', 'click', 'Go forward')" href="{{ $pag.Next.URL }}"
+                <a href="{{ $pag.Next.URL }}"
                    aria-label="Next"><span aria-hidden="true">next &raquo;</span></a>
             </li>
         {{ else }}
@@ -57,7 +56,7 @@
 
         {{ with $pag.Last }}
             <li>
-                <a onclick="ga('send', 'event', 'Pagination', 'click', 'Go to last')" href="{{ .URL }}"
+                <a href="{{ .URL }}"
                    aria-label="Last"><span aria-hidden="true">last &raquo;&raquo;</span></a>
             </li>
         {{ end }}
