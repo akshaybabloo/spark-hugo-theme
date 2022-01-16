@@ -5,24 +5,14 @@
 
 <title>{{ if ne .Site.Title .Title }}{{.Title}} &mdash; {{ end }}{{.Site.Title}}</title>
 
-<meta name="robots" content="index, follow">
-
 {{ if (isset .Params "externalurl") }}
 <meta http-equiv="refresh" content="2;url={{ .Params.externalurl }}" />
 {{ end -}}
 
-<link rel="shortcut icon" href="{{`img/favicon.ico` | relURL}}" />
-<link rel="icon" type="image/x-icon" sizes="16x16 32x32" href="{{`img/favicon.ico` | relURL}}">
-<link rel="apple-touch-icon" sizes="152x152" href="{{`img/favicon-152-precomposed.png` | relURL}}">
-<link rel="apple-touch-icon" sizes="144x144" href="{{`img/favicon-144-precomposed.png` | relURL}}">
-<link rel="apple-touch-icon" sizes="120x120" href="{{`img/favicon-120-precomposed.png` | relURL}}">
-<link rel="apple-touch-icon" sizes="114x114" href="{{`img/favicon-114-precomposed.png` | relURL}}">
-<link rel="apple-touch-icon" sizes="180x180" href="{{`img/favicon-180-precomposed.png` | relURL}}">
-<link rel="apple-touch-icon" sizes="72x72" href="{{`img/favicon-72-precomposed.png` | relURL}}">
-<link rel="apple-touch-icon" href="{{`img/favicon-57.png` | relURL}}">
-<link rel="icon" href="{{`img/favicon-32.png` | relURL}}" sizes="32x32">
-<link rel="manifest" href="{{`img/manifest.json` | relURL}}">
-<link rel="icon" sizes="192x192" href="{{`img/favicon-192.png` | relURL}}">
+<link rel="icon" type="image/x-icon" sizes="16x16 32x32" href="/img/favicon.ico">
+<link rel="apple-touch-icon" sizes="180x180" href="/img/favicon-180-precomposed.png">
+<link rel="manifest" href="/img/manifest.json">
+<link rel="icon" sizes="192x192" href="/img/favicon-192.png">
 
 <link rel="canonical" href="{{ .Permalink }}"/>
 <link rel="alternate" type="application/rss+xml" title="RSS Feed for {{ .Site.Title }}" href="{{ `index.xml` | absURL }}" />
