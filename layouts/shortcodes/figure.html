@@ -1,6 +1,6 @@
 <figure>
     {{ with .Get "link"}}<a href="{{.}}">{{ end }}
-        <img data-src="{{ .Get "src" }}" {{ with .Get "class" }}class="{{.}}"{{ end }} {{ if or (.Get "alt") (.Get "caption") }}alt="{{ with .Get "alt"}}{{.}}{{else}}{{ .Get "caption" }}{{ end }}"{{ end }} uk-img>
+        <img data-src="{{ .Get "src" }}" {{ with .Get "width" }}width="{{.}}"{{ end }} {{ with .Get "class" }}class="{{.}}"{{ end }} {{ if or (.Get "alt") (.Get "caption") }}alt="{{ with .Get "alt"}}{{.}}{{else}}{{ .Get "caption" }}{{ end }}"{{ end }} uk-img>
     {{ if .Get "link"}}</a>{{ end }}
     {{ if or (or (.Get "title") (.Get "caption")) (.Get "attr")}}
     <figcaption>{{ if isset .Params "title" }}
