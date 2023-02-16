@@ -1,0 +1,1 @@
+google.com, pub-{{.Site.Params.googleAds}}, DIRECT, f08c47fec0942fa0

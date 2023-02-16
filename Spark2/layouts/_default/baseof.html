@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {{- partial "head.html" . -}}
+    {{ partial "profileOGPSEO.html" . }}
+    {{- block "head" . }}{{- end }}
+</head>
+<body>
+<div id="profile" class="flex flex-col h-screen justify-between">
+    {{- partial "nav.html" . -}}
+    <div class="mb-auto w-auto px-6 py-12 bg-gray-800 w-screen lg:max-w-7xl md:mx-auto mt-6 xl:rounded-xl">
+        <div class="mt-8 prose prose-invert mx-auto lg:prose-lg max-w-none prose-li:leading-4 break-words text-justify">
+            {{- block "main" . }}{{- end }}
+        </div>
+    </div>
+
+    {{- partial "footer.html" . -}}
+    {{- partial "search.html" . -}}
+</div>
+{{- partial "scripts.html" . -}}
+
+{{ if .Params.video }}
+<link href="/css/video-js.min.css" rel="stylesheet">
+<script src="/js/video.min.js"></script>
+{{ end }}
+</body>
+</html>

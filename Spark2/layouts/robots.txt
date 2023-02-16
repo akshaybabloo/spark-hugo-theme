@@ -1,0 +1,10 @@
+User-agent: *
+Sitemap: {{.Site.BaseURL}}sitemap.xml
+{{- if .Site.Params.seo.noIndexCategories }}
+Disallow: /categories/
+Noindex: /categories/
+{{- end }}
+{{- if .Site.Params.seo.noIndexTags }}
+Disallow: /tags/
+Noindex: /tags/
+{{- end }}

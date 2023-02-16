@@ -1,0 +1,23 @@
+<script>
+    const algoliaAppId = {{.Site.Params.algoliaAppId}}
+    const algoliaApiKey = {{.Site.Params.algoliaApiKey}}
+    const algoliaIndexName = {{.Site.Params.algoliaIndexName}}
+</script>
+
+{{ if eq (getenv "HUGO_ENV") "production" }}
+<script src="/js/runtime.min.js"></script>
+<script src="/js/vendors.min.js"></script>
+<script src="/js/main.min.js"></script>
+{{ else }}
+<script src="/js/runtime.js"></script>
+<script src="/js/vendors.js"></script>
+<script src="/js/main.js"></script>
+{{ end }}
+
+{{ range .Params.htmlScripts }}
+    <script src="{{ . }}" async></script>
+{{ end }}
+
+{{ if .Params.ads }}
+    {{- partial "ads.html" . -}}
+{{ end }}
