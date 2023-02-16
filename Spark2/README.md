@@ -12,6 +12,8 @@ It uses the following technologies:
 - [TypeScript](https://www.typescriptlang.org/) - For type checking
 - [Gulp](https://gulpjs.com/) - For moving static files
 
+![Spark-2 Screenshot](https://github.com/akshaybabloo/gollahalli.com/raw/master/screeshot/spark2-home-page.png)
+
 ## Features
 
 - Responsive, uses [UiKit v3](https://github.com/uikit/uikit/)
