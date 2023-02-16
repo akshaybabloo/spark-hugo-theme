@@ -1,0 +1,9 @@
+{
+    "modules": false,
+    "plugins": {
+        "postcss-import": {},
+        "tailwindcss/nesting": {},
+        "tailwindcss": {},
+        "autoprefixer": {}
+    }
+}
