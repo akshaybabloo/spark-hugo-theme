@@ -1,0 +1,15 @@
+{{define "main"}}
+
+{{.Content}}
+
+{{ range $k, $i := .Site.Data.Experience }}
+<h2>{{$k}}</h2>
+{{ partial "experience.html" . }}
+{{ end }}
+
+{{ range $k, $i := .Site.Data.Education }}
+<h2>{{$k}}</h2>
+{{ partial "education.html" . }}
+{{ end }}
+
+{{end}}

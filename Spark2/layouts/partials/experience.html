@@ -1,0 +1,27 @@
+<table class="table-auto prose-p:leading-4">
+    <tbody>
+    {{ $present := where . "to" "Present" }}
+    {{ range sort $present "from" "desc" }}
+        <tr class="bg-gray-600">
+            <td class="!pl-2">{{ dateFormat "January, 2006" .from }} - {{ .to }}</td>
+            <td>
+                {{ .title }}
+                <p>{{ if .company }}{{ .company }},{{ end }} {{ .where }}</p>
+                <p>{{ if .description }}{{ .description }}{{end}}</p>
+            </td>
+        </tr>
+    {{ end }}
+
+    {{ $noPresent := where . "to" "!=" "Present" }}
+    {{ range sort $noPresent "from" "desc" }}
+        <tr>
+            <td class="!pl-2">{{ dateFormat "January, 2006" .from }} - {{ dateFormat "January, 2006" .to }}</td>
+            <td>
+                {{ .title }}
+                <p>{{ if .company }}{{ .company }},{{ end }} {{ .where }}</p>
+                <p>{{ if .description }}{{ .description }}{{ end }}</p>
+            </td>
+        </tr>
+    {{ end }}
+    </tbody>
+</table>
