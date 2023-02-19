@@ -6,8 +6,6 @@
 
 {{ if eq (getenv "HUGO_ENV") "production" }}
 <link rel="preload" href="/css/main.min.css" as="style">
-{{ else }}
-<link rel="preload" href="/css/main.css" as="style">
 {{ end }}
 
 {{ if eq (getenv "HUGO_ENV") "production" }}
@@ -73,5 +71,5 @@
 {{ if eq (getenv "HUGO_ENV") "production" }}
 <link rel="stylesheet" href="/css/main.min.css">
 {{ else }}
-<link rel="stylesheet" href="/css/main.css">
+<link rel="stylesheet" href="/css/main.css?v={{now.Unix}}">
 {{ end }}

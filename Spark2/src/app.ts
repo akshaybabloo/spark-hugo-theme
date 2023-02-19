@@ -12,7 +12,8 @@ import {
     reddit,
     search,
     times,
-    twitter
+    twitter,
+    maximize
 } from "./icons";
 import algoliasearch from "algoliasearch/lite";
 import {groupBy, includes} from "lodash";
@@ -39,6 +40,7 @@ createApp({
             mail: mail.html.pop(),
             externalLink: externalLink.html.pop(),
             link: link.html.pop(),
+            maximize: maximize.html.pop(),
 
             searchText: "",
             hits: [],
@@ -58,6 +60,23 @@ createApp({
             } else {
                 searchModel.classList.add("hidden");
             }
+        },
+        maximizeImage: function (event: PointerEvent) {
+            const imageModel = this.$refs.imageModel as HTMLDivElement;
+            const imageModelImage = this.$refs.imageModelImage as HTMLImageElement;
+            const imageTarget = event?.target as HTMLImageElement;
+            if (includes(imageModel.classList, "hidden")) {
+                imageModel.classList.remove("hidden");
+            } else {
+                imageModel.classList.add("hidden");
+            }
+
+            if (imageTarget.src === undefined) {
+                return;
+            }
+
+            imageModelImage.src = imageTarget.src;
+            
         },
         searchAlgolia: function (event: HTMLInputElement) {
             if (this.searchText === "") {

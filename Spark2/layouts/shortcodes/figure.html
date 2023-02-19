@@ -1,16 +1,21 @@
-<figure>
-    {{ with .Get "link"}}<a href="{{.}}">{{ end }}
-        <img src="{{ .Get "src" }}" {{ with .Get "width" }}width="{{.}}"{{ end }} class="mx-auto" {{ if or (.Get "alt") (.Get "caption") }}alt="{{ with .Get "alt"}}{{.}}{{else}}{{ .Get "caption" }}{{ end }}"{{ end }}>
-    {{ if .Get "link"}}</a>{{ end }}
-    {{ if or (or (.Get "title") (.Get "caption")) (.Get "attr")}}
-    <figcaption>{{ if isset .Params "title" }}
-        <h4 class="text-center !my-1">{{ .Get "title" }}</h4>{{ end }}
-        {{ if or (.Get "caption") (.Get "attr")}}<p>
-        {{ .Get "caption" }}
-        {{ with .Get "attrlink"}}<a href="{{.}}"> {{ end }}
-            {{ .Get "attr" }}
-        {{ if .Get "attrlink"}}</a> {{ end }}
-        </p> {{ end }}
-    </figcaption>
-    {{ end }}
-</figure>
+<div class="relative flex justify-center">
+    <figure class="group/item cursor-pointer">
+        {{ with .Get "link"}}<a href="{{.}}">{{ end }}
+            <img class="hover:opacity-50" src="{{ .Get "src" }}" ref="imgs" @click="maximizeImage($event)" {{ with .Get "width" }}width="{{.}}"{{ end }} {{ if or (.Get "alt") (.Get "caption") }}alt="{{ with .Get "alt"}}{{.}}{{else}}{{ .Get "caption" }}{{ end }}"{{ end }}>
+        {{ if .Get "link"}}</a>{{ end }}
+            <div class="invisible group-hover/item:visible absolute m-auto top-1/2 right-1/2 -translate-x-1/2 -translate-y-1/2">
+                <i v-html="maximize" class="text-black" aria-hidden="true" @click="maximizeImage"></i>
+            </div>
+        {{ if or (or (.Get "title") (.Get "caption")) (.Get "attr")}}
+        <figcaption>{{ if isset .Params "title" }}
+            <h4 class="text-center !my-1">{{ .Get "title" }}</h4>{{ end }}
+            {{ if or (.Get "caption") (.Get "attr")}}<p>
+            {{ .Get "caption" }}
+            {{ with .Get "attrlink"}}<a href="{{.}}"> {{ end }}
+                {{ .Get "attr" }}
+            {{ if .Get "attrlink"}}</a> {{ end }}
+            </p> {{ end }}
+        </figcaption>
+        {{ end }}
+    </figure>
+</div>
