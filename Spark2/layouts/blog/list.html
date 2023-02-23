@@ -23,7 +23,7 @@
         {{ range $index, $element := .Pages }}
         <article>
             {{ if .Params.images }}
-            <a href="{{.Permalink}}"><img class="p-1 rounded-md md:object-scale-down mx-auto w-8/12"
+            <a href="{{.RelPermalink}}"><img class="p-1 rounded-md md:object-scale-down mx-auto w-8/12"
                                           src="{{ index .Params.images 0 }}" alt="{{ .Title }}"></a>
             {{ end }}
 
@@ -54,7 +54,7 @@
                     <div class="mb-3">
 
                         <h2 class="!my-0 inline-block text-white transition-colors duration-200 hover:text-deep-purple-accent-700">
-                            <a href="{{.Permalink}}" aria-label="Article"
+                            <a href="{{.RelPermalink}}" aria-label="Read more about {{.Title}}"
                                class="text-3xl font-extrabold leading-none sm:text-4xl xl:text-4xl !no-underline"> {{.Title}}</a>
                         </h2>
 
