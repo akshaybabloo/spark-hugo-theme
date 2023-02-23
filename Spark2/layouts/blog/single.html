@@ -47,7 +47,7 @@
         {{ range $index, $element := .Params.siteMapImages }}
             {{if eq $index 0 }}
             <figure>
-                <img class="mx-auto rounded-lg object-contain" width="600" src="{{ .imageLoc | absURL }}" alt="{{ .imageCaption }}">
+                <img class="mx-auto rounded-lg object-contain" width="600" src="{{ .imageLoc | relURL }}" alt="{{ .imageCaption }}">
             </figure>
             {{end}}
         {{end}}
