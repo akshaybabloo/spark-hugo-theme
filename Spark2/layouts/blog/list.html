@@ -17,69 +17,73 @@
 <h1>{{.Title}}</h1>
 
 <div class="px-4 py-11 mx-auto sm:max-w-xl md:max-w-full lg:max-w-screen-xl md:px-24 lg:px-8 lg:py-10">
-    <div class="divide-y">
 
-        {{ range (.Paginate (.Pages.GroupByPublishDate "2006")).PageGroups }}
-        {{ range $index, $element := .Pages }}
-        <article>
-            {{ if .Params.images }}
-            <a href="{{.RelPermalink}}"><img class="p-1 rounded-md md:object-scale-down mx-auto w-8/12"
-                                          src="{{ index .Params.images 0 }}" alt="{{ .Title }}"></a>
-            {{ end }}
+    {{ $pageGroup := (.Paginate (.Pages.GroupByPublishDate "2006")).PageGroups }}
+    {{$lenPageGroup := len $pageGroup}}
 
-            <div class="grid sm:grid-cols-3">
-                <div class="mb-4 sm:mb-0">
-                    <div class="space-y-1 text-xs font-semibold tracking-wide uppercase">
+    {{ range $pageGroupIndex, $pageGroupElement := $pageGroup }}
+    {{ $pages := $pageGroupElement.Pages}}
+    {{$lenPages := len $pages}}
 
-                        <p>
-                            {{ range .Params.tags }}
-                            <span class="text-xs font-medium inline-flex items-center px-2.5 py-0.5 rounded mr-2 bg-gray-700 text-gray-300 md:mt-1 sm:mt-1">
-                            <i v-html="hashTag" class="mr-1"></i>
-                          {{.}}
+    {{ range $pageIndex, $pageElement := $pages }}
+    <article>
+        {{ if .Params.images }}
+        <a href="{{.RelPermalink}}"><img class="p-1 rounded-md md:object-scale-down mx-auto w-8/12"
+                                        src="{{ index .Params.images 0 }}" alt="{{ .Title }}"></a>
+        {{ end }}
+
+        <div class="grid sm:grid-cols-3">
+            <div class="mb-4 sm:mb-0">
+                <div class="space-y-1 text-xs font-semibold tracking-wide uppercase">
+
+                    <p>
+                        {{ range .Params.tags }}
+                        <span class="text-xs font-medium inline-flex items-center px-2.5 py-0.5 rounded mr-2 bg-gray-700 text-gray-300 md:mt-1 sm:mt-1">
+                        <i v-html="hashTag" class="mr-1"></i>
+                        {{.}}
                         </span>
-                            {{end}}
-                        </p>
-
-                        <p class="text-gray-400">                        
-                            <time datetime="{{.PublishDate}}" itemprop="datePublished">{{.PublishDate.Format "02 Jan 2006"}}</time>
-                        </p>
-                        {{ if not (eq .Lastmod .Date) }}
-                        <p class="text-gray-400">
-                            <time datetime="{{.Lastmod}}" itemprop="dateModified">(Modified on {{.Lastmod.Format "02 Jan 2006"}})</time>
-                        </p>
-                        {{ end }}
-                    </div>
-                </div>
-                <div class="sm:col-span-3 lg:col-span-2">
-                    <div class="mb-3">
-
-                        <h2 class="!my-0 inline-block text-white transition-colors duration-200 hover:text-deep-purple-accent-700">
-                            <a href="{{.RelPermalink}}" aria-label="Read more about {{.Title}}"
-                               class="text-3xl font-extrabold leading-none sm:text-4xl xl:text-4xl !no-underline"> {{.Title}}</a>
-                        </h2>
-
-                    </div>
-
-                    <p class="text-gray-300">
-                        {{.Description}}
+                        {{end}}
                     </p>
+
+                    <p class="text-gray-400">                        
+                        <time datetime="{{.PublishDate}}" itemprop="datePublished">{{.PublishDate.Format "02 Jan 2006"}}</time>
+                    </p>
+                    {{ if not (eq .Lastmod .Date) }}
+                    <p class="text-gray-400">
+                        <time datetime="{{.Lastmod}}" itemprop="dateModified">(Modified on {{.Lastmod.Format "02 Jan 2006"}})</time>
+                    </p>
+                    {{ end }}
                 </div>
             </div>
-        </article>
-        <ins class="adsbygoogle"
-        style="display:block"
-        data-ad-client="ca-pub-7450383714878520"
-        data-ad-slot="1601009013"
-        data-ad-format="auto"
-        data-full-width-responsive="true"></ins>
-        {{end}}
+            <div class="sm:col-span-3 lg:col-span-2">
+                <div class="mb-3">
+                    <h2 class="!my-0 inline-block text-white transition-colors duration-200 hover:text-deep-purple-accent-700">
+                        <a href="{{.RelPermalink}}" aria-label="Read more about {{.Title}}"
+                            class="text-3xl font-extrabold leading-none sm:text-4xl xl:text-4xl !no-underline"> {{.Title}}</a>
+                    </h2>
+                </div>
+            </div>
+        </div>
+        <p class="text-gray-300 text-justify">
+            {{.Description}}
+        </p>
+    </article>
+    <ins class="adsbygoogle"
+    style="display:block"
+    data-ad-client="ca-pub-7450383714878520"
+    data-ad-slot="1601009013"
+    data-ad-format="auto"
+    data-full-width-responsive="true"></ins>
+        {{ if or (ne $lenPageGroup (add $pageGroupIndex 1)) (ne $lenPages (add $pageIndex 1)) }}
+            <hr class="h-px my-8 bg-gray-500 border-0">
         {{end}}
 
+    {{end}}
+    {{end}}
 
     </div>
-</div>
 
 {{ partial "pagination.html" . }}
 
 
-        {{end}}
+{{end}}
