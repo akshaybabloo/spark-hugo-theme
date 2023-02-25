@@ -61,22 +61,19 @@ createApp({
                 searchModel.classList.add("hidden");
             }
         },
-        maximizeImage: function (event: PointerEvent) {
+        toggleMaximizeImage: function () {
             const imageModel = this.$refs.imageModel as HTMLDivElement;
-            const imageModelImage = this.$refs.imageModelImage as HTMLImageElement;
-            const imageTarget = event?.target as HTMLImageElement;
+            const imageModelSrc = this.$refs.imageModelSrc as HTMLImageElement;
             if (includes(imageModel.classList, "hidden")) {
                 imageModel.classList.remove("hidden");
             } else {
                 imageModel.classList.add("hidden");
+                imageModelSrc.src = "";
             }
-
-            if (imageTarget.src === undefined) {
-                return;
-            }
-
-            imageModelImage.src = imageTarget.src;
-            
+        },
+        maximizeImage: function (event: PointerEvent, imgSrc: string) {
+            const imageModelSrc = this.$refs.imageModelSrc as HTMLImageElement;
+            imageModelSrc.src = imgSrc;            
         },
         searchAlgolia: function (event: HTMLInputElement) {
             if (this.searchText === "") {
