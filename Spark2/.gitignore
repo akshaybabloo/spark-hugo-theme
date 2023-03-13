@@ -2,8 +2,15 @@ node_modules/
 
 /static/css/main.*
 /static/css/video*
+/static/css/style.*
+/static/css/fira*
+
 /static/js/video*
 /static/js/main*
 /static/js/vendors*
 /static/js/runtime*
-/static/css/style.*
+
+/static/fonts/*
+*.woff*
+
+/src/*.css

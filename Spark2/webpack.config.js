@@ -48,7 +48,16 @@ module.exports = (env, argv) => {
                             loader: 'babel-loader'
                         }
                     ]
-                }
+                },
+                {
+                    test: /\.(woff|woff2|eot|ttf|otf)$/i,
+                    type: 'asset/resource',
+                    generator: {  //If emitting file, the file path is
+                        filename: 'fonts/[name][ext]',
+                        // publicPath: "fonts/",
+                        outputPath: "static/fonts/"
+                    }
+                },
             ]
         },
         resolve: {
