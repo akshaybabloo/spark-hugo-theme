@@ -55,7 +55,7 @@ module.exports = (env, argv) => {
                     generator: {  //If emitting file, the file path is
                         filename: 'fonts/[name][ext]',
                         // publicPath: "fonts/",
-                        outputPath: "static/fonts/"
+                        outputPath: "static/"
                     }
                 },
             ]
