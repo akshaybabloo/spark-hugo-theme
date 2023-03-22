@@ -1,7 +1,0 @@
-<a class="uk-display-block uk-card uk-card-body uk-card-default uk-border-rounded" onclick='getOutboundLink("outbound", {{ .Params.externalurl }})' href="{{ .Params.externalurl }}">
-    <h4 class="uk-card-title">{{ .Title }} {{ if (isset .Params "externalurl") }}<img class="uk-icon" width="12"
-                                                                                      src="{{ `/img/external-link.svg` | relURL }}"
-                                                                                      uk-svg alt="New window icon">{{end}}</h4>
-    <p>{{ .Params.description }}</p>
-    <p>Built with: {{ range .Params.tags }}<span class="uk-label">{{ . }}</span> {{ end }}</p>
-</a>
