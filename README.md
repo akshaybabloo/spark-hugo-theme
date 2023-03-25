@@ -14,7 +14,7 @@ It uses the following technologies:
 - [TypeScript](https://www.typescriptlang.org/) - For type checking
 - [Gulp](https://gulpjs.com/) - For moving static files
 
-![Spark-2 Screenshot](https://github.com/akshaybabloo/gollahalli.com/raw/master/screeshot/spark2-home-page.png)
+![Spark-2 Screenshot](https://raw.githubusercontent.com/akshaybabloo/spark-hugo-theme/spark-2/screenshots/spark2-home-page.jpeg)
 
 ## Features
 
