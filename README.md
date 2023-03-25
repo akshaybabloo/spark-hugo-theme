@@ -25,7 +25,7 @@ By default, a dark and responsive Hugo theme. Typography used is Space Mono, mon
 - [1.4. Development](#14-development)
 - [1.5. License](#15-license)
 
-![Spark Screenshot](https://github.com/akshaybabloo/gollahalli.com/raw/master/screeshot/spark2-home-page.png)
+![Spark Screenshot](https://raw.githubusercontent.com/akshaybabloo/spark-hugo-theme/spark-1/screenshots/spark-home-page.png)
 
 ## 1.1. Features
 
