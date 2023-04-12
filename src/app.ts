@@ -13,7 +13,8 @@ import {
     search,
     times,
     twitter,
-    maximize
+    maximize,
+    pen
 } from "./icons";
 import algoliasearch from "algoliasearch/lite";
 import {groupBy, includes} from "lodash";
@@ -41,6 +42,7 @@ createApp({
             externalLink: externalLink.html.pop(),
             link: link.html.pop(),
             maximize: maximize.html.pop(),
+            pen: pen.html.pop(),
 
             searchText: "",
             hits: [],
