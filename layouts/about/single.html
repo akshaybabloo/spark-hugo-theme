@@ -4,12 +4,16 @@
 
 {{ range $k, $i := .Site.Data.Experience }}
 <h2>{{$k}}</h2>
-{{ partial "experience.html" . }}
-{{ end }}
+<div class="not-prose">
+    {{ partial "experience.html" . }}
+    {{ end }}
+</div>
 
 {{ range $k, $i := .Site.Data.Education }}
 <h2>{{$k}}</h2>
-{{ partial "education.html" . }}
-{{ end }}
+<div class="not-prose">
+    {{ partial "education.html" . }}
+    {{ end }}
+</div>
 
 {{end}}

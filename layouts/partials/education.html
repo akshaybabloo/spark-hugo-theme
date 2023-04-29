@@ -1,13 +1,10 @@
-<table class="table-auto prose-p:leading-4">
-    <tbody>
-        {{ range sort . "from" "desc" }}
-            <tr>
-                <td class="!pl-2">{{.from}} - {{.to}}</td>
-                <td>
-                    {{.title}}
-                    <p>{{if .company }}{{.company}},{{end}} {{.where}}</p>
-                </td>
-            </tr>
-        {{ end }}
-    </tbody>
-</table>
+<ol class="relative border-l border-gray-700">
+    {{ range sort . "from" "desc" }}              
+    <li class="mb-5 ml-4">
+        <div class="absolute w-3 h-3 rounded-full mt-3 -left-1.5 border border-gray-900 bg-gray-700"></div>
+        <time class="mb-1 text-sm font-normal leading-none text-gray-500">{{ .from }} - {{.to}}</time>
+        <h3 class="text-lg font-semibold text-white">{{ .title }}</h3>
+        <p class="mb-4 text-base font-normal text-gray-400">{{if .company }}{{.company}},{{end}} {{.where}}</p>
+    </li>
+    {{ end }}
+</ol>
