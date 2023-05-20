@@ -28,7 +28,7 @@
     {{ range $pageIndex, $pageElement := $pages }}
     <article>
         {{ if .Params.images }}
-        <a href="{{.RelPermalink}}"><img class="p-1 rounded-md md:object-scale-down mx-auto w-8/12"
+        <a href="{{.RelPermalink}}"><img class="p-1 rounded-md md:object-scale-down mx-auto md:w-8/12"
                                         src="{{ index .Params.images 0 }}" alt="{{ .Title }}"></a>
         {{ end }}
 
