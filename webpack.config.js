@@ -68,7 +68,9 @@ module.exports = (env, argv) => {
         },
         optimization: {
             minimizer: [
-                new CssMinimizerPlugin(),
+                new CssMinimizerPlugin({
+                    parallel: true,
+                }),
                 new ForkTsCheckerWebpackPlugin(),
                 new TerserPlugin()
             ],
