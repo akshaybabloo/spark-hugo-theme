@@ -54,7 +54,21 @@ createApp({
 			showMenu: true,
 		};
 	},
+    mounted() {
+        document.addEventListener('keydown', this.escapeKeyListener);
+    },
+    beforeUnmount() {
+        document.removeEventListener('keydown', this.escapeKeyListener);
+    },
 	methods: {
+        escapeKeyListener(e: KeyboardEvent) {
+            if (e.key === 'Escape') {
+                const searchModel = this.$refs.searchModel as HTMLDivElement;
+                if (!searchModel.classList.contains("hidden")) {
+                    this.showSearchToggle();
+                }
+            }
+        },
 		showMenuToggle: function () {
 			this.showMenu = !this.showMenu;
 		},
