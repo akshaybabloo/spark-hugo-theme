@@ -14,7 +14,9 @@ import {
     times,
     twitter,
     maximize,
-    pen
+    pen,
+    arrowLeft,
+    arrowRight
 } from "./icons";
 import algoliasearch from "algoliasearch/lite";
 import {groupBy, includes} from "lodash";
@@ -43,6 +45,8 @@ createApp({
             link: link.html.pop(),
             maximize: maximize.html.pop(),
             pen: pen.html.pop(),
+            arrowRight: arrowRight.html.pop(),
+            arrowLeft: arrowLeft.html.pop(),
 
             searchText: "",
             hits: [],

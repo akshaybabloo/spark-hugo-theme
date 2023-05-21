@@ -1,6 +1,6 @@
 import {icon, library,} from '@fortawesome/fontawesome-svg-core'
 import {faFacebook, faGithub, faLinkedin, faPinterest, faReddit, faTwitter} from '@fortawesome/free-brands-svg-icons';
-import {faEnvelope, faExternalLinkAlt, faHashtag, faSearch, faTimes, faLink, faMaximize, faPen} from '@fortawesome/free-solid-svg-icons';
+import {faEnvelope, faExternalLinkAlt, faHashtag, faSearch, faTimes, faLink, faMaximize, faPen, faArrowRight, faArrowLeft} from '@fortawesome/free-solid-svg-icons';
 
 library.add(
     faGithub,
@@ -16,7 +16,9 @@ library.add(
     faExternalLinkAlt,
     faLink,
     faMaximize,
-    faPen
+    faPen,
+    faArrowRight,
+    faArrowLeft
 )
 
 export const linkedin = icon({prefix: 'fab', iconName: 'linkedin'}, {transform: {size: 30}});
@@ -34,3 +36,5 @@ export const mail = icon({prefix: 'fas', iconName: 'envelope'}, {transform: {siz
 export const link = icon({prefix: 'fas', iconName: 'link'}, {transform: {size: 10}});
 export const maximize = icon({prefix: 'fas', iconName: 'maximize'}, {transform: {size: 30}});
 export const pen = icon({prefix: 'fas', iconName: 'pen'});
+export const arrowRight = icon({prefix: 'fas', iconName: 'arrow-right'});
+export const arrowLeft = icon({prefix: 'fas', iconName: 'arrow-left'});
