@@ -19,7 +19,7 @@ import {
     arrowRight
 } from "./icons";
 import algoliasearch from "algoliasearch/lite";
-import {groupBy, includes} from "lodash";
+import {groupBy} from "lodash";
 import { Icon } from '@fortawesome/fontawesome-svg-core';
 
 
@@ -75,7 +75,7 @@ createApp({
         toggleMaximizeImage: function () {
             const imageModel = this.$refs.imageModel as HTMLDivElement;
             const imageModelSrc = this.$refs.imageModelSrc as HTMLImageElement;
-            if (includes(imageModel.classList, "hidden")) {
+            if (imageModel.classList.contains("hidden")) {
                 imageModel.classList.remove("hidden");
             } else {
                 imageModel.classList.add("hidden");
