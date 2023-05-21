@@ -19,18 +19,13 @@ import {
     arrowRight
 } from "./icons";
 import algoliasearch from "algoliasearch/lite";
-import {groupBy} from "lodash";
-import { Icon } from '@fortawesome/fontawesome-svg-core';
+import { groupBy, getIconHtml } from "./utils";
 
 
 // @ts-ignore
 const client = algoliasearch(algoliaAppId, algoliaApiKey);
 // @ts-ignore
 const index = client.initIndex(algoliaIndexName);
-
-function getIconHtml(icon: Icon) {
-    return icon.html.pop();
-}
 
 createApp({
     data() {
