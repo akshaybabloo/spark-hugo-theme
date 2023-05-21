@@ -20,6 +20,7 @@ import {
 } from "./icons";
 import algoliasearch from "algoliasearch/lite";
 import {groupBy, includes} from "lodash";
+import { Icon } from '@fortawesome/fontawesome-svg-core';
 
 
 // @ts-ignore
@@ -27,26 +28,30 @@ const client = algoliasearch(algoliaAppId, algoliaApiKey);
 // @ts-ignore
 const index = client.initIndex(algoliaIndexName);
 
+function getIconHtml(icon: Icon) {
+    return icon.html.pop();
+}
+
 createApp({
     data() {
         return {
             // icons
-            linkedin: linkedin.html.pop(),
-            github: github.html.pop(),
-            twitter: twitter.html.pop(),
-            search: search.html.pop(),
-            times: times.html.pop(),
-            hashTag: hashTag.html.pop(),
-            facebook: facebook.html.pop(),
-            pinterest: pinterest.html.pop(),
-            reddit: reddit.html.pop(),
-            mail: mail.html.pop(),
-            externalLink: externalLink.html.pop(),
-            link: link.html.pop(),
-            maximize: maximize.html.pop(),
-            pen: pen.html.pop(),
-            arrowRight: arrowRight.html.pop(),
-            arrowLeft: arrowLeft.html.pop(),
+            linkedin: getIconHtml(linkedin),
+            github: getIconHtml(github),
+            twitter: getIconHtml(twitter),
+            search: getIconHtml(search),
+            times: getIconHtml(times),
+            hashTag: getIconHtml(hashTag),
+            facebook: getIconHtml(facebook),
+            pinterest: getIconHtml(pinterest),
+            reddit: getIconHtml(reddit),
+            mail: getIconHtml(mail),
+            externalLink: getIconHtml(externalLink),
+            link: getIconHtml(link),
+            maximize: getIconHtml(maximize),
+            pen: getIconHtml(pen),
+            arrowRight: getIconHtml(arrowRight),
+            arrowLeft: getIconHtml(arrowLeft),
 
             searchText: "",
             hits: [],
