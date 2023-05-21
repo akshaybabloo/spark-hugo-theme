@@ -61,7 +61,7 @@ createApp({
         },
         showSearchToggle: function () {
             const searchModel = this.$refs.searchModel as HTMLDivElement;
-            if (includes(searchModel.classList, "hidden")) {
+            if (searchModel.classList.contains("hidden")) {
                 searchModel.classList.remove("hidden");
             } else {
                 searchModel.classList.add("hidden");
@@ -80,6 +80,12 @@ createApp({
         maximizeImage: function (event: PointerEvent, imgSrc: string) {
             const imageModelSrc = this.$refs.imageModelSrc as HTMLImageElement;
             imageModelSrc.src = imgSrc;            
+        },
+        outsideClick: function (event: PointerEvent) {
+            const searchModel = this.$refs.innerContainer as HTMLDivElement;
+            if (!searchModel.contains(event.target as Node)) {
+                this.showSearchToggle();
+            }
         },
         searchAlgolia: function (event: HTMLInputElement) {
             if (this.searchText === "") {
