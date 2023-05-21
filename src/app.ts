@@ -92,19 +92,27 @@ createApp({
                 this.showSearchToggle();
             }
         },
-        searchAlgolia: function (event: HTMLInputElement) {
+        searchAlgolia: async function () {
+            // Clear results when the search text is empty
             if (this.searchText === "") {
-                this.numberOfHits = 0;
                 this.hits = [];
+                this.numberOfHits = 0;
                 return;
             }
-            index.search(this.searchText).then(value => {
-                this.numberOfHits = value.nbHits;
-                // @ts-ignore
+        
+            try {
+                // Get the results from Algolia
+                const value = await index.search(this.searchText);
+        
+                // Update the hits and number of hits
                 this.hits = groupBy(value.hits, "section");
-            }).catch(reason => {
-                console.error(reason);
-            })
+                this.numberOfHits = value.nbHits;
+            } catch (error) {
+                // Log the error and clear the results
+                console.error(error);
+                this.hits = [];
+                this.numberOfHits = 0;
+            }
         }
     }
 }).mount("#profile");
