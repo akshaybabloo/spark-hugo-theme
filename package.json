@@ -24,7 +24,7 @@
     "fork-ts-checker-webpack-plugin": "^8.0.0",
     "gulp": "^4.0.2",
     "gulp-cli": "^2.3.0",
-    "mini-css-extract-plugin": "^2.7.3",
+    "mini-css-extract-plugin": "^2.7.6",
     "postcss": "^8.4.23",
     "postcss-import": "^15.1.0",
     "postcss-loader": "^7.3.0",
