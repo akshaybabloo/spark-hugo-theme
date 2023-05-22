@@ -5,17 +5,17 @@
 <meta http-equiv="X-UA-Compatible" content="ie=edge">
 
 {{ if eq (getenv "HUGO_ENV") "production" }}
-<link rel="preload" href="/css/main.min.css" as="style">
+<link rel="preload" href="/css/main.min.css?v={{now.Unix}}" as="style">
 {{ end }}
 
 {{ if eq (getenv "HUGO_ENV") "production" }}
-<link rel="preload" href="/js/runtime.min.js" as="script">
-<link rel="preload" href="/js/vendors.min.js" as="script">
-<link rel="preload" href="/js/main.min.js" as="script">
+<link rel="preload" href="/js/runtime.min.js?v={{now.Unix}}" as="script">
+<link rel="preload" href="/js/vendors.min.js?v={{now.Unix}}" as="script">
+<link rel="preload" href="/js/main.min.js?v={{now.Unix}}" as="script">
 {{ else }}
-<link rel="preload" href="/js/runtime.js" as="script">
-<link rel="preload" href="/js/vendors.js" as="script">
-<link rel="preload" href="/js/main.js" as="script">
+<link rel="preload" href="/js/runtime.js?v={{now.Unix}}" as="script">
+<link rel="preload" href="/js/vendors.js?v={{now.Unix}}" as="script">
+<link rel="preload" href="/js/main.js?v={{now.Unix}}" as="script">
 {{ end }}
 
 <title>{{ if ne .Site.Title .Title }}{{.Title}} &mdash; {{ end }}{{.Site.Title}}</title>
@@ -69,7 +69,7 @@
 {{ template "_internal/twitter_cards.html" . }}
 
 {{ if eq (getenv "HUGO_ENV") "production" }}
-<link rel="stylesheet" href="/css/main.min.css">
+<link rel="stylesheet" href="/css/main.min.css?v={{now.Unix}}">
 {{ else }}
 <link rel="stylesheet" href="/css/main.css?v={{now.Unix}}">
 {{ end }}

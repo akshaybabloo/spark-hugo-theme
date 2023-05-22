@@ -5,9 +5,9 @@
 </script>
 
 {{ if eq (getenv "HUGO_ENV") "production" }}
-<script src="/js/runtime.min.js"></script>
-<script src="/js/vendors.min.js"></script>
-<script src="/js/main.min.js"></script>
+<script src="/js/runtime.min.js?v={{now.Unix}}"></script>
+<script src="/js/vendors.min.js?v={{now.Unix}}"></script>
+<script src="/js/main.min.js?v={{now.Unix}}"></script>
 {{ else }}
 <script src="/js/runtime.js?v={{now.Unix}}"></script>
 <script src="/js/vendors.js?v={{now.Unix}}"></script>
