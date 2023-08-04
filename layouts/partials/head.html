@@ -31,7 +31,10 @@
 <link rel="icon" sizes="192x192" href="/img/favicon-192.png">
 
 <link rel="canonical" href="{{ .Permalink }}"/>
-<link rel="alternate" type="application/rss+xml" title="RSS Feed for {{ .Site.Title }}" href="{{ `index.xml` | absURL }}" />
+
+{{ range .AlternativeOutputFormats -}}
+    {{ printf `<link rel="%s" type="%s" href="%s" title="%s" />` .Rel .MediaType.Type .Permalink $.Site.Title | safeHTML }}
+{{ end -}}
 
 <meta name="description" content="{{ .Params.description }}"/>
 <meta itemprop="description" content="{{ .Params.description }}"/>

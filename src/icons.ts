@@ -18,6 +18,7 @@ import {
 	faPen,
 	faArrowRight,
 	faArrowLeft,
+	faRss,
 } from "@fortawesome/free-solid-svg-icons";
 
 library.add(
@@ -36,7 +37,8 @@ library.add(
 	faMaximize,
 	faPen,
 	faArrowRight,
-	faArrowLeft
+	faArrowLeft,
+	faRss
 );
 
 export const linkedin = icon(
@@ -66,6 +68,10 @@ export const reddit = icon(
 
 export const search = icon(
 	{ prefix: "fas", iconName: "search" },
+	{ transform: { size: 20 } }
+);
+export const rss = icon(
+	{ prefix: "fas", iconName: "rss" },
 	{ transform: { size: 20 } }
 );
 export const times = icon(

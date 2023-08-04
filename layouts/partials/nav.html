@@ -28,7 +28,14 @@
         </div>
     </div>
     <div>
-        <button type="button" class="px-4 py-2 ml-4 lg:mt-0 inline-block" @click="showSearchToggle()" aria-label="Search button"><i v-html="search"></i></button>
+        {{ if strings.Contains .Page.RelPermalink "/blog/" }}
+            {{ with .GetPage "/blog/" }}
+                {{ with .OutputFormats.Get "rss" }}
+                    <a href="{{ .Permalink }}" class="px-4 py-2 ml-4 lg:mt-0 inline-block" aria-label="Blog RSS link"><i v-html="rss"></i></a>
+                {{ end }}
+            {{ end }}
+        {{ end }}
+        <button type="button" class="{{ if strings.Contains .Page.RelPermalink "/blog/" }} pe-4 {{ else }} px-4 {{ end }} py-2 ml-4 lg:mt-0 inline-block" @click="showSearchToggle()" aria-label="Search button"><i v-html="search"></i></button>
     </div>
 
 </nav>

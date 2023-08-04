@@ -17,6 +17,7 @@ import {
 	pen,
 	arrowLeft,
 	arrowRight,
+	rss,
 } from "./icons";
 import algoliasearch from "algoliasearch/lite";
 import { groupBy, getIconHtml } from "./utils";
@@ -46,6 +47,7 @@ createApp({
 			pen: getIconHtml(pen),
 			arrowRight: getIconHtml(arrowRight),
 			arrowLeft: getIconHtml(arrowLeft),
+			rss: getIconHtml(rss),
 
 			searchText: "",
 			hits: [],
