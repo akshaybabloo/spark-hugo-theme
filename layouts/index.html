@@ -14,7 +14,15 @@
 
             <div class="p-4 md:p-12 text-center">
                 <div class="profile-image-container rounded-full shadow-xl mx-auto -mt-16 h-48 w-48 bg-cover bg-center relative border-4 border-transparent">
-                    <img src="{{.Site.Params.thumbnailUrl}}" class="rounded-full lg:block" alt="{{.Site.Title}}">
+                    <picture>
+                        {{ $src := .Site.Params.thumbnailUrl }}
+                        {{ $src = replace $src ".jpg" ".webp" }}
+                        {{ $src = replace $src ".png" ".webp" }}
+                        {{ $src = replace $src ".jpeg" ".webp" }}
+                        {{ $src = replace $src ".gif" ".webp" }}
+                        <source srcset="{{ $src }}" class="rounded-full lg:block" type="image/webp">
+                        <img src="{{.Site.Params.thumbnailUrl}}" class="rounded-full lg:block" alt="{{.Site.Title}}">
+                    </picture>
                 </div>
 
                 <!-- Nav bar -->

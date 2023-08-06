@@ -29,8 +29,18 @@
     <article>
         {{ if .Params.images }}
         <a href="{{.RelPermalink}}">
-            <img class="p-1 rounded-md md:object-scale-down mx-auto md:w-8/12"
+            <picture>
+                {{ if not (strings.Contains (index .Params.images 0) "gif") }}
+                    {{ $src := index .Params.images 0 }}
+                    {{ $src = replace $src ".jpg" ".webp" }}
+                    {{ $src = replace $src ".png" ".webp" }}
+                    {{ $src = replace $src ".jpeg" ".webp" }}
+                    {{ $src = replace $src ".gif" ".webp" }}
+                    <source srcset="{{ $src }}" class="p-1 rounded-md md:object-scale-down mx-auto md:w-8/12" type="image/webp">
+                {{ end }}
+                <img class="p-1 rounded-md md:object-scale-down mx-auto md:w-8/12"
                                         src="{{ index .Params.images 0 }}" alt="{{ .Title }}">
+            </picture>
         </a>
         {{ end }}
 
