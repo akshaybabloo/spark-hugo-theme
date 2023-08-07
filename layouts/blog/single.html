@@ -59,14 +59,12 @@
             {{if eq $index 0 }}
             <figure>
                 <picture>
-                    {{ if not (strings.Contains (.imageLoc | relURL) "gif") }}
-                        {{ $src := .imageLoc | relURL }}
-                        {{ $src = replace $src ".jpg" ".webp" }}
-                        {{ $src = replace $src ".png" ".webp" }}
-                        {{ $src = replace $src ".jpeg" ".webp" }}
-                        {{ $src = replace $src ".gif" ".webp" }}
-                        <source srcset="{{ $src }}" class="mx-auto rounded-lg object-contain" type="image/webp">
-                    {{ end }}
+                    {{ $src := .imageLoc | relURL }}
+                    {{ $src = replace $src ".jpg" ".webp" }}
+                    {{ $src = replace $src ".png" ".webp" }}
+                    {{ $src = replace $src ".jpeg" ".webp" }}
+                    {{ $src = replace $src ".gif" ".webp" }}
+                    <source srcset="{{ $src }}" class="mx-auto rounded-lg object-contain" type="image/webp">
                     <img class="mx-auto rounded-lg object-contain" width="600" src="{{ .imageLoc | relURL }}" alt="{{ .imageCaption }}">
                 </picture>
             </figure>

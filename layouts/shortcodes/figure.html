@@ -2,15 +2,12 @@
     <div class="relative flex justify-center">
         {{ with .Get "link"}}<a href="{{.}}">{{ end }}
         <picture class="group-hover/item:opacity-50 !m-0">
-            {{ if not (strings.Contains (.Get "src") "gif") }}
-                {{ $src := .Get "src"}}
-                {{ $src = replace $src ".jpg" ".webp" }}
-                {{ $src = replace $src ".png" ".webp" }}
-                {{ $src = replace $src ".jpeg" ".webp" }}
-                {{ $src = replace $src ".gif" ".webp" }}
-                <source srcset="{{ $src }}" class="mx-auto rounded-lg object-contain" type="image/webp">
-            {{ end }}
-
+            {{ $src := .Get "src"}}
+            {{ $src = replace $src ".jpg" ".webp" }}
+            {{ $src = replace $src ".png" ".webp" }}
+            {{ $src = replace $src ".jpeg" ".webp" }}
+            {{ $src = replace $src ".gif" ".webp" }}
+            <source srcset="{{ $src }}" class="mx-auto rounded-lg object-contain" type="image/webp">
             <img src="{{ .Get "src" }}" ref="imgs" @click="maximizeImage($event, '{{ .Get "src" }}')" {{ with .Get "width" }}width="{{.}}"{{ end }} {{ if or (.Get "alt") (.Get "caption") }}alt="{{ with .Get "alt"}}{{.}}{{else}}{{ .Get "caption" }}{{ end }}"{{ end }}>
         </picture>
         {{ if .Get "link"}}</a>{{ end }}
