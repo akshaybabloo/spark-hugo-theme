@@ -1,6 +1,15 @@
 <!doctype html>
 <html lang="en">
 <head>
+    {{- partial "meta.html" . -}}
+    {{ $src := .Site.Params.thumbnailUrl }}
+    {{ $src = replace $src ".jpg" ".webp" }}
+    {{ $src = replace $src ".png" ".webp" }}
+    {{ $src = replace $src ".jpeg" ".webp" }}
+    {{ $src = replace $src ".gif" ".webp" }}
+    <link rel="preload" href="{{$src}}" as="image">
+    <link rel="preload" href="{{.Site.Params.thumbnailUrl}}" as="image">
+    <link rel="preload" href="{{.Site.Params.namedLogo}}" as="image">
     {{- partial "head.html" . -}}
 </head>
 <body class="text-white leading-normal tracking-wider shadow-xl">

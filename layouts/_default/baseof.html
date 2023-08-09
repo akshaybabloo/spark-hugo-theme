@@ -1,9 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    {{- partial "meta.html" . -}}
+    {{- block "head" . }}{{- end }}
     {{- partial "head.html" . -}}
     {{ partial "profileOGPSEO.html" . }}
-    {{- block "head" . }}{{- end }}
 </head>
 <body>
 <div id="profile" class="flex flex-col h-screen justify-between">
