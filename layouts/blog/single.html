@@ -3,6 +3,13 @@
     {{ if .Params.images }}
         {{ range .Params.images }}
             <link rel="preload" href="{{ . }}" as="image">
+
+            {{ $src := . }}
+            {{ $src = replace $src ".jpg" ".webp" }}
+            {{ $src = replace $src ".png" ".webp" }}
+            {{ $src = replace $src ".jpeg" ".webp" }}
+            {{ $src = replace $src ".gif" ".webp" }}
+            <link rel="preload" href="{{ $src }}" as="image">
         {{ end }}
     {{ end }}
 

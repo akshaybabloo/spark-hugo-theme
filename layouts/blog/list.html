@@ -4,6 +4,13 @@
         {{ range $index, $element := .Pages }}
             {{ if .Params.images }}
             <link rel="preload" href="{{ index .Params.images 0 }}" as="image">
+
+            {{ $src := index .Params.images 0 }}
+            {{ $src = replace $src ".jpg" ".webp" }}
+            {{ $src = replace $src ".png" ".webp" }}
+            {{ $src = replace $src ".jpeg" ".webp" }}
+            {{ $src = replace $src ".gif" ".webp" }}
+            <link rel="preload" href="{{ $src }}" as="image">
             {{ end }}
         {{ end }}
     {{ end }}
