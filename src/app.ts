@@ -96,10 +96,17 @@ createApp({
 			const imageModelSrc = this.$refs.imageModelSrc as HTMLImageElement;
 			imageModelSrc.src = imgSrc;
 		},
-		outsideClick: function (event: PointerEvent) {
-			const searchModel = this.$refs.innerContainer as HTMLDivElement;
-			if (!searchModel.contains(event.target as Node)) {
-				this.showSearchToggle();
+		outsideClick: function (event: PointerEvent, from: string) {
+			switch (from) {
+				case "searchModel":
+						this.showSearchToggle();
+					break;
+				case "imageModel":
+						this.toggleMaximizeImage();
+					break;
+
+				default:
+					break;
 			}
 		},
 		searchAlgolia: async function () {
