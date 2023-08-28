@@ -24,6 +24,9 @@ sitemap:
 # siteMapImages:
 #   - imageLoc: ""
 #     imageCaption: ""
+# siteMapVideos:
+#   - videoLoc: ""
+#     videoDescription: ""
 ---
 
 <!--adsense-->

@@ -6,11 +6,12 @@
   {{- range .Data.Pages }}
     {{- if and (not (isset .Params "url")) (not (isset .Params "externalurl")) (not (in .Permalink "/tags")) (not (in .Permalink "/categories")) }}
       <url>
-          <loc>{{ .Permalink }}</loc>
+        <loc>{{ .Permalink }}</loc>
         {{ if not .Lastmod.IsZero }}<lastmod>{{ safeHTML ( .Lastmod.Format "2006-01-02T15:04:05-07:00" ) }}</lastmod>{{- end }}
         {{ with .Sitemap.ChangeFreq }}<changefreq>{{ . }}</changefreq>{{- end }}
         {{ if ge .Sitemap.Priority 0.0 }}<priority>{{ .Sitemap.Priority }}</priority>{{ end }}
         {{- $title := .Title }}
+        {{- $date := .Date }}
         {{- if (isset .Params "sitemapimages" ) }}
           {{- range .Params.sitemapimages }}
             <image:image>
@@ -18,6 +19,21 @@
               <image:title>{{ $title }}</image:title>
               <image:caption>{{ .imageCaption }}</image:caption>
             </image:image>
+          {{- end }}
+        {{- end }}
+        {{- if (isset .Params "sitemapvideos" ) }}
+          {{- range .Params.sitemapvideos }}
+            <video:video>
+              <video:title>{{ $title }}</video:title>
+              <video:description>
+                {{ .videoDescription }}
+              </video:description>
+              <video:content_loc>
+                  {{ .videoLoc | absURL }}
+              </video:content_loc>
+              <video:publication_date>{{ safeHTML ( $date.Format "2006-01-02T15:04:05-07:00" ) }}</video:publication_date>
+              <video:family_friendly>yes</video:family_friendly>
+            </video:video>
           {{- end }}
         {{- end }}
         {{- if .IsTranslated }}
