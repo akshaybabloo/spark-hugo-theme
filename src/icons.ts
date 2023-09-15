@@ -5,7 +5,7 @@ import {
 	faLinkedin,
 	faPinterest,
 	faReddit,
-	faTwitter,
+	faXTwitter,
 } from "@fortawesome/free-brands-svg-icons";
 import {
 	faEnvelope,
@@ -21,9 +21,10 @@ import {
 	faRss,
 } from "@fortawesome/free-solid-svg-icons";
 
+
 library.add(
 	faGithub,
-	faTwitter,
+	faXTwitter,
 	faLinkedin,
 	faSearch,
 	faTimes,
@@ -50,7 +51,7 @@ export const github = icon(
 	{ transform: { size: 30 } }
 );
 export const twitter = icon(
-	{ prefix: "fab", iconName: "twitter" },
+	{ prefix: "fab", iconName: "x-twitter" },
 	{ transform: { size: 30 } }
 );
 export const facebook = icon(
