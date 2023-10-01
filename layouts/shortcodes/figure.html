@@ -1,14 +1,24 @@
+{{$page := .Page}}
 <figure class="group/item cursor-pointer" @click="toggleMaximizeImage(); maximizeImage($event, '{{ .Get "src" }}')">
     <div class="relative flex justify-center">
         {{ with .Get "link"}}<a href="{{.}}">{{ end }}
         <picture class="group-hover/item:opacity-50 !m-0">
-            {{ $src := .Get "src"}}
+            {{ $srcOriginal := .Get "src" }}
+            {{ $src := $srcOriginal }}
+            {{ $stat := os.FileExists (path.Join "static" $src) }}
+            {{ if not $stat }}
+                {{ $srcOriginal = $page.Resources.GetMatch $srcOriginal }}
+                {{ with $srcOriginal }}
+                    {{ $srcOriginal = .RelPermalink }}
+                    {{ $src = $srcOriginal }}
+                {{ end }}
+            {{ end }}
             {{ $src = replace $src ".jpg" ".webp" }}
             {{ $src = replace $src ".png" ".webp" }}
             {{ $src = replace $src ".jpeg" ".webp" }}
             {{ $src = replace $src ".gif" ".webp" }}
             <source srcset="{{ $src }}" class="mx-auto rounded-lg object-contain" type="image/webp">
-            <img src="{{ .Get "src" }}" class="!m-0" ref="imgs" @click="maximizeImage($event, '{{ .Get "src" }}')" {{ with .Get "width" }}width="{{.}}"{{ end }} {{ if or (.Get "alt") (.Get "caption") }}alt="{{ with .Get "alt"}}{{.}}{{else}}{{ .Get "caption" }}{{ end }}"{{ end }}>
+            <img src="{{ $srcOriginal }}" class="!m-0" ref="imgs" @click="maximizeImage($event, '{{ .Get "src" }}')" {{ with .Get "width" }}width="{{.}}"{{ end }} {{ if or (.Get "alt") (.Get "caption") }}alt="{{ with .Get "alt"}}{{.}}{{else}}{{ .Get "caption" }}{{ end }}"{{ end }}>
         </picture>
         {{ if .Get "link"}}</a>{{ end }}
     
