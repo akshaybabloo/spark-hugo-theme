@@ -34,7 +34,7 @@
 <meta itemprop="description" content="{{ .Params.description }}"/>
 
 {{ if not (eq .Type "blog") }}
-  {{- partial "websiteSchemaSEO.html" . -}}
+  {{- partial "seo/websiteSchemaSEO.html" . -}}
 {{ end }}
 
 {{ if (isset .Params "images") }}
@@ -62,8 +62,8 @@
 
 {{ end }}
 {{ partial "seo/opengraph.html" . }}
-{{ template "_internal/schema.html" . }}
-{{ template "_internal/twitter_cards.html" . }}
+{{ partial "seo/schema.html" . }}
+{{ partial "seo/twitter_cards.html" . }}
 
 {{ if eq (getenv "HUGO_ENV") "production" }}
 <link rel="stylesheet" href="/css/main.min.css?v={{now.Unix}}">

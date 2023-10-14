@@ -30,7 +30,7 @@
     {{ with .OutputFormats.Get "amp" }}
         <link rel="amphtml" href="{{ .Permalink }}">
     {{ end }}
-    {{- partial "articleSchemaSEO.html" . -}}
+    {{- partial "seo/articleSchemaSEO.html" . -}}
 {{ end }}
 
 {{define "main"}}
