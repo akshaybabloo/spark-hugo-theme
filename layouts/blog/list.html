@@ -3,24 +3,10 @@
     {{ range (.Paginate (.Pages.GroupByPublishDate "2006")).PageGroups }}
         {{ range $index, $element := .Pages }}
             {{ if .Params.images }}
-            {{ $srcOriginal := index .Params.images 0 }}
-            {{ $src := $srcOriginal }}
-            {{ $stat := os.FileExists (path.Join "static" $src) }}
+            {{ $imagePath := partial "image-path" (dict "page" . "src" (index .Params.images 0 )) }}
+            {{ $srcOriginal := $imagePath.originalSrc}}
+            {{ $src := $imagePath.webpSrc }}
 
-            {{ if not $stat }}
-                {{ $srcOriginal = .Resources.GetMatch $srcOriginal }}
-                {{ with $srcOriginal }}
-                    {{ $srcOriginal = .RelPermalink }}
-                    {{ $src = $srcOriginal }}
-                {{ end }}
-            {{ end }}
-
-            <link rel="preload" href="{{ $srcOriginal }}" as="image">
-
-            {{ $src = replace $src ".jpg" ".webp" }}
-            {{ $src = replace $src ".png" ".webp" }}
-            {{ $src = replace $src ".jpeg" ".webp" }}
-            {{ $src = replace $src ".gif" ".webp" }}
             <link rel="preload" href="{{ $src }}" as="image">
             {{ end }}
         {{ end }}

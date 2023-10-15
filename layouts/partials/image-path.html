@@ -1,0 +1,17 @@
+{{ $page := .page }}
+{{ $srcOriginal := .src }}
+
+{{ $src := $srcOriginal }}
+{{ $stat := os.FileExists (path.Join "static" $src) }}
+{{ if not $stat }}
+    {{ $srcOriginal = $page.Resources.GetMatch $srcOriginal }}
+    {{ with $srcOriginal }}
+        {{ $srcOriginal = .RelPermalink }}
+        {{ $src = $srcOriginal }}
+    {{ end }}
+{{ end }}
+{{ $src = replace $src ".jpg" ".webp" }}
+{{ $src = replace $src ".png" ".webp" }}
+{{ $src = replace $src ".jpeg" ".webp" }}
+{{ $src = replace $src ".gif" ".webp" }}
+{{ return dict "originalSrc" $srcOriginal "webpSrc" $src }}

@@ -1,28 +1,14 @@
 {{ define "head"}}
 
-    {{ $resource := .Resources}}
+    {{ $resource := .}}
 
     {{ if .Params.images }}
         {{ range .Params.images }}
-            {{ $srcOriginal := . }}
-            {{ $src := $srcOriginal }}
-            {{ $stat := os.FileExists (path.Join "static" $src) }}
-            
-
-            {{ if not $stat }}
-                {{ $srcOriginal = $resource.GetMatch $srcOriginal }}
-                {{ with $srcOriginal }}
-                    {{ $srcOriginal = .RelPermalink }}
-                    {{ $src = $srcOriginal }}
-                {{ end }}
-            {{ end }}
+            {{ $imagePath := partial "image-path" (dict "page" $resource "src" .) }}
+            {{ $srcOriginal := $imagePath.originalSrc}}
+            {{ $src := $imagePath.webpSrc }}
 
             <link rel="preload" href="{{ $srcOriginal }}" as="image">
-
-            {{ $src = replace $src ".jpg" ".webp" }}
-            {{ $src = replace $src ".png" ".webp" }}
-            {{ $src = replace $src ".jpeg" ".webp" }}
-            {{ $src = replace $src ".gif" ".webp" }}
             <link rel="preload" href="{{ $src }}" as="image">
         {{ end }}
     {{ end }}
@@ -80,21 +66,10 @@
             {{if eq $index 0 }}
             <figure>
                 <picture>
-                    {{ $srcOriginal := .imageLoc }}
-                    {{ $src := $srcOriginal }}
-                    {{ $stat := os.FileExists (path.Join "static" $src) }}
+                    {{ $imagePath := partial "image-path" (dict "page" . "src" .imageLoc) }}
+                    {{ $srcOriginal := $imagePath.originalSrc}}
+                    {{ $src := $imagePath.webpSrc }}
 
-                    {{ if not $stat }}
-                        {{ $srcOriginal = .Resources.GetMatch $srcOriginal }}
-                        {{ with $srcOriginal }}
-                            {{ $srcOriginal = .RelPermalink }}
-                            {{ $src = $srcOriginal }}
-                        {{ end }}
-                    {{ end }}
-                    {{ $src = replace $src ".jpg" ".webp" }}
-                    {{ $src = replace $src ".png" ".webp" }}
-                    {{ $src = replace $src ".jpeg" ".webp" }}
-                    {{ $src = replace $src ".gif" ".webp" }}
                     <source srcset="{{ $src }}" class="mx-auto rounded-lg object-contain" type="image/webp">
                     <img class="mx-auto rounded-lg object-contain" width="600" src="{{ .imageLoc | relURL }}" alt="{{ .imageCaption }}">
                 </picture>
