@@ -1,0 +1,11 @@
+{{ $src := .src }}
+{{ $page := .page }}
+
+{{ $stat := os.FileExists (path.Join "static" $src) }}
+{{- if not $stat }}
+    {{ $srcOriginal := $page.Resources.GetMatch $src }}
+    {{ with $srcOriginal }}
+        {{ $src = .RelPermalink }}
+    {{ end }}
+{{ end -}}
+{{ return $src }}

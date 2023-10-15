@@ -4,9 +4,12 @@
 <meta property="og:url" content="{{ .Permalink }}" />
 
 
-
+{{ $page := .}}
 {{- with $.Params.images -}}
-{{- range first 6 . }}<meta name="image" property="og:image" content="{{ . | absURL }}" />{{ end -}}
+{{- range first 6 . -}}
+{{ $src := partial "resource-check" (dict "page" $page "src" . ) }}
+<meta name="image" property="og:image" content="{{ $src | absURL }}" />
+{{- end -}}
 {{- else -}}
 {{- $images := $.Resources.ByType "image" -}}
 {{- $featured := $images.GetMatch "*feature*" -}}

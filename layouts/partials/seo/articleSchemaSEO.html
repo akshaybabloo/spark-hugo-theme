@@ -1,3 +1,12 @@
+{{ $url := "" }}
+{{- if (isset .Params "images") }}
+    {{ $url = index .Params.images 0 }}
+{{- else -}}
+    {{ $url = .Site.Params.thumbnailUrl }}
+{{ end }}
+
+{{ $src := partial "resource-check" (dict "page" . "src" $url ) }}
+
 <script type="application/ld+json">
     {
         "@context": "https://schema.org",
@@ -38,11 +47,7 @@
         {{- end -}}
         "image": {
             "@type": "ImageObject",
-            {{- if (isset .Params "images") }}
-            "url":{{ (index .Params.images 0) | absURL | jsonify | safeJS }},
-            {{- else -}}
-            "url":{{ .Site.Params.thumbnailUrl | absURL | jsonify | safeJS }},
-            {{ end }}
+            "url": {{ $src | absURL | jsonify | safeJS }},
             "width": 2600,
             "height": 1430
         },

@@ -1,6 +1,8 @@
+{{ $page := . }}
 {{- with $.Params.images -}}
+{{ $src := partial "resource-check" (dict "page" $page "src" (index . 0) ) }}
 <meta name="twitter:card" content="summary_large_image"/>
-<meta name="twitter:image" content="{{ index . 0 | absURL }}"/>
+<meta name="twitter:image" content="{{ $src | absURL }}"/>
 {{ else -}}
 {{- $images := $.Resources.ByType "image" -}}
 {{- $featured := $images.GetMatch "*feature*" -}}

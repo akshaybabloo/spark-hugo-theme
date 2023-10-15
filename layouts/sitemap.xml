@@ -12,17 +12,10 @@
         {{ if ge .Sitemap.Priority 0.0 }}<priority>{{ .Sitemap.Priority }}</priority>{{ end }}
         {{- $title := .Title }}
         {{- $date := .Date }}
-        {{- $resources := .Resources -}}
+        {{- $page := . }}
         {{- if (isset .Params "sitemapimages" ) }}
           {{- range .Params.sitemapimages }}
-            {{ $src := .imageLoc }}
-            {{ $stat := os.FileExists (path.Join "static" $src) }}
-            {{- if not $stat }}
-              {{ $srcOriginal := $resources.GetMatch $src }}
-              {{ with $srcOriginal }}
-                  {{ $src = .RelPermalink }}
-              {{ end }}
-            {{ end -}}
+            {{ $src := partial "resource-check" (dict "page" $page "src" .imageLoc)}}
             <image:image>
               <image:loc>{{ $src | absURL }}</image:loc>
               <image:title>{{ $title }}</image:title>
