@@ -3,9 +3,10 @@ import {resolve} from 'path'
 
 export default defineConfig(({mode}) => {
     console.log("Build mode:", mode);
+    process.env = {...process.env, ...loadEnv(mode, process.cwd())};
     return {
         define: {
-            'process.env.NODE_ENV': mode === 'development',
+            'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || mode),
             '__VUE_PROD_DEVTOOLS__': mode === 'development',
             '__VUE_PROD_HYDRATION_MISMATCH_DETAILS__': mode === 'development',
             '__VUE_OPTIONS_API__': true,
