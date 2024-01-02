@@ -3,8 +3,8 @@ const { src, dest, parallel } = require('gulp');
 // Following are the default paths that the files will be moved to
 const cssFolderPath = './static/css/';
 const jsFolderPath = './static/js/';
-const fontWoff2FolderPath = './src/woff2/';
-const fontWoffFolderPath = './src/woff/';
+const fontWoff2FolderPath = './woff2/';
+const fontWoffFolderPath = './woff/';
 const srcFolderPath = './src/';
 
 // Following are the files that will be moved to their locations
@@ -61,4 +61,4 @@ function moveSrc() {
 }
 
 // Run both functions in parallel
-exports.default = parallel(moveCss, moveJs, moveFontWoff2, moveFontWoff, moveSrc);
+exports.default = parallel(moveCss, moveJs, moveFontWoff2, moveFontWoff);

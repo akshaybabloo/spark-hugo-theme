@@ -1,10 +1,20 @@
 import {defineConfig, loadEnv} from 'vite';
 import {resolve} from 'path'
+import libAssetsPlugin from '@laynezh/vite-plugin-lib-assets'
+import Inspect from 'vite-plugin-inspect'
 
 export default defineConfig(({mode}) => {
     console.log("Build mode:", mode);
     process.env = {...process.env, ...loadEnv(mode, process.cwd())};
     return {
+        plugins: [
+            Inspect(),
+            libAssetsPlugin({
+                name: '[name].[ext]',
+                outputPath: 'fonts',
+                include: /\.woff2?$/,
+            }),
+        ],
         define: {
             'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || mode),
             '__VUE_PROD_DEVTOOLS__': mode === 'development',
