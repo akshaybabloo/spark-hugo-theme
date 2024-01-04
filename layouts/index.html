@@ -72,15 +72,15 @@
                 <div class="py-4 text-lg">{{ .Content }}</div>
 
                 <div class="mt-6 pb-16 lg:pb-0 w-4/6 mx-auto flex flex-wrap items-center justify-between">
-                    <a class="link" href="{{ .Site.Params.linkedin }}">
+                    <a class="link" href="{{ .Site.Params.social.linkedin }}">
                         <i v-html="linkedin" class="hover:text-gray-300" aria-hidden="true"></i>
                         <span class="sr-only">LinkedIn</span>
                     </a>
-                    <a class="link" href="{{ .Site.Params.twitter }}">
+                    <a class="link" href="{{ .Site.Params.social.twitter }}">
                         <i v-html="twitter" class="hover:text-gray-300" aria-hidden="true"></i>
                         <span class="sr-only">Twitter</span>
                     </a>
-                    <a class="link" href="{{ .Site.Params.github }}">
+                    <a class="link" href="{{ .Site.Params.social.github }}">
                         <i v-html="github" class="hover:text-gray-300" aria-hidden="true"></i>
                         <span class="sr-only">GitHub</span>
                     </a>

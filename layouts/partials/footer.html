@@ -7,15 +7,15 @@
         {{ end }}</p>
 
     <div class="flex justify-center items-center space-x-1">
-        <a href="{{ .Site.Params.linkedin }}" class="inline-flex justify-center p-3 rounded-lg cursor-pointer text-gray-400 hover:text-white hover:bg-gray-600" aria-label="LinkedIn">
+        <a href="{{ .Site.Params.social.linkedin }}" class="inline-flex justify-center p-3 rounded-lg cursor-pointer text-gray-400 hover:text-white hover:bg-gray-600" aria-label="LinkedIn">
             <i v-html="linkedin"></i>
         </a>
 
-        <a href="{{ .Site.Params.github }}" class="inline-flex justify-center p-3 rounded-lg cursor-pointer text-gray-400 hover:text-white hover:bg-gray-600" aria-label="GitHub">
+        <a href="{{ .Site.Params.social.github }}" class="inline-flex justify-center p-3 rounded-lg cursor-pointer text-gray-400 hover:text-white hover:bg-gray-600" aria-label="GitHub">
             <i v-html="github"></i>
         </a>
 
-        <a href="{{ .Site.Params.twitter }}" class="inline-flex justify-center p-3 rounded-lg cursor-pointer text-gray-400 hover:text-white hover:bg-gray-600" aria-label="Twitter">
+        <a href="{{ .Site.Params.social.twitter }}" class="inline-flex justify-center p-3 rounded-lg cursor-pointer text-gray-400 hover:text-white hover:bg-gray-600" aria-label="Twitter">
             <i v-html="twitter"></i>
         </a>
     </div>
