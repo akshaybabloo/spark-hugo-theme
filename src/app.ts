@@ -50,16 +50,20 @@ createApp({
                 arrowLeft: getIconHtml(arrowLeft),
                 rss: getIconHtml(rss),
             },
-            searchText: "",
-            hits: [],
-            numberOfHits: 0,
+
             showMenu: true,
         });
 
-        const searchModel = ref(null);
-        const imageModel = ref(null);
-        const imageModelSrc = ref(null);
-
+        // Search related refs
+        const searchText = ref("");
+        let numberOfHits = ref<number>(0);
+        let hits = ref<Record<string, any[]>>({})
+        const searchModelRef = ref<HTMLElement>();
+        
+        // Image related refs
+        const imageModel = ref<HTMLElement>();
+        const imageModelSrc = ref<HTMLImageElement>();
+        
         onMounted(() => {
             document.addEventListener('keydown', escapeKeyListener);
         });
@@ -68,8 +72,8 @@ createApp({
             document.removeEventListener('keydown', escapeKeyListener);
         });
 
-        function escapeKeyListener(e) {
-            if (e.key === 'Escape' && !searchModel.value.classList.contains("hidden")) {
+        function escapeKeyListener(e: KeyboardEvent) {
+            if (e.key === 'Escape' && !searchModelRef.value?.classList.contains("hidden")) {
                 showSearchToggle();
             }
         }
@@ -79,29 +83,33 @@ createApp({
         }
 
         function showSearchToggle() {
-            if (searchModel.value.classList.contains("hidden")) {
-                searchModel.value.classList.remove("hidden");
+            if (searchModelRef.value?.classList.contains("hidden")) {
+                searchModelRef.value.classList.remove("hidden");
             } else {
-                searchModel.value.classList.add("hidden");
+                searchModelRef.value?.classList.add("hidden");
             }
         }
 
         function toggleMaximizeImage() {
-            if (imageModel.value.classList.contains("hidden")) {
+            if (imageModel.value?.classList.contains("hidden")) {
                 imageModel.value.classList.remove("hidden");
             } else {
-                imageModel.value.classList.add("hidden");
-                imageModelSrc.value.src = "";
+                imageModel.value?.classList.add("hidden");
+                if (imageModelSrc.value) {
+                    imageModelSrc.value.src = "";
+                }
             }
         }
 
-        function maximizeImage(event, imgSrc) {
-            imageModelSrc.value.src = imgSrc;
+        function maximizeImage(event: PointerEvent, imgSrc: string) {
+            if (imageModelSrc.value) {
+                imageModelSrc.value.src = imgSrc;
+            }
         }
 
-        function outsideClick(event, from) {
+        function outsideClick(event: PointerEvent, from: string) {
             switch (from) {
-                case "searchModel":
+                case "searchModelRef":
                     showSearchToggle();
                     break;
                 case "imageModel":
@@ -113,28 +121,31 @@ createApp({
         }
 
         async function searchAlgolia() {
-            if (state.searchText === "") {
-                state.hits = [];
-                state.numberOfHits = 0;
+            if (searchText.value === "") {
+                hits.value = {};
+                numberOfHits.value = 0;
                 return;
             }
 
             try {
-                const value = await index.search(state.searchText);
-                state.hits = groupBy(value.hits, "section");
-                state.numberOfHits = value.nbHits;
+                const value = await index.search(searchText.value);
+                hits.value = groupBy(value.hits, "section");
+                numberOfHits.value = value.nbHits;
             } catch (error) {
                 console.error(error);
-                state.hits = [];
-                state.numberOfHits = 0;
+                hits.value = {};
+                numberOfHits.value = 0;
             }
         }
 
         return {
             ...state,
-            searchModel,
+            searchModelRef,
             imageModel,
             imageModelSrc,
+            searchText,
+            numberOfHits,
+            hits,
             escapeKeyListener,
             showMenuToggle,
             showSearchToggle,
