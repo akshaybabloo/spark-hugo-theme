@@ -27,6 +27,7 @@ export default defineConfig(({mode}) => {
             },
         },
         build: {
+            sourcemap: true,
             minify: mode === 'production',
             outDir: resolve(__dirname, 'static'),
             emptyOutDir: false,

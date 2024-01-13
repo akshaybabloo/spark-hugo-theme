@@ -16,3 +16,4 @@ node_modules/
 /src/*.css
 app.es.js
 app.umd.js
+*.map
