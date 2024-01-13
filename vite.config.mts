@@ -15,6 +15,10 @@ export default defineConfig(({mode}) => {
                 include: /\.woff2?$/,
             }),
         ],
+        // esbuild: {
+        //     legalComments: 'none',
+        //     minify: true,
+        // },
         define: {
             'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || mode),
             '__VUE_PROD_DEVTOOLS__': mode === 'development',
