@@ -73,19 +73,19 @@
 
                 <div class="mt-6 pb-16 lg:pb-0 w-4/6 mx-auto flex flex-wrap items-center justify-between">
                     <a class="link" href="{{ .Site.Params.social.linkedin }}">
-                        <i v-html="linkedin" class="hover:text-gray-300" aria-hidden="true"></i>
+                        <i v-html="icons.linkedin" class="hover:text-gray-300" aria-hidden="true"></i>
                         <span class="sr-only">LinkedIn</span>
                     </a>
                     <a class="link" href="{{ .Site.Params.social.twitter }}">
-                        <i v-html="twitter" class="hover:text-gray-300" aria-hidden="true"></i>
+                        <i v-html="icons.twitter" class="hover:text-gray-300" aria-hidden="true"></i>
                         <span class="sr-only">Twitter</span>
                     </a>
                     <a class="link" href="{{ .Site.Params.social.github }}">
-                        <i v-html="github" class="hover:text-gray-300" aria-hidden="true"></i>
+                        <i v-html="icons.github" class="hover:text-gray-300" aria-hidden="true"></i>
                         <span class="sr-only">GitHub</span>
                     </a>
                     <a class="link" href="mailto:{{ .Site.Params.email }}">
-                        <i v-html="mail" class="hover:text-gray-300" aria-hidden="true"></i>
+                        <i v-html="icons.mail" class="hover:text-gray-300" aria-hidden="true"></i>
                         <span class="sr-only">eMail</span>
                     </a>
                 </div>
@@ -93,7 +93,7 @@
 
             <!-- Pin to top right corner -->
             <div class="absolute top-0 right-0 h-12 w-18 p-4">
-                <button class="focus:outline-none" @click="showSearchToggle()" aria-label="Search button"><i v-html="search"
+                <button class="focus:outline-none" @click="showSearchToggle()" aria-label="Search button"><i v-html="icons.search"
                                                                                   class="hover:text-gray-300"></i>
                 </button>
             </div>

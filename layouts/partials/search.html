@@ -1,17 +1,17 @@
 <!-- search model -->
-<div class="fixed z-10 inset-0 overflow-auto backdrop-blur-lg bg-gray-800/80 hidden" ref="searchModel" @click="outsideClick($event, 'searchModel')">
+<div class="fixed z-10 inset-0 overflow-auto backdrop-blur-lg bg-gray-800/80 hidden" ref="searchModelRef" @click="outsideClick($event, 'searchModelRef')">
     <div class="relative max-w-4xl flex items-center h-auto flex-wrap mx-auto my-32" ref="innerContainer" @click.stop>
         <div class="relative w-full rounded-lg shadow-2xl bg-gray-600 mx-6 ring-gray-800 p-4">
             <!-- close button -->
             <div class="absolute top-0 right-0 h-12 w-18 p-4">
-                <button class="focus:outline-none" aria-label="Close" @click="showSearchToggle()"><i v-html="times"
+                <button class="focus:outline-none" aria-label="Close" @click="showSearchToggle()"><i v-html="icons.times"
                                                                                   class="hover:text-gray-300"></i>
                 </button>
             </div>
             <div class="pt-3 md:pt-0 md:block w-full order-3">
                 <div class="relative max-w-3xl mx-auto px-6">
                     <div class="absolute h-10 mt-1 left-0 top-0 flex items-center pl-10">
-                        <i v-html="search" class="text-gray-600"></i>
+                        <i v-html="icons.search" class="text-gray-600"></i>
                     </div>
                     <input type="search" placeholder="Enter search term" v-model="searchText" @input="searchAlgolia"
                            class="block w-full bg-brand-white focus:outline-none focus:bg-white focus:shadow text-gray-700 font-bold rounded-lg pl-12 pr-4 py-3">

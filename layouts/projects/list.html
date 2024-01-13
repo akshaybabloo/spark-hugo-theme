@@ -23,7 +23,7 @@
             {{ range .Pages }}
                 <a href="{{.Params.externalurl}}" class="flex flex-col justify-between overflow-hidden text-left transition-shadow duration-200 bg-gray-600 hover:border hover:border-liquid-lava rounded shadow-xl group hover:shadow-2xl">
                     <div class="p-5">
-                        <h3 class="!mt-1 mb-2 font-bold text-l">{{ .Title }} {{ if (isset .Params "externalurl") }} <sup class="text-xs" v-html="externalLink"></sup> {{end}}</h3>
+                        <h3 class="!mt-1 mb-2 font-bold text-l">{{ .Title }} {{ if (isset .Params "externalurl") }} <sup class="text-xs" v-html="icons.externalLink"></sup> {{end}}</h3>
                         <p class="text-sm leading-5 text-gray-300">
                             {{ .Params.description }}
                         </p>
