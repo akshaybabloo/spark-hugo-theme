@@ -13,7 +13,7 @@
         {{ if .Get "link"}}</a>{{ end }}
     
         <div class="invisible group-hover/item:visible absolute m-auto top-1/2 right-1/2 -translate-x-1/2 -translate-y-1/2">
-            <i v-html="maximize" class="text-black" aria-hidden="true" @click="maximizeImage($event, '{{ .Get "src" }}')"></i>
+            <i v-html="icons.maximize" class="text-black" aria-hidden="true" @click="maximizeImage($event, '{{ .Get "src" }}')"></i>
         </div>
     </div>
     {{ if or (or (.Get "title") (.Get "caption")) (.Get "attr")}}

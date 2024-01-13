@@ -1,26 +1,26 @@
 import "./main.scss";
-import { createApp } from "vue";
+import {createApp, reactive, onMounted, onBeforeUnmount, ref} from "vue";
 import {
-	externalLink,
-	facebook,
-	github,
-	hashTag,
-	link,
-	linkedin,
-	mail,
-	pinterest,
-	reddit,
-	search,
-	times,
-	twitter,
-	maximize,
-	pen,
-	arrowLeft,
-	arrowRight,
-	rss,
+    externalLink,
+    facebook,
+    github,
+    hashTag,
+    link,
+    linkedin,
+    mail,
+    pinterest,
+    reddit,
+    search,
+    times,
+    twitter,
+    maximize,
+    pen,
+    arrowLeft,
+    arrowRight,
+    rss,
 } from "./icons";
 import algoliasearch from "algoliasearch/lite";
-import { groupBy, getIconHtml } from "./utils";
+import {groupBy, getIconHtml} from "./utils";
 
 // @ts-ignore
 const client = algoliasearch(algoliaAppId, algoliaApiKey);
@@ -28,108 +28,120 @@ const client = algoliasearch(algoliaAppId, algoliaApiKey);
 const index = client.initIndex(algoliaIndexName);
 
 createApp({
-	data() {
-		return {
-			// icons
-			linkedin: getIconHtml(linkedin),
-			github: getIconHtml(github),
-			twitter: getIconHtml(twitter),
-			search: getIconHtml(search),
-			times: getIconHtml(times),
-			hashTag: getIconHtml(hashTag),
-			facebook: getIconHtml(facebook),
-			pinterest: getIconHtml(pinterest),
-			reddit: getIconHtml(reddit),
-			mail: getIconHtml(mail),
-			externalLink: getIconHtml(externalLink),
-			link: getIconHtml(link),
-			maximize: getIconHtml(maximize),
-			pen: getIconHtml(pen),
-			arrowRight: getIconHtml(arrowRight),
-			arrowLeft: getIconHtml(arrowLeft),
-			rss: getIconHtml(rss),
+    setup() {
+        const state = reactive({
+            // Icons
+            icons: {
+                linkedin: getIconHtml(linkedin),
+                github: getIconHtml(github),
+                twitter: getIconHtml(twitter),
+                search: getIconHtml(search),
+                times: getIconHtml(times),
+                hashTag: getIconHtml(hashTag),
+                facebook: getIconHtml(facebook),
+                pinterest: getIconHtml(pinterest),
+                reddit: getIconHtml(reddit),
+                mail: getIconHtml(mail),
+                externalLink: getIconHtml(externalLink),
+                link: getIconHtml(link),
+                maximize: getIconHtml(maximize),
+                pen: getIconHtml(pen),
+                arrowRight: getIconHtml(arrowRight),
+                arrowLeft: getIconHtml(arrowLeft),
+                rss: getIconHtml(rss),
+            },
+            searchText: "",
+            hits: [],
+            numberOfHits: 0,
+            showMenu: true,
+        });
 
-			searchText: "",
-			hits: [],
-			numberOfHits: 0,
+        const searchModel = ref(null);
+        const imageModel = ref(null);
+        const imageModelSrc = ref(null);
 
-			showMenu: true,
-		};
-	},
-    mounted() {
-        document.addEventListener('keydown', this.escapeKeyListener);
-    },
-    beforeUnmount() {
-        document.removeEventListener('keydown', this.escapeKeyListener);
-    },
-	methods: {
-        escapeKeyListener(e: KeyboardEvent) {
-            if (e.key === 'Escape') {
-                const searchModel = this.$refs.searchModel as HTMLDivElement;
-                if (!searchModel.classList.contains("hidden")) {
-                    this.showSearchToggle();
-                }
+        onMounted(() => {
+            document.addEventListener('keydown', escapeKeyListener);
+        });
+
+        onBeforeUnmount(() => {
+            document.removeEventListener('keydown', escapeKeyListener);
+        });
+
+        function escapeKeyListener(e) {
+            if (e.key === 'Escape' && !searchModel.value.classList.contains("hidden")) {
+                showSearchToggle();
             }
-        },
-		showMenuToggle: function () {
-			this.showMenu = !this.showMenu;
-		},
-		showSearchToggle: function () {
-			const searchModel = this.$refs.searchModel as HTMLDivElement;
-			if (searchModel.classList.contains("hidden")) {
-				searchModel.classList.remove("hidden");
-			} else {
-				searchModel.classList.add("hidden");
-			}
-		},
-		toggleMaximizeImage: function () {
-			const imageModel = this.$refs.imageModel as HTMLDivElement;
-			const imageModelSrc = this.$refs.imageModelSrc as HTMLImageElement;
-			if (imageModel.classList.contains("hidden")) {
-				imageModel.classList.remove("hidden");
-			} else {
-				imageModel.classList.add("hidden");
-				imageModelSrc.src = "";
-			}
-		},
-		maximizeImage: function (event: PointerEvent, imgSrc: string) {
-			const imageModelSrc = this.$refs.imageModelSrc as HTMLImageElement;
-			imageModelSrc.src = imgSrc;
-		},
-		outsideClick: function (event: PointerEvent, from: string) {
-			switch (from) {
-				case "searchModel":
-						this.showSearchToggle();
-					break;
-				case "imageModel":
-						this.toggleMaximizeImage();
-					break;
+        }
 
-				default:
-					break;
-			}
-		},
-		searchAlgolia: async function () {
-			// Clear results when the search text is empty
-			if (this.searchText === "") {
-				this.hits = [];
-				this.numberOfHits = 0;
-				return;
-			}
+        function showMenuToggle() {
+            state.showMenu = !state.showMenu;
+        }
 
-			try {
-				// Get the results from Algolia
-				const value = await index.search(this.searchText);
+        function showSearchToggle() {
+            if (searchModel.value.classList.contains("hidden")) {
+                searchModel.value.classList.remove("hidden");
+            } else {
+                searchModel.value.classList.add("hidden");
+            }
+        }
 
-				// Update the hits and number of hits
-				this.hits = groupBy(value.hits, "section");
-				this.numberOfHits = value.nbHits;
-			} catch (error) {
-				// Log the error and clear the results
-				console.error(error);
-				this.hits = [];
-				this.numberOfHits = 0;
-			}
-		},
-	},
+        function toggleMaximizeImage() {
+            if (imageModel.value.classList.contains("hidden")) {
+                imageModel.value.classList.remove("hidden");
+            } else {
+                imageModel.value.classList.add("hidden");
+                imageModelSrc.value.src = "";
+            }
+        }
+
+        function maximizeImage(event, imgSrc) {
+            imageModelSrc.value.src = imgSrc;
+        }
+
+        function outsideClick(event, from) {
+            switch (from) {
+                case "searchModel":
+                    showSearchToggle();
+                    break;
+                case "imageModel":
+                    toggleMaximizeImage();
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        async function searchAlgolia() {
+            if (state.searchText === "") {
+                state.hits = [];
+                state.numberOfHits = 0;
+                return;
+            }
+
+            try {
+                const value = await index.search(state.searchText);
+                state.hits = groupBy(value.hits, "section");
+                state.numberOfHits = value.nbHits;
+            } catch (error) {
+                console.error(error);
+                state.hits = [];
+                state.numberOfHits = 0;
+            }
+        }
+
+        return {
+            ...state,
+            searchModel,
+            imageModel,
+            imageModelSrc,
+            escapeKeyListener,
+            showMenuToggle,
+            showSearchToggle,
+            toggleMaximizeImage,
+            maximizeImage,
+            outsideClick,
+            searchAlgolia
+        };
+    }
 }).mount("#profile");
