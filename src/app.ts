@@ -65,6 +65,7 @@ createApp({
         const imageModelSrc = ref<HTMLImageElement>();
         
         onMounted(() => {
+            console.log("Welcome to my gollahalli.com!", __GIT_HASH__);
             document.addEventListener('keydown', escapeKeyListener);
         });
 

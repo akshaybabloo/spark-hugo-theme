@@ -2,6 +2,9 @@ import {defineConfig, loadEnv} from 'vite';
 import {resolve} from 'path'
 import libAssetsPlugin from '@laynezh/vite-plugin-lib-assets'
 import Inspect from 'vite-plugin-inspect'
+import {execSync} from 'child_process';
+
+const gitHash = execSync('git rev-parse --short HEAD').toString().trim();
 
 export default defineConfig(({mode}) => {
     console.log("Build mode:", mode);
@@ -24,6 +27,7 @@ export default defineConfig(({mode}) => {
             '__VUE_PROD_DEVTOOLS__': mode === 'development',
             '__VUE_PROD_HYDRATION_MISMATCH_DETAILS__': mode === 'development',
             '__VUE_OPTIONS_API__': true,
+            '__GIT_HASH__': JSON.stringify(gitHash),
         },
         resolve: {
             alias: {
