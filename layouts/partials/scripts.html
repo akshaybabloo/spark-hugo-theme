@@ -1,15 +1,3 @@
-<script>
-    const algoliaAppId = {{.Site.Params.algoliaAppId}}
-    const algoliaApiKey = {{.Site.Params.algoliaApiKey}}
-    const algoliaIndexName = {{.Site.Params.algoliaIndexName}}
-</script>
-
-{{ if eq (getenv "HUGO_ENV") "production" }}
-<script src="/js/app.umd.js?v={{now.Unix}}"></script>
-{{ else }}
-<script src="/js/app.umd.js?v={{now.Unix}}"></script>
-{{ end }}
-
 {{ range .Params.htmlScripts }}
     <script src="{{ . }}" async></script>
 {{ end }}
