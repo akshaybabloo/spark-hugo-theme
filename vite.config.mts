@@ -92,7 +92,7 @@ export default defineConfig(({mode}) => {
                         } else if (/css/.test(extType)) {
                             extType = "css";
                         }
-                        return `${extType}/[name][extname]`;
+                        return `${extType}/[name]-[hash][extname]`;
                     },
                     chunkFileNames: 'js/[name]-[hash].[format].js',
                     entryFileNames: 'js/[name]-[hash].[format].js',

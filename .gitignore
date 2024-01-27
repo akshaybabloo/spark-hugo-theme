@@ -1,6 +1,6 @@
 node_modules/
 
-/static/css/app.*
+/static/css/app*
 /static/css/video*
 /static/css/style.*
 /static/css/fira*
