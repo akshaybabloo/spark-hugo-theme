@@ -1,22 +1,65 @@
-import {defineConfig, loadEnv} from 'vite';
+import {defineConfig, loadEnv, splitVendorChunkPlugin, Plugin} from 'vite';
 import {resolve} from 'path'
-import libAssetsPlugin from '@laynezh/vite-plugin-lib-assets'
-import Inspect from 'vite-plugin-inspect'
 import {execSync} from 'child_process';
+import { promises as fs } from 'fs';
 
 const gitHash = execSync('git rev-parse --short HEAD').toString().trim();
+
+/**
+ * Preserve go comment in html file
+ * 
+ * @returns {Plugin}
+ */
+function preserveGoCommentPlugin(): Plugin {
+    return {
+        name: 'preserve-go-comment',
+        async writeBundle(options, bundle) {
+            for (const fileName in bundle) {
+                if (fileName.endsWith('.html')) {
+                    console.log(options.dir, fileName);
+                    const filePath = resolve(options.dir, fileName);
+                    let content = await fs.readFile(filePath, 'utf8');
+                    content = content.replace('{{/**/}}', '{{/*<script type="module" src="../../src/app.ts"></script>*/}}');
+                    const newFilePath = resolve(options.dir, '..', fileName);
+                    await fs.writeFile(newFilePath, content, 'utf8');
+                    await fs.rm(resolve(options.dir, fileName))
+                }
+            }
+        }
+    };
+}
+
+/**
+ * Clean file content
+ * 
+ * @returns {Plugin}
+ */
+function cleanFileContentPlugin(): Plugin {
+    return {
+        name: 'clean-file-content',
+        transform(code, id) {
+            if (id.endsWith('.html')) {
+                // Extract and preserve Go-style comments
+                const goComments = code.match(/{{\/\*.*?\*\/}}/gs) || [];
+                const newContent = goComments.join('\n');
+                return {
+                    code: newContent,
+                    map: null // if you don't have a source map, return null
+                };
+            }
+        }
+    };
+}
+
 
 export default defineConfig(({mode}) => {
     console.log("Build mode:", mode);
     process.env = {...process.env, ...loadEnv(mode, process.cwd())};
     return {
         plugins: [
-            Inspect(),
-            libAssetsPlugin({
-                name: '[name].[ext]',
-                outputPath: 'fonts',
-                include: /\.woff2?$/,
-            }),
+            cleanFileContentPlugin(),
+            splitVendorChunkPlugin(),
+            preserveGoCommentPlugin(),
         ],
         // esbuild: {
         //     legalComments: 'none',
@@ -39,11 +82,6 @@ export default defineConfig(({mode}) => {
             minify: mode === 'production',
             outDir: resolve(__dirname, 'static'),
             emptyOutDir: false,
-            lib: {
-                entry: resolve(__dirname, 'src/app.ts'),
-                name: 'main',
-                fileName: (format) => `main.${format}.js`
-            },
             rollupOptions: {
                 output: {
                     assetFileNames: (assetInfo) => {
@@ -53,12 +91,15 @@ export default defineConfig(({mode}) => {
                         } else if (/woff|woff2/.test(extType)) {
                             extType = "css";
                         }
-                        if (assetInfo.name === 'style.css') return 'css/main.css';
+                        if (assetInfo.name === 'app.css') return 'css/main.css';
                         return `${extType}/[name][extname]`;
                     },
-                    chunkFileNames: 'js/[name].[format].js',
-                    entryFileNames: 'js/[name].[format].js',
-                }
+                    chunkFileNames: 'js/[name]-[hash].[format].js',
+                    entryFileNames: 'js/[name]-[hash].[format].js',
+                },
+                input: {
+                    app: resolve(__dirname, 'layouts/partials/main-script.html'),
+                },
             }
         }
     }

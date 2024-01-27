@@ -1,6 +1,3 @@
-<link rel="preload" href="/css/main.css?v={{now.Unix}}" as="style">
-<link rel="preload" href="/js/app.umd.js?v={{now.Unix}}" as="script">
-
 <title>{{ if ne .Site.Title .Title }}{{.Title}} &mdash; {{ end }}{{.Site.Title}}</title>
 
 {{ if (isset .Params "externalurl") }}
@@ -53,8 +50,6 @@
 {{ partial "seo/opengraph.html" . }}
 {{ partial "seo/schema.html" . }}
 {{ partial "seo/twitter_cards.html" . }}
-
-<link rel="stylesheet" href="/css/main.css?v={{now.Unix}}">
 
 {{ if .Site.Params.clarity }}
 <script type="text/javascript">

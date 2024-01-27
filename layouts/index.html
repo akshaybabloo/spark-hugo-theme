@@ -11,6 +11,13 @@
     <link rel="preload" href="{{.Site.Params.thumbnailUrl}}" as="image">
     <link rel="preload" href="{{.Site.Params.namedLogo}}" as="image">
     {{- partial "head.html" . -}}
+
+    <script>
+        const algoliaAppId = {{.Site.Params.algoliaAppId}}
+        const algoliaApiKey = {{.Site.Params.algoliaApiKey}}
+        const algoliaIndexName = {{.Site.Params.algoliaIndexName}}
+    </script>
+    {{ partial "main-script.html" . }}
 </head>
 <body class="text-white leading-normal tracking-wider shadow-xl">
 

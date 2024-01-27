@@ -5,6 +5,13 @@
     {{- block "head" . }}{{- end }}
     {{- partial "head.html" . -}}
     {{ partial "seo/profileOGPSEO.html" . }}
+
+    <script>
+        const algoliaAppId = {{.Site.Params.algoliaAppId}}
+        const algoliaApiKey = {{.Site.Params.algoliaApiKey}}
+        const algoliaIndexName = {{.Site.Params.algoliaIndexName}}
+    </script>
+    {{ partial "main-script.html" . }}
 </head>
 <body>
 <div id="profile" class="flex flex-col h-screen justify-between">
