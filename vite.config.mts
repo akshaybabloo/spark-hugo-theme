@@ -90,8 +90,9 @@ export default defineConfig(({mode}) => {
                             extType = 'img';
                         } else if (/woff|woff2/.test(extType)) {
                             extType = "css";
+                        } else if (/css/.test(extType)) {
+                            extType = "css";
                         }
-                        if (assetInfo.name === 'app.css') return 'css/main.css';
                         return `${extType}/[name][extname]`;
                     },
                     chunkFileNames: 'js/[name]-[hash].[format].js',
