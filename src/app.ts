@@ -50,8 +50,6 @@ createApp({
                 arrowLeft: getIconHtml(arrowLeft),
                 rss: getIconHtml(rss),
             },
-
-            showMenu: true,
         });
 
         // Search related refs
@@ -59,6 +57,7 @@ createApp({
         let numberOfHits = ref<number>(0);
         let hits = ref<Record<string, any[]>>({})
         const searchModelRef = ref<HTMLElement>();
+        const showMenu = ref<boolean>(true);
         
         // Image related refs
         const imageModel = ref<HTMLElement>();
@@ -80,7 +79,8 @@ createApp({
         }
 
         function showMenuToggle() {
-            state.showMenu = !state.showMenu;
+            console.log("showMenuToggle")
+            showMenu.value = !showMenu.value;
         }
 
         function showSearchToggle() {
@@ -153,7 +153,8 @@ createApp({
             toggleMaximizeImage,
             maximizeImage,
             outsideClick,
-            searchAlgolia
+            searchAlgolia,
+            showMenu
         };
     }
 }).mount("#profile");

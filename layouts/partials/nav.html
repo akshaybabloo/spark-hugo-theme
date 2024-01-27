@@ -16,7 +16,7 @@
     </div>
 
     <div class="w-full block flex-grow lg:flex lg:items-center lg:w-auto"
-         v-bind:class="{hidden: showMenu}">
+         :class="{hidden: showMenu}">
         <div class="text-xl lg:flex-grow">
             {{ $currentPage := . }}
             {{ range.Site.Menus.main }}

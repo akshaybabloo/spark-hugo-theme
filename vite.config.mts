@@ -16,7 +16,6 @@ function preserveGoCommentPlugin(): Plugin {
         async writeBundle(options, bundle) {
             for (const fileName in bundle) {
                 if (fileName.endsWith('.html')) {
-                    console.log(options.dir, fileName);
                     const filePath = resolve(options.dir, fileName);
                     let content = await fs.readFile(filePath, 'utf8');
                     content = content.replace('{{/**/}}', '{{/*<script type="module" src="../../src/app.ts"></script>*/}}');
