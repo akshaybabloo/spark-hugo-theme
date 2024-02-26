@@ -19,16 +19,16 @@
     </script>
     {{ partial "main-script.html" . }}
 </head>
-<body class="text-white leading-normal tracking-wider shadow-xl">
+<body class="text-white leading-normal tracking-wider">
 
 <div id="profile" class="max-w-4xl flex items-center h-auto lg:h-screen flex-wrap mx-auto my-32 lg:my-0">
 
     <!--Main Col-->
-    <div class="sm:relative w-full rounded-lg shadow-2xl  opacity-75 mx-6 ring-gray-800/5  bg-gradient-to-r from-pink-500 via-red-500 to-yellow-500 p-1">
+    <div class="sm:relative w-full rounded-lg shadow-2xl mx-6 ring-gray-800/5  bg-gradient-to-r from-pink-500 via-red-500 to-yellow-500 p-1">
 
 
         <div class="p-4 md:p-12 text-center h-full w-full bg-gray-800 rounded-lg">
-            <div class="profile-image-container rounded-full shadow-xl mx-auto -mt-16 h-48 w-48 bg-cover bg-center relative border-4 border-transparent">
+            <div class="rounded-full shadow-xl mx-auto -mt-20 h-48 w-48 bg-cover bg-center relative border-4 border-transparent">
                 <picture>
                     {{ $imagePath := partial "image-path" (dict "page" . "src" .Site.Params.thumbnailUrl) }}
                     {{ $srcOriginal := $imagePath.originalSrc}}
