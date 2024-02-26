@@ -36,21 +36,20 @@ article {
 }
 
 .profile-image-container {
-    position: relative;
-}
-
-.profile-image-container:before {
-    content: '';
-    position: absolute;
-    left: -2px;
-    top: -2px;
-    background: conic-gradient(transparent 0% 75%, #fff 75% 100%);
-    background-size: 100% 100%;
-    width: calc(100% + 4px);
-    height: calc(100% + 4px);
-    z-index: -1;
-    animation: steam 1s linear forwards;
-    border-radius: 50%; 
+	position: relative;
+	&:before {
+		content: '';
+		position: absolute;
+		left: -2px;
+		top: -2px;
+		background: conic-gradient(transparent 0% 75%, #fff 75% 100%);
+		background-size: 100% 100%;
+		width: calc(100% + 4px);
+		height: calc(100% + 4px);
+		z-index: -1;
+		animation: steam 1s linear forwards;
+		border-radius: 50%;
+	}
 }
 
 @keyframes steam {
