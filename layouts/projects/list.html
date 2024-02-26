@@ -21,17 +21,16 @@
         <h2>{{.Key}}</h2>
         <div class="relative grid gap-5 sm:grid-cols-2 lg:grid-cols-4 prose-a:no-underline">
             {{ range .Pages }}
-                <a href="{{.Params.externalurl}}" class="flex flex-col justify-between overflow-hidden text-left transition-shadow duration-200 bg-gray-600 hover:border hover:border-liquid-lava rounded shadow-xl group hover:shadow-2xl">
+                <a href="{{.Params.externalurl}}" class="flex flex-col justify-between overflow-hidden text-left transition duration-200 bg-gray-600 transform hover:scale-105 ease-in-out shadow-gray-950 rounded shadow-lg group hover:shadow-xl ">
                     <div class="p-5">
                         <h3 class="!mt-1 mb-2 font-bold text-l">{{ .Title }} {{ if (isset .Params "externalurl") }} <sup class="text-xs" v-html="icons.externalLink"></sup> {{end}}</h3>
                         <p class="text-sm leading-5 text-gray-300">
                             {{ .Params.description }}
                         </p>
                         <p class="text-sm leading-5 text-gray-300">
-                            Built with: {{ range .Params.tags }}<span class="bg-liquid-lava text-white text-xs font-semibold my-0.5 mx-0.5 px-2.5 py-0.5 rounded">{{ . }}</span> {{ end }}
+                            Built with: {{ range .Params.tags }}<span class="bg-gray-600 border text-white text-xs font-semibold my-0.5 mx-0.5 px-2.5 py-0.5 rounded">{{ . }}</span> {{ end }}
                         </p>
                     </div>
-                    <div class="w-full h-1 ml-auto duration-300 origin-left transform scale-x-0 bg-deep-purple-accent-400 group-hover:scale-x-100"></div>
                 </a>
             {{end}}
         </div>
