@@ -94,7 +94,7 @@
     <div class="flex justify-center items-center">
         {{ if .NextPage }}
         <a href="{{ .NextPage.Permalink }}" class="no-underline w-full block max-w-sm py-1 px-2 border rounded-lg bg-gray-800 border-gray-700 hover:bg-gray-700">
-            <p class="!mb-0 text-base font-bold tracking-tight text-gray-900 dark:text-white"><i v-html="icons.arrowLeft" aria-hidden="true"></i> Previous</p>
+            <p class="!mb-0 text-base font-bold tracking-tight text-white"><i v-html="icons.arrowLeft" aria-hidden="true"></i> Previous</p>
             <p class="font-normal text-base text-gray-400 !mt-0 !ml-4.5">{{ .NextPage.Title | truncate 50 "..." }}</p>
         </a>
         {{ end }}
@@ -102,7 +102,7 @@
     <div class="flex justify-center items-center space-x-1">
         {{ if .PrevPage }}
         <a href="{{ .PrevPage.Permalink }}" class="no-underline w-full block max-w-sm py-1 px-2 border rounded-lg bg-gray-800 border-gray-700 hover:bg-gray-700 text-right">
-            <p class="!mb-0 text-base font-bold tracking-tight text-gray-900 dark:text-white">Back <i v-html="icons.arrowRight" aria-hidden="true"></i></p>
+            <p class="!mb-0 text-base font-bold tracking-tight text-white">Back <i v-html="icons.arrowRight" aria-hidden="true"></i></p>
             <p class="font-normal text-base text-gray-400 !mt-0 !mr-4.5">{{ .PrevPage.Title | truncate 50 "..." }}</p>
         </a>
         {{ end }}
