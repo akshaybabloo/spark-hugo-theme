@@ -21,7 +21,7 @@
         <h2>{{.Key}}</h2>
         <div class="relative grid gap-5 sm:grid-cols-2 lg:grid-cols-4 prose-a:no-underline">
             {{ range .Pages }}
-                <a href="{{.Params.externalurl}}" class="flex flex-col justify-between overflow-hidden text-left transition duration-200 bg-gray-600 transform hover:scale-105 ease-in-out shadow-gray-950 rounded shadow-lg group hover:shadow-xl ">
+                <a href="{{.Params.externalurl}}" class="flex flex-col justify-between overflow-hidden text-left transition duration-200 bg-gray-600 transform hover:scale-105 ease-in-out shadow-gray-950 rounded shadow-lg group hover:shadow-xl border border-gray-500">
                     <div class="p-5">
                         <h3 class="!mt-1 mb-2 font-bold text-l">{{ .Title }} {{ if (isset .Params "externalurl") }} <sup class="text-xs" v-html="icons.externalLink"></sup> {{end}}</h3>
                         <p class="text-sm leading-5 text-gray-300">
