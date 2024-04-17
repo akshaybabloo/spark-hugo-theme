@@ -9,6 +9,9 @@ node_modules/
 /static/js/main*
 /static/js/vendors*
 /static/js/runtime*
+/static/js/vue*
+/static/js/@*
+/static/js/algoliasearch*
 
 /static/fonts/*
 *.woff*

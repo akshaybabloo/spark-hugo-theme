@@ -1,4 +1,4 @@
-import {defineConfig, loadEnv, splitVendorChunkPlugin, Plugin} from 'vite';
+import {defineConfig, loadEnv, Plugin} from 'vite';
 import {resolve} from 'path'
 import {execSync} from 'child_process';
 import { promises as fs } from 'fs';
@@ -57,7 +57,6 @@ export default defineConfig(({mode}) => {
     return {
         plugins: [
             cleanFileContentPlugin(),
-            splitVendorChunkPlugin(),
             preserveGoCommentPlugin(),
         ],
         // esbuild: {
@@ -96,6 +95,13 @@ export default defineConfig(({mode}) => {
                     },
                     chunkFileNames: 'js/[name]-[hash].[format].js',
                     entryFileNames: 'js/[name]-[hash].[format].js',
+                    manualChunks: {
+                        'vue': ['vue'],
+                        '@fortawesome/fontawesome-svg-core': ['@fortawesome/fontawesome-svg-core'],
+                        '@fortawesome/free-brands-svg-icons': ['@fortawesome/free-brands-svg-icons'],
+                        '@fortawesome/free-solid-svg-icons': ['@fortawesome/free-solid-svg-icons'],
+                        'algoliasearch/lite': ['algoliasearch/lite'],
+                    },
                 },
                 input: {
                     app: resolve(__dirname, 'layouts/partials/main-script.html'),
