@@ -30,7 +30,7 @@
     "@fortawesome/free-solid-svg-icons": "^6.5.2",
     "algoliasearch": "^4.23.3",
     "firacode": "^6.2.0",
-    "video.js": "^8.10.0",
+    "video.js": "^8.12.0",
     "vue": "^3.4.26"
   }
 }
