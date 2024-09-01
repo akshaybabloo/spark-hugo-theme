@@ -19,9 +19,9 @@
             <script type="application/json">
                 {
                     "vars" : {
-                        "gtag_id": "{{ .Site.GoogleAnalytics }}",
+                        "gtag_id": "{{ .Site.Config.Services.GoogleAnalytics.ID }}",
                         "config" : {
-                            "{{ .Site.GoogleAnalytics }}": { "groups": "default" }
+                            "{{ .Site.Config.Services.GoogleAnalytics.ID }}": { "groups": "default" }
                         }
                     }
                 }
