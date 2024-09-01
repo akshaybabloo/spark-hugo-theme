@@ -1,15 +1,13 @@
 # Spark 2
 
-> [Spark 1](https://github.com/akshaybabloo/spark-hugo-theme/tree/spark-1) is now deprecated. Please use Spark 2.
-
-This is the second version of the Spark theme. This theme is built on Hugo v0.80+. It is a dark theme with a minimalistic design.
+This is the second version of the Spark theme. This theme is built on Hugo v0.133+. It is a dark theme with a minimalistic design.
 
 It uses the following technologies:
 
 - [Tailwind CSS](https://tailwindcss.com/)  - For styling
 - [Vue.js](https://vuejs.org/) - For interactivity
 - [Algolia](https://www.algolia.com/) - For search
-- [Webpack](https://webpack.js.org/) - For bundling
+- [Vite](https://vitejs.dev/) - For bundling
 - [Font Awesome](https://fontawesome.com/) - For icons
 - [TypeScript](https://www.typescriptlang.org/) - For type checking
 - [Gulp](https://gulpjs.com/) - For moving static files
@@ -18,7 +16,7 @@ It uses the following technologies:
 
 ## Features
 
-- Responsive, uses [UiKit v3](https://github.com/uikit/uikit/)
+- Responsive design
 - Suitable for researchers, PhD candidates, personal website and bloggers
 - Disqus support
 - Google Ads support (Only for blogs) and AMP blogs
@@ -62,7 +60,7 @@ Usage is similar to the original Spark theme. I have added a few more features t
 
 ### Configuration
 
-Please see the configuration [here](https://github.com/akshaybabloo/gollahalli.com/blob/master/config.toml). This theme is built on Hugo v0.55+.
+Please see the configuration [here](https://github.com/akshaybabloo/gollahalli.com/blob/master/config.toml).
 
 ```toml
 baseURL = "https://www.gollahalli.com/"
