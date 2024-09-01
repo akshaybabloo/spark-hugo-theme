@@ -19,13 +19,11 @@ import {
     arrowRight,
     rss,
 } from "./icons";
-import algoliasearch from "algoliasearch/lite";
+import {liteClient as algoliasearch} from "algoliasearch/lite";
 import {groupBy, getIconHtml} from "./utils";
 
 // @ts-ignore
 const client = algoliasearch(algoliaAppId, algoliaApiKey);
-// @ts-ignore
-const index = client.initIndex(algoliaIndexName);
 
 createApp({
     setup() {
@@ -58,11 +56,11 @@ createApp({
         let hits = ref<Record<string, any[]>>({})
         const searchModelRef = ref<HTMLElement>();
         const showMenu = ref<boolean>(true);
-        
+
         // Image related refs
         const imageModel = ref<HTMLElement>();
         const imageModelSrc = ref<HTMLImageElement>();
-        
+
         onMounted(() => {
             console.log("Welcome to my gollahalli.com!", __GIT_HASH__);
             document.addEventListener('keydown', escapeKeyListener);
@@ -129,9 +127,14 @@ createApp({
             }
 
             try {
-                const value = await index.search(searchText.value);
-                hits.value = groupBy(value.hits, "section");
-                numberOfHits.value = value.nbHits;
+                //@ts-ignore
+                const value = await client.search({
+                    requests: [
+                        {query: searchText.value, indexName: algoliaIndexName}
+                    ],
+                });
+                hits.value = groupBy(value.results[0].hits, "section");
+                numberOfHits.value = value.results[0].hits.length;
             } catch (error) {
                 console.error(error);
                 hits.value = {};
