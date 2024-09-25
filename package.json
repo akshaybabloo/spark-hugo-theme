@@ -31,6 +31,6 @@
     "algoliasearch": "^5.4.1",
     "firacode": "^6.2.0",
     "video.js": "^8.17.4",
-    "vue": "^3.5.6"
+    "vue": "^3.5.8"
   }
 }
