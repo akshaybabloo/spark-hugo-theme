@@ -107,6 +107,13 @@ export default defineConfig(({mode}) => {
                     app: resolve(__dirname, 'layouts/partials/main-script.html'),
                 },
             }
+        },
+        css: {
+            preprocessorOptions: {
+                scss: {
+                    api: 'modern-compiler'
+                }
+            }
         }
     }
 });
