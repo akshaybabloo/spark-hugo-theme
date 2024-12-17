@@ -27,7 +27,7 @@
     "@fortawesome/fontawesome-svg-core": "^6.7.2",
     "@fortawesome/free-brands-svg-icons": "^6.7.2",
     "@fortawesome/free-solid-svg-icons": "^6.7.2",
-    "algoliasearch": "^5.15.0",
+    "algoliasearch": "^5.17.1",
     "firacode": "^6.2.0",
     "video.js": "^8.21.0",
     "vue": "^3.5.13"
