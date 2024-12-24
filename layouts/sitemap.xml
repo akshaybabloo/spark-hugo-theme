@@ -25,13 +25,14 @@
         {{- end }}
         {{- if (isset .Params "sitemapvideos" ) }}
           {{- range .Params.sitemapvideos }}
+            {{ $src := partial "resource-check" (dict "page" $page "src" .videoLoc)}}
             <video:video>
               <video:title>{{ $title }}</video:title>
               <video:description>
                 {{ .videoDescription }}
               </video:description>
               <video:content_loc>
-                  {{ .videoLoc | absURL }}
+                  {{ $src | absURL }}
               </video:content_loc>
               <video:publication_date>{{ safeHTML ( $date.Format "2006-01-02T15:04:05-07:00" ) }}</video:publication_date>
               <video:family_friendly>yes</video:family_friendly>
