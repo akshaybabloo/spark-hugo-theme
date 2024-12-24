@@ -1,0 +1,27 @@
+{{ $page := .page }}
+{{ $srcOriginal := .src}}
+
+{{ $src := $srcOriginal }}
+{{ $stat := os.FileExists (path.Join "static" $src) }}
+{{ if not $stat }}
+    {{ $srcOriginal = $page.Resources.GetMatch $srcOriginal }}
+    {{ with $srcOriginal }}
+        {{ $srcOriginal = .RelPermalink }}
+        {{ $src = $srcOriginal }}
+    {{ end }}
+{{ end }}
+
+{{ $src = replace $src ".mp4" ".webm" }}
+{{ $src = replace $src ".mov" ".webm" }}
+{{ $src = replace $src ".avi" ".webm" }}
+{{ $src = replace $src ".flv" ".webm" }}
+{{ $src = replace $src ".mkv" ".webm" }}
+{{ $src = replace $src ".wmv" ".webm" }}
+{{ $src = replace $src ".3gp" ".webm" }}
+{{ $src = replace $src ".mpg" ".webm" }}
+{{ $src = replace $src ".mpeg" ".webm" }}
+{{ $src = replace $src ".m4v" ".webm" }}
+{{ $src = replace $src ".ogv" ".webm" }}
+{{ $src = replace $src ".webm" ".webm" }}
+
+{{ return dict "originalSrc" $srcOriginal "webmSrc" $src }}

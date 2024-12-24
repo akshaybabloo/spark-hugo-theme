@@ -1,12 +1,20 @@
+{{$page := .Page}}
+{{ $videoPath := partial "video-path" (dict "page" $page "src" (index .Params "src")) }}
+{{ $srcOriginal := $videoPath.originalSrc}}
+{{ $src := $videoPath.webmSrc }}
+
+<div class="flex justify-center">
 <video
-    class="video-js vjs-theme-city vjs-fluid"
+    class="video-js vjs-theme-city"
     controls
     preload="auto"
+    width="800"
+    height="600"
     data-setup='{}'>
-  <source src='{{ index .Params "src" }}.mp4' type="video/mp4"></source>
-  <source src='{{ index .Params "src" }}.webm' type="video/webm"></source>
+  <source src='{{ $src }}' type="video/webm"></source>
   <p class="vjs-no-js">
     To view this video please enable JavaScript, and consider upgrading to a
     web browser that supports HTML5 video
   </p>
 </video>
+</div>
