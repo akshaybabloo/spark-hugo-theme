@@ -101,6 +101,7 @@ export default defineConfig(({mode}) => {
                         '@fortawesome/free-brands-svg-icons': ['@fortawesome/free-brands-svg-icons'],
                         '@fortawesome/free-solid-svg-icons': ['@fortawesome/free-solid-svg-icons'],
                         'algoliasearch/lite': ['algoliasearch/lite'],
+                        '@microsoft/clarity': ['@microsoft/clarity'],
                     },
                 },
                 input: {

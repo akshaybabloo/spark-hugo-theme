@@ -21,12 +21,16 @@ import {
 } from "./icons";
 import {liteClient as algoliasearch} from "algoliasearch/lite";
 import {groupBy, getIconHtml} from "./utils";
+import Clarity from '@microsoft/clarity';
 
 // @ts-ignore
 const client = algoliasearch(algoliaAppId, algoliaApiKey);
 
 createApp({
     setup() {
+        // @ts-ignore
+        Clarity.init(clarityProjectId);
+        
         const state = reactive({
             // Icons
             icons: {
