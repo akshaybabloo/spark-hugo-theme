@@ -15,7 +15,7 @@ function preserveGoCommentPlugin(): Plugin {
         name: 'preserve-go-comment',
         async writeBundle(options, bundle) {
             for (const fileName in bundle) {
-                if (fileName.endsWith('.html')) {
+                if (fileName.endsWith('.html') && options.dir) {
                     const filePath = resolve(options.dir, fileName);
                     let content = await fs.readFile(filePath, 'utf8');
                     content = content.replace('{{/**/}}', '{{/*<script type="module" src="../../src/app.ts"></script>*/}}');
@@ -83,7 +83,7 @@ export default defineConfig(({mode}) => {
             rollupOptions: {
                 output: {
                     assetFileNames: (assetInfo) => {
-                        let extType = assetInfo.name.split('.').at(1);
+                        let extType = assetInfo.names[0].split('.').at(1) || '';
                         if (/png|jpe?g|svg|gif|tiff|bmp|ico/i.test(extType)) {
                             extType = 'img';
                         } else if (/woff|woff2/.test(extType)) {
