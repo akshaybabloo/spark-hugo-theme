@@ -13,3 +13,11 @@ updates:
           - "major"
           - "minor"
           - "patch"
+      tailwindcss:
+        applies-to: version-updates
+        patterns:
+          - "@tailwindcss*"
+        update-types:
+          - "major"
+          - "minor"
+          - "patch"
