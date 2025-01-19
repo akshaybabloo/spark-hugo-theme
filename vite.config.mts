@@ -100,7 +100,7 @@ export default defineConfig(({mode}) => {
                         '@fortawesome/fontawesome-svg-core': ['@fortawesome/fontawesome-svg-core'],
                         '@fortawesome/free-brands-svg-icons': ['@fortawesome/free-brands-svg-icons'],
                         '@fortawesome/free-solid-svg-icons': ['@fortawesome/free-solid-svg-icons'],
-                        'algoliasearch/lite': ['algoliasearch/lite'],
+                        '@algolia/client-search': ['@algolia/client-search'],
                         '@microsoft/clarity': ['@microsoft/clarity'],
                     },
                 },

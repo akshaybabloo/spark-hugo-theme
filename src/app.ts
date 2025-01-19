@@ -1,5 +1,5 @@
 import "./main.scss";
-import {createApp, reactive, onMounted, onBeforeUnmount, ref} from "vue";
+import { createApp, reactive, onMounted, onBeforeUnmount, ref } from "vue";
 import {
     externalLink,
     facebook,
@@ -19,8 +19,8 @@ import {
     arrowRight,
     rss,
 } from "./icons";
-import {liteClient as algoliasearch} from "algoliasearch/lite";
-import {groupBy, getIconHtml} from "./utils";
+import { searchClient as algoliasearch } from "@algolia/client-search";
+import { groupBy, getIconHtml } from "./utils";
 import Clarity from '@microsoft/clarity';
 
 // @ts-ignore
@@ -30,7 +30,7 @@ createApp({
     setup() {
         // @ts-ignore
         Clarity.init(clarityProjectId);
-        
+
         const state = reactive({
             // Icons
             icons: {
@@ -131,11 +131,11 @@ createApp({
             }
 
             try {
-                //@ts-ignore
-                const value = await client.search({
-                    requests: [
-                        {query: searchText.value, indexName: algoliaIndexName}
-                    ],
+                const value = await client.searchSingleIndex({
+                    // @ts-ignore
+                    indexName: algoliaIndexName,
+                    searchParams: { query: searchText.value }
+
                 });
                 hits.value = groupBy(value.results[0].hits, "section");
                 numberOfHits.value = value.results[0].hits.length;
