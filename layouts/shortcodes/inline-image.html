@@ -1,0 +1,11 @@
+<span class="inline-flex items-baseline">
+    {{ $page := .Page }}
+    {{ $imagePath := partial "image-path" (dict "page" $page "src" (.Get "src")) }}
+    {{ $srcOriginal := $imagePath.originalSrc}}
+    {{ $src := $imagePath.webpSrc }}
+  <img
+    src="{{ $src }}"
+    alt="{{ .Get "alt" }}"
+    class="self-center w-5 h-5 mx-1"
+  />
+</span>
