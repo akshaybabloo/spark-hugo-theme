@@ -2,6 +2,7 @@ import {defineConfig, loadEnv, Plugin} from 'vite';
 import {resolve} from 'path'
 import {execSync} from 'child_process';
 import { promises as fs } from 'fs';
+import tailwindcss from "@tailwindcss/vite";
 
 const gitHash = execSync('git rev-parse --short HEAD').toString().trim();
 
@@ -58,6 +59,7 @@ export default defineConfig(({mode}) => {
         plugins: [
             cleanFileContentPlugin(),
             preserveGoCommentPlugin(),
+            tailwindcss(),
         ],
         // esbuild: {
         //     legalComments: 'none',

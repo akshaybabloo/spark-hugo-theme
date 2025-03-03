@@ -1,4 +1,5 @@
-import "./main.scss";
+import "./tailwind.css";
+import "./custom.scss";
 import { createApp, reactive, onMounted, onBeforeUnmount, ref } from "vue";
 import {
     externalLink,

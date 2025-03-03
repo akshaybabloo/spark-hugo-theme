@@ -17,6 +17,7 @@ node_modules/
 *.woff*
 
 /src/*.css
+!/src/tailwind.css
 app-*.es.js
 vendor-*.es.js
 *.map

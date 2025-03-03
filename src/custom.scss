@@ -1,0 +1,14 @@
+@import url("../../../node_modules/firacode/distr/fira_code.css");
+
+article {
+    %headings {
+        .anchor-link {
+            display: none;
+        }
+        &:hover {
+            .anchor-link {
+                display: inline;
+            }
+        }
+    }
+}
