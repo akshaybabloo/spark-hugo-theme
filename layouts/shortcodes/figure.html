@@ -1,20 +1,16 @@
 {{$page := .Page}}
-<figure class="group/item cursor-pointer" @click="toggleMaximizeImage(); maximizeImage($event, '{{ .Get "src" }}')">
+<figure @click="toggleMaximizeImage(); maximizeImage($event, '{{ .Get "src" }}')">
     <div class="relative flex justify-center">
         {{ with .Get "link"}}<a href="{{.}}">{{ end }}
-        <picture class="group-hover/item:opacity-50 !m-0">
+        <picture class="!m-0 cursor-pointer hover:invert-25">
             {{ $imagePath := partial "image-path" (dict "page" $page "src" (.Get "src")) }}
             {{ $srcOriginal := $imagePath.originalSrc}}
             {{ $src := $imagePath.webpSrc }}
 
-            <source srcset="{{ $src }}" class="mx-auto rounded-lg object-contain" type="image/webp">
+            <source srcset="{{ $src }}" class="mx-auto rounded-lg" type="image/webp">
             <img src="{{ $srcOriginal }}" class="!m-0" ref="imgs" @click="maximizeImage($event, '{{ .Get "src" }}')" {{ with .Get "width" }}width="{{.}}"{{ end }} {{ if or (.Get "alt") (.Get "caption") }}alt="{{ with .Get "alt"}}{{.}}{{else}}{{ .Get "caption" }}{{ end }}"{{ end }}>
         </picture>
         {{ if .Get "link"}}</a>{{ end }}
-    
-        <div class="invisible group-hover/item:visible absolute m-auto top-1/2 right-1/2 -translate-x-1/2 -translate-y-1/2">
-            <i v-html="icons.maximize" class="text-black" aria-hidden="true" @click="maximizeImage($event, '{{ .Get "src" }}')"></i>
-        </div>
     </div>
     {{ if or (or (.Get "title") (.Get "caption")) (.Get "attr")}}
         <figcaption>{{ if isset .Params "title" }}
@@ -25,7 +21,7 @@
                     {{ with .Get "attrlink"}}<a href="{{.}}"> {{ end }}
                         {{ .Get "attr" }}
                     {{ if .Get "attrlink"}}</a> {{ end }}
-                </p> 
+                </p>
             {{ end }}
         </figcaption>
     {{ end }}
