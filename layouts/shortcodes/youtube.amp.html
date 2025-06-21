@@ -1,8 +1,0 @@
-{{define "amp-scripts"}}
-<script async custom-element="amp-youtube" src="https://cdn.ampproject.org/v0/amp-youtube-0.1.js"></script>
-{{ end }}
-{{- $id := .Get "id" | default (.Get 0) -}}
-<amp-youtube
-    data-videoid="{{ $id }}"
-    layout="responsive"
-    width="480" height="270"></amp-youtube>

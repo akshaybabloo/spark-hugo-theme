@@ -19,7 +19,7 @@ It uses the following technologies:
 - Responsive design
 - Suitable for researchers, PhD candidates, personal website and bloggers
 - Disqus support
-- Google Ads support (Only for blogs) and AMP blogs
+- Google Ads support (Only for blogs)
 - Google Analytics support with event tracking
 - Uses SASS/SCSS, no NodeJS needed
 - Can change the colour of the theme
@@ -29,8 +29,6 @@ It uses the following technologies:
 - Structured data for website and blogs
 - With blog pagination and categories
 - Support for external links in blog
-- AMP Support
-  - Blog contents now support AMP
 - For production, `HUGO_ENV` must be set to `production`, so that Google Analytics can work.
 - SEO
   - Optimised for search engine
@@ -66,9 +64,9 @@ Please see the configuration [here](https://github.com/akshaybabloo/gollahalli.c
 baseURL = "https://www.gollahalli.com/"
 languageCode = "en-us"
 title = "Akshay Raj Gollahalli"
-theme = "Spark2"
+theme = "spark2"
 
-googleAnalytics = "G-7WDESHJKMH" # Optional
+googleAnalytics = "G-7WDESHJKMH"   # Optional
 disqusShortname = "gollahalli-com" # Optional
 pygmentsCodeFences = true
 enableRobotsTXT = true
@@ -76,11 +74,16 @@ enableEmoji = true
 
 [markup]
 [markup.highlight]
-style = "rrt"
+style = "github-dark"
+[markup.goldmark]
 [markup.goldmark.renderer]
 unsafe = true
 [markup.goldmark.extensions]
 linkify = false
+[markup.goldmark.parser]
+[markup.goldmark.parser.attribute]
+block = true
+title = true
 
 [outputFormats]
 [outputFormats.searchindex]
@@ -91,42 +94,52 @@ isPlainText = true
 mediaType = "text/plain"
 baseName = "ads"
 isPlainText = true
-#  [outputFormats.AMP]
-#    permalinkable = false
 
+
+[mediaTypes]
+[mediaTypes."font/woff"]
+suffixes = ["woff"]
+[mediaTypes."font/woff2"]
+suffixes = ["woff2"]
 
 [outputs]
-home = ["HTML", "RSS", "AMP", "searchindex", "ads"]
-page = ["HTML", "RSS", "AMP"]
-section = ["HTML", "RSS", "AMP"]
+home = ["HTML", "RSS", "searchindex", "ads"]
+page = ["HTML", "RSS"]
+section = ["HTML", "RSS"]
 
 [params]
-googleAds = "7450383714878520" # Optional, ignore "ca-pub-"
-amp = true
-year = 2022
-github = "https://github.com/akshaybabloo" # Optional
-linkedin = "https://linkedin.com/in/gollahalli" # Optional
-twitter = "http://twitter.com/akshaybabloo" # Optional
-email = "akshay@gollahalli.com" # Optional
-# pgp = "3570 2F7C E0CF 2579 BF7D 05DD A603 9E24 179E E13D" # Optional
-# logoSVG = "img/logo.svg" # Use logoSVG or logo. Optional
+googleAds = "7450383714878520"                          # Optional, ignore "ca-pub-"
+repo = "https://github.com/akshaybabloo/gollahalli.com"
+year = 2024
+email = "akshay@gollahalli.com"                 # Optional
+#    pgp = "3570 2F7C E0CF 2579 BF7D 05DD A603 9E24 179E E13D" # Optional
+# logoSVG = "img/logo.svg" # # Use logoSVG or logo. Optional
 # logo = "" # Use logoSVG or logo. Optional
 namedLogo = "/img/logo.svg"
-logoPhoto = "/img/akshay.jpg" # Use logoSVG or logo or logoPhoto. Optional
+logoPhoto = "/img/akshay.jpg"                          # Use logoSVG or logo or logoPhoto. Optional
 algoliaAppId = "UT1XVMZE1Q"
 algoliaApiKey = "fadcde84f1cdaf165d51c20a50336188"
 algoliaIndexName = "gollahalli-website"
 thumbnailUrl = "/img/akshay.jpg"
 acknowledge = false
-convertAssetsToInline = false  # Converts external assets into minified inline assets
+convertAssetsToInline = false                          # Converts external assets into minified inline assets
 cloudflareInsight = "83b998816e3e4417be0a7582d7645cd3"
+clarity = "im383wjll4"
+
+[params.social]
+github = "https://github.com/akshaybabloo"      # Optional
+linkedin = "https://linkedin.com/in/gollahalli" # Optional
+twitter = "http://twitter.com/akshaybabloo"     # Optional
+
 [params.sponsor]
 enable = true
 link = "https://github.com/sponsors/akshaybabloo"
+
 [params.alert]
 body = "Stay home, protect yourself and everyone around you from COVID-19. For more information see - <a href='https://www.who.int/emergencies/diseases/novel-coronavirus-2019'>www.who.int/emergencies/diseases/novel-coronavirus-2019</a>"
 type = "danger"
 icon = ""
+
 [params.scss]
 primary = "#c9cacc"
 secondary = "#c9cacc"
@@ -137,6 +150,7 @@ subTextColor = "gray"
 labelBackgroundColor = "#e2e8f0"
 labelTextColor = "#1a202c"
 headers = "#fc8181"
+
 [params.seo]
 noIndexTags = true
 noIndexCategories = true

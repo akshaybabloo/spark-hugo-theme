@@ -13,9 +13,6 @@
         {{ end }}
     {{ end }}
 
-    {{ with .OutputFormats.Get "amp" }}
-        <link rel="amphtml" href="{{ .Permalink }}">
-    {{ end }}
     {{- partial "seo/articleSchemaSEO.html" . -}}
 {{ end }}
 
