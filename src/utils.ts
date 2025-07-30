@@ -1,4 +1,4 @@
-import { Icon } from "@fortawesome/fontawesome-svg-core"
+import { Icon } from '@fortawesome/fontawesome-svg-core'
 
 /**
  * Group an array of objects by a key

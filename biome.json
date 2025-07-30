@@ -7,9 +7,7 @@
 	},
 	"files": {
 		"ignoreUnknown": false,
-		"experimentalScannerIgnores": [
-			"tailwind.css"
-		]
+		"includes": ["**", "!src/tailwind.css", "!layouts/_default/list.searchindex.json"]
 	},
 	"formatter": {
 		"enabled": true,
@@ -24,7 +22,7 @@
 	},
 	"javascript": {
 		"formatter": {
-			"quoteStyle": "double",
+			"quoteStyle": "single",
 			"semicolons": "asNeeded"
 		}
 	},

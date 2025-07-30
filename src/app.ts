@@ -1,6 +1,6 @@
-import "./tailwind.css"
-import "./custom.scss"
-import { createApp, reactive, onMounted, onBeforeUnmount, ref } from "vue"
+import './tailwind.css'
+import './custom.scss'
+import { createApp, reactive, onMounted, onBeforeUnmount, ref } from 'vue'
 import {
 	externalLink,
 	facebook,
@@ -19,10 +19,10 @@ import {
 	arrowLeft,
 	arrowRight,
 	rss,
-} from "./icons"
-import { searchClient as algoliasearch } from "@algolia/client-search"
-import { groupBy, getIconHtml } from "./utils"
-import Clarity from "@microsoft/clarity"
+} from './icons'
+import { searchClient as algoliasearch } from '@algolia/client-search'
+import { groupBy, getIconHtml } from './utils'
+import Clarity from '@microsoft/clarity'
 
 const client = algoliasearch(algoliaAppId, algoliaApiKey)
 
@@ -54,7 +54,7 @@ createApp({
 		})
 
 		// Search related refs
-		const searchText = ref("")
+		const searchText = ref('')
 		let numberOfHits = ref<number>(0)
 		let hits = ref<Record<string, any[]>>({})
 		const searchModelRef = ref<HTMLElement>()
@@ -67,41 +67,41 @@ createApp({
 		const imageModelSrc = ref<HTMLImageElement>()
 
 		onMounted(() => {
-			console.log("Welcome to my gollahalli.com!", __GIT_HASH__)
-			document.addEventListener("keydown", escapeKeyListener)
+			console.log('Welcome to my gollahalli.com!', __GIT_HASH__)
+			document.addEventListener('keydown', escapeKeyListener)
 		})
 
 		onBeforeUnmount(() => {
-			document.removeEventListener("keydown", escapeKeyListener)
+			document.removeEventListener('keydown', escapeKeyListener)
 		})
 
 		function escapeKeyListener(e: KeyboardEvent) {
-			if (e.key === "Escape" && !searchModelRef.value?.classList.contains("hidden")) {
+			if (e.key === 'Escape' && !searchModelRef.value?.classList.contains('hidden')) {
 				showSearchToggle()
 			}
 		}
 
 		function showMenuToggle() {
-			console.log("showMenuToggle")
+			console.log('showMenuToggle')
 			showMenu.value = !showMenu.value
 		}
 
 		function showSearchToggle() {
-			if (searchModelRef.value?.classList.contains("hidden")) {
-				searchModelRef.value.classList.remove("hidden")
+			if (searchModelRef.value?.classList.contains('hidden')) {
+				searchModelRef.value.classList.remove('hidden')
 				searchInput.value?.focus()
 			} else {
-				searchModelRef.value?.classList.add("hidden")
+				searchModelRef.value?.classList.add('hidden')
 			}
 		}
 
 		function toggleMaximizeImage() {
-			if (imageModel.value?.classList.contains("hidden")) {
-				imageModel.value.classList.remove("hidden")
+			if (imageModel.value?.classList.contains('hidden')) {
+				imageModel.value.classList.remove('hidden')
 			} else {
-				imageModel.value?.classList.add("hidden")
+				imageModel.value?.classList.add('hidden')
 				if (imageModelSrc.value) {
-					imageModelSrc.value.src = ""
+					imageModelSrc.value.src = ''
 				}
 			}
 		}
@@ -114,10 +114,10 @@ createApp({
 
 		function outsideClick(event: PointerEvent, from: string) {
 			switch (from) {
-				case "searchModelRef":
+				case 'searchModelRef':
 					showSearchToggle()
 					break
-				case "imageModel":
+				case 'imageModel':
 					toggleMaximizeImage()
 					break
 				default:
@@ -126,7 +126,7 @@ createApp({
 		}
 
 		async function searchAlgolia() {
-			if (searchText.value === "") {
+			if (searchText.value === '') {
 				hits.value = {}
 				numberOfHits.value = 0
 				return
@@ -139,7 +139,7 @@ createApp({
 					indexName: algoliaIndexName,
 					searchParams: { query: searchText.value, hitsPerPage: 100 },
 				})
-				hits.value = groupBy(value.hits, "section")
+				hits.value = groupBy(value.hits, 'section')
 				numberOfHits.value = value.hits.length
 			} catch (error) {
 				console.error(error)
@@ -170,4 +170,4 @@ createApp({
 			showMenu,
 		}
 	},
-}).mount("#profile")
+}).mount('#profile')
