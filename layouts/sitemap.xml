@@ -2,7 +2,8 @@
 {{ $sitemapXSL := ( "css/sitemap.xsl" | relURL ) }}
 {{ (printf `<?xml-stylesheet type="text/xsl" href="%s"?>` $sitemapXSL)  | safeHTML }}
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
-  xmlns:xhtml="http://www.w3.org/1999/xhtml" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
+  xmlns:xhtml="http://www.w3.org/1999/xhtml" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"
+  xmlns:video="http://www.google.com/schemas/sitemap-video/1.1">
   {{- range .Data.Pages }}
     {{- if and (not (isset .Params "url")) (not (isset .Params "externalurl")) (not (in .Permalink "/tags")) (not (in .Permalink "/categories")) }}
       <url>
@@ -46,11 +47,6 @@
                       hreflang="{{ .Lang }}"
                       href="{{ .Permalink }}"
                       />{{ end }}
-          <xhtml:link
-                      rel="alternate"
-                      hreflang="{{ .Lang }}"
-                      href="{{ .Permalink }}"
-                      />
         {{- end }}
       </url>
     {{- end }}

@@ -2,6 +2,7 @@
 <xsl:stylesheet version="2.0"
                 xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"
                 xmlns:sitemap="http://www.sitemaps.org/schemas/sitemap/0.9"
+                xmlns:video="http://www.google.com/schemas/sitemap-video/1.1"
                 xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
     <xsl:output method="html" version="1.0" encoding="UTF-8" indent="yes"/>
     <xsl:template match="/">
@@ -98,8 +99,9 @@
                         <table id="sitemap" cellpadding="3">
                             <thead>
                                 <tr>
-                                    <th width="70%">URL (<xsl:value-of select="count(sitemap:urlset/sitemap:url)"/> total)</th>
-                                    <th width="15%">Images</th>
+                                    <th width="65%">URL (<xsl:value-of select="count(sitemap:urlset/sitemap:url)"/> total)</th>
+                                    <th width="10%">Images</th>
+                                    <th width="10%">Videos</th>
                                     <th title="Last Modification Time" width="15%">Last Modified</th>
                                 </tr>
                             </thead>
@@ -118,6 +120,9 @@
                                         </td>
                                         <td>
                                             <xsl:value-of select="count(image:image)"/>
+                                        </td>
+                                        <td>
+                                            <xsl:value-of select="count(video:video)"/>
                                         </td>
                                         <td>
                                             <xsl:value-of select="concat(substring(sitemap:lastmod,0,11),concat(' ', substring(sitemap:lastmod,12,5)))"/>
