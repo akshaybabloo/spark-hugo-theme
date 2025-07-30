@@ -24,12 +24,10 @@ import { searchClient as algoliasearch } from "@algolia/client-search"
 import { groupBy, getIconHtml } from "./utils"
 import Clarity from "@microsoft/clarity"
 
-// @ts-ignore
 const client = algoliasearch(algoliaAppId, algoliaApiKey)
 
 createApp({
 	setup() {
-		// @ts-ignore
 		Clarity.init(clarityProjectId)
 
 		const state = reactive({
@@ -60,9 +58,11 @@ createApp({
 		let numberOfHits = ref<number>(0)
 		let hits = ref<Record<string, any[]>>({})
 		const searchModelRef = ref<HTMLElement>()
+		const searchInput = ref<HTMLInputElement>()
 		const showMenu = ref<boolean>(true)
+		const isLoading = ref<boolean>(false)
 
-		// Image related refs
+		// Image-related refs
 		const imageModel = ref<HTMLElement>()
 		const imageModelSrc = ref<HTMLImageElement>()
 
@@ -89,6 +89,7 @@ createApp({
 		function showSearchToggle() {
 			if (searchModelRef.value?.classList.contains("hidden")) {
 				searchModelRef.value.classList.remove("hidden")
+				searchInput.value?.focus()
 			} else {
 				searchModelRef.value?.classList.add("hidden")
 			}
@@ -131,29 +132,34 @@ createApp({
 				return
 			}
 
+			isLoading.value = true
+
 			try {
 				const value = await client.searchSingleIndex({
-					// @ts-ignore
 					indexName: algoliaIndexName,
-					searchParams: { query: searchText.value },
+					searchParams: { query: searchText.value, hitsPerPage: 100 },
 				})
-				hits.value = groupBy(value.results[0].hits, "section")
-				numberOfHits.value = value.results[0].hits.length
+				hits.value = groupBy(value.hits, "section")
+				numberOfHits.value = value.hits.length
 			} catch (error) {
 				console.error(error)
 				hits.value = {}
 				numberOfHits.value = 0
+			} finally {
+				isLoading.value = false
 			}
 		}
 
 		return {
 			...state,
 			searchModelRef,
+			searchInput,
 			imageModel,
 			imageModelSrc,
 			searchText,
 			numberOfHits,
 			hits,
+			isLoading,
 			escapeKeyListener,
 			showMenuToggle,
 			showSearchToggle,

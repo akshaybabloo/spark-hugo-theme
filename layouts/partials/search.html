@@ -2,26 +2,33 @@
 <div class="fixed z-10 inset-0 overflow-auto backdrop-blur-lg bg-gray-800/80 hidden" ref="searchModelRef" @click="outsideClick($event, 'searchModelRef')">
     <div class="relative max-w-4xl flex items-center h-auto flex-wrap mx-auto my-32" ref="innerContainer" @click.stop>
         <div class="relative w-full rounded-lg shadow-2xl bg-gray-600 mx-6 ring-gray-800 p-4">
-            <!-- close button -->
-            <div class="absolute top-0 right-0 h-12 w-18 p-4">
-                <button class="focus:outline-none" aria-label="Close" @click="showSearchToggle()"><i v-html="icons.times"
-                                                                                  class="hover:text-gray-300"></i>
-                </button>
-            </div>
-            <div class="pt-3 md:pt-0 md:block w-full order-3">
-                <div class="relative max-w-3xl mx-auto px-6">
-                    <div class="absolute h-10 mt-1 left-0 top-0 flex items-center pl-10">
-                        <i v-html="icons.search" class="text-gray-600"></i>
+            <div class="flex items-center">
+                <!-- search input -->
+                <div class="relative flex-grow">
+                    <div class="absolute h-10 mt-1 left-0 top-0 flex items-center pl-5">
+                        <span v-html="icons.search" class="text-gray-600" aria-hidden="true"></span>
                     </div>
                     <input type="search" placeholder="Enter search term" v-model="searchText" @input="searchAlgolia"
-                           class="block w-full bg-brand-white focus:outline-none focus:bg-white focus:shadow text-gray-700 font-bold rounded-lg pl-12 pr-4 py-3">
+                           class="block w-full bg-brand-white focus:outline-none focus:bg-white focus:shadow text-gray-700 font-bold rounded-lg pl-12 pr-4 py-3"
+                           ref="searchInput"
+                           aria-label="Search for content"
+                    >
+                </div>
+                <!-- close button -->
+                <div class="pl-4">
+                    <button class="focus:outline-none" aria-label="Close" @click="showSearchToggle()">
+                        <span v-html="icons.times" class="hover:text-gray-300" aria-hidden="true"></span>
+                    </button>
                 </div>
             </div>
             <div class="mx-auto lg:mx-0 pt-3 border-b-2 border-gray-500 opacity-25"></div>
 
-            <div class="p-2 overflow-auto h-52 w-full flex flex-col">
-                <p class="text-center my-auto mx-auto text-gray-400 text-xl font-medium" v-if="numberOfHits === 0 && searchText === ''">Type above to search</p>
-                <p class="text-center my-auto mx-auto text-gray-400 text-xl font-medium" v-if="numberOfHits===0 && searchText !== ''">No results for "<span class="!text-white">{{"{{searchText}}"}}</span>"</p>
+            <div class="p-2 overflow-auto max-h-96 w-full flex flex-col">
+                <p class="text-center my-auto mx-auto text-gray-400 text-xl font-medium" v-if="isLoading">Loading...</p>
+                <p class="text-center my-auto mx-auto text-gray-400 text-xl font-medium" v-if="!isLoading && numberOfHits === 0">
+                    <span v-if="searchText === ''">Type above to search</span>
+                    <span v-else>No results for "<span class="!text-white">{{"{{searchText}}"}}</span>"</span>
+                </p>
                 <div v-for="(contents, section) in hits" class="self-start w-full">
                     <h2 class="text-xl font-bold pb-3 py-3 capitalize">{{"{{section}}"}}</h2>
                     <section v-for="content in contents">
