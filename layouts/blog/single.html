@@ -36,23 +36,23 @@
     </p>
     <div class="inline-flex rounded-md shadow-sm">
         <p class="!my-0 pr-2 hidden md:block">Share on</p>
-        <a href="https://www.facebook.com/sharer.php?u={{ .Permalink }}" class="py-2 px-4 text-sm font-medium rounded-l-lg border focus:z-10 focus:ring-2 bg-gray-700 border-gray-600 text-white hover:text-white hover:bg-gray-600 focus:ring-blue-500 focus:text-white">
+        <a href="https://www.facebook.com/sharer.php?u={{ .Permalink }}" target="_blank" rel="noopener noreferrer" class="py-2 px-4 text-sm font-medium rounded-l-lg border focus:z-10 focus:ring-2 bg-gray-700 border-gray-600 text-white hover:text-white hover:bg-gray-600 focus:ring-blue-500 focus:text-white">
             <i v-html="icons.facebook" aria-hidden="true"></i>
             <span class="sr-only">Share on Facebook</span>
         </a>
-        <a href="https://www.linkedin.com/shareArticle?mini=true&url={{ .Permalink }}" class="py-2 px-4 text-sm font-medium border-t border-b border-r focus:z-10 focus:ring-2 bg-gray-700 border-gray-600 text-white hover:text-white hover:bg-gray-600 focus:ring-blue-500 focus:text-white">
+        <a href="https://www.linkedin.com/shareArticle?mini=true&url={{ .Permalink }}" target="_blank" rel="noopener noreferrer" class="py-2 px-4 text-sm font-medium border-t border-b border-r focus:z-10 focus:ring-2 bg-gray-700 border-gray-600 text-white hover:text-white hover:bg-gray-600 focus:ring-blue-500 focus:text-white">
             <i v-html="icons.linkedin" aria-hidden="true"></i>
             <span class="sr-only">Share on LinkedIn</span>
         </a>
-        <a href="https://www.reddit.com/submit?url={{ .Permalink }}&title={{.Title|htmlEscape }}" class="py-2 px-4 text-sm font-medium border-t border-b border-r focus:z-10 focus:ring-2 bg-gray-700 border-gray-600 text-white hover:text-white hover:bg-gray-600 focus:ring-blue-500 focus:text-white">
+        <a href="https://www.reddit.com/submit?url={{ .Permalink }}&title={{.Title|htmlEscape }}" target="_blank" rel="noopener noreferrer" class="py-2 px-4 text-sm font-medium border-t border-b border-r focus:z-10 focus:ring-2 bg-gray-700 border-gray-600 text-white hover:text-white hover:bg-gray-600 focus:ring-blue-500 focus:text-white">
             <i v-html="icons.reddit" aria-hidden="true"></i>
             <span class="sr-only">Share on Reddit</span>
         </a>
-        <a href="https://twitter.com/intent/tweet?url={{ .Permalink }}" class="py-2 px-4 text-sm font-medium border-t border-b focus:z-10 focus:ring-2 bg-gray-700 border-gray-600 text-white hover:text-white hover:bg-gray-600 focus:ring-blue-500 focus:text-white">
+        <a href="https://twitter.com/intent/tweet?url={{ .Permalink }}" target="_blank" rel="noopener noreferrer" class="py-2 px-4 text-sm font-medium border-t border-b focus:z-10 focus:ring-2 bg-gray-700 border-gray-600 text-white hover:text-white hover:bg-gray-600 focus:ring-blue-500 focus:text-white">
             <i v-html="icons.twitter" aria-hidden="true"></i>
             <span class="sr-only">Share on Twitter</span>
         </a>
-        <a href="https://pinterest.com/pin/create/link/?url={{ .Permalink }}" class="py-2 px-4 text-sm font-medium rounded-r-md border focus:z-10 focus:ring-2 bg-gray-700 border-gray-600 text-white hover:text-white hover:bg-gray-600 focus:ring-blue-500 focus:text-white">
+        <a href="https://pinterest.com/pin/create/link/?url={{ .Permalink }}" target="_blank" rel="noopener noreferrer" class="py-2 px-4 text-sm font-medium rounded-r-md border focus:z-10 focus:ring-2 bg-gray-700 border-gray-600 text-white hover:text-white hover:bg-gray-600 focus:ring-blue-500 focus:text-white">
             <i v-html="icons.pinterest" aria-hidden="true"></i>
             <span class="sr-only">Share on Pinterest</span>
         </a>

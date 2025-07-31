@@ -1,5 +1,17 @@
 <title>{{ if ne .Site.Title .Title }}{{.Title}} &mdash; {{ end }}{{.Site.Title}}</title>
 
+{{ with .Description }}
+    {{ $.Scratch.Set "description" . }}
+{{ else }}
+    {{ if .IsPage }}
+        {{ $.Scratch.Set "description" .Summary }}
+    {{ else }}
+        {{ with .Site.Params.description }}
+            {{ $.Scratch.Set "description" . }}
+        {{ end }}
+    {{ end }}
+{{ end }}
+
 {{ if (isset .Params "externalurl") }}
 <meta http-equiv="refresh" content="2;url={{ .Params.externalurl }}" />
 {{ end -}}
@@ -16,17 +28,10 @@
     {{ printf `<link rel="%s" type="%s" href="%s" title="%s" />` .Rel .MediaType.Type .Permalink $.Site.Title | safeHTML }}
 {{ end -}}
 
-<meta name="description" content="{{ .Params.description }}"/>
-<meta itemprop="description" content="{{ .Params.description }}"/>
+<meta name="description" content="{{ $.Scratch.Get "description" }}"/>
 
 {{ if not (eq .Type "blog") }}
   {{- partial "seo/websiteSchemaSEO.html" . -}}
-{{ end }}
-
-{{ if (isset .Params "images") }}
-  <meta itemprop="thumbnailUrl" content="{{ (index .Params.images 0) | absURL }}"/>
-{{ else }}
-  <meta itemprop="thumbnailUrl" content="{{ .Site.Params.thumbnailUrl | absURL }}"/>
 {{ end }}
 
 {{ if and (in .Permalink "tags") (.Site.Params.seo.noIndexTags) }}
@@ -48,7 +53,6 @@
 
 {{ end }}
 {{ partial "seo/opengraph.html" . }}
-{{ partial "seo/schema.html" . }}
 {{ partial "seo/twitter_cards.html" . }}
 
 {{ if .Site.Params.clarity }}

@@ -21,7 +21,7 @@
 </head>
 <body class="text-white leading-normal tracking-wider">
 
-<div id="profile" class="max-w-4xl flex items-center h-auto lg:h-screen flex-wrap mx-auto my-32 lg:my-0">
+<main id="profile" class="max-w-4xl flex items-center h-auto lg:h-screen flex-wrap mx-auto my-32 lg:my-0">
 
     <!--Main Col-->
     <div class="sm:relative w-full rounded-lg shadow-2xl mx-6 bg-gradient-to-r from-pink-500 via-red-500 to-yellow-500 p-1">
@@ -48,6 +48,7 @@
 
                     <div class="block lg:hidden">
                         <button @click="showMenuToggle()"
+                                aria-label="Toggle navigation menu"
                                 class="flex items-center px-3 py-2 border rounded text-teal-200 border-teal-400 hover:text-white hover:border-white">
                             <svg class="fill-current h-3 w-3" viewBox="0 0 20 20"
                                     xmlns="http://www.w3.org/2000/svg">
@@ -72,7 +73,7 @@
                 </nav>
             </div>
 
-            <h1 class="hidden">{{ .Title }}</h1>
+            <h1 class="sr-only">{{ .Title }}</h1>
 
 
             <div class="py-4 text-lg">{{ .Content }}</div>
@@ -106,7 +107,7 @@
 
     </div>
 {{ partial "search.html" . }}
-</div>
+</main>
 {{ partial "scripts.html" . }}
 </body>
 </html>

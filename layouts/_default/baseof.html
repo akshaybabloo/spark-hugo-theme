@@ -14,7 +14,7 @@
     {{ partial "main-script.html" . }}
 </head>
 <body>
-<div id="profile" class="flex flex-col h-screen justify-between">
+<main id="profile" class="flex flex-col h-screen justify-between">
     {{- partial "nav.html" . -}}
     <div class="mb-auto w-auto px-6 py-12 bg-gray-800 lg:max-w-7xl md:mx-auto mt-6 xl:rounded-xl shadow-2xl border border-gray-600">
         <div class="mt-8 prose prose-invert mx-auto lg:prose-lg max-w-none prose-ul:leading-[1.5] prose-ol:leading-[1.5] break-words">
@@ -24,7 +24,7 @@
 
     {{- partial "footer.html" . -}}
     {{- partial "search.html" . -}}
-</div>
+</main>
 {{- partial "scripts.html" . -}}
 
 {{ if .Params.video }}
