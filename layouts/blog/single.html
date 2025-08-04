@@ -75,6 +75,13 @@
         {{end}}
     {{ end }}
 
+    {{ if .Params.toc }}
+        <div class="bg-gray-600 p-2 rounded-lg my-4 prose-ol:leading-[1]">
+            <p>Table of Contents</p>
+            {{ .TableOfContents }}
+        </div>
+    {{ end }}
+
     <ins class="adsbygoogle"
      style="display:block; text-align:center;"
      data-ad-layout="in-article"

@@ -8,6 +8,7 @@ description: ""
 images: []
 ads: true
 video: false
+toc: true
 # htmlScripts: []
 author:
   prefix: "Mr."
