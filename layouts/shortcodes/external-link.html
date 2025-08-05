@@ -1,0 +1,8 @@
+<a href="{{ .Get "src" }}" target="_blank" rel="noopener noreferrer">
+    {{ if .Get "label" }}
+        {{ .Get "label" }}
+    {{ else }}
+        source
+    {{ end }} 
+    <sup class="text-xs inline" v-html="icons.externalLink"></sup>
+</a>
