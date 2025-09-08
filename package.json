@@ -26,7 +26,7 @@
 		"vite": "^7.1.5"
 	},
 	"dependencies": {
-		"@algolia/client-search": "^5.35.0",
+		"@algolia/client-search": "^5.37.0",
 		"@fortawesome/fontawesome-free": "^7.0.1",
 		"@fortawesome/fontawesome-svg-core": "^7.0.1",
 		"@fortawesome/free-brands-svg-icons": "^7.0.1",
