@@ -12,7 +12,7 @@
 		"fmt": "biome format --write"
 	},
 	"devDependencies": {
-		"@biomejs/biome": "^2.2.4",
+		"@biomejs/biome": "^2.2.6",
 		"@tailwindcss/forms": "^0.5.10",
 		"@tailwindcss/postcss": "^4.1.14",
 		"@tailwindcss/typography": "^0.5.19",
