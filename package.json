@@ -23,7 +23,7 @@
 		"sass": "^1.93.2",
 		"tailwindcss": "^4.0.17",
 		"typescript": "^5.9.3",
-		"vite": "^7.1.7"
+		"vite": "^7.1.12"
 	},
 	"dependencies": {
 		"@algolia/client-search": "^5.40.1",
