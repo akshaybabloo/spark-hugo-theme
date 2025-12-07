@@ -31,7 +31,7 @@
 		"@fortawesome/fontawesome-svg-core": "^7.1.0",
 		"@fortawesome/free-brands-svg-icons": "^7.1.0",
 		"@fortawesome/free-solid-svg-icons": "^7.1.0",
-		"@microsoft/clarity": "^1.0.0",
+		"@microsoft/clarity": "^1.0.2",
 		"firacode": "^6.2.0",
 		"video.js": "^8.23.4",
 		"vue": "^3.5.25"
