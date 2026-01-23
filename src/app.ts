@@ -1,127 +1,108 @@
 import './tailwind.css'
 import './custom.scss'
-import { createApp, reactive, onMounted, onBeforeUnmount, ref } from 'vue'
-import {
-	externalLink,
-	facebook,
-	github,
-	hashTag,
-	link,
-	linkedin,
-	mail,
-	pinterest,
-	reddit,
-	search,
-	times,
-	twitter,
-	maximize,
-	pen,
-	arrowLeft,
-	arrowRight,
-	rss,
-} from './icons'
+import { createApp, onMounted, onBeforeUnmount, ref, computed, watch } from 'vue'
 import { searchClient as algoliasearch } from '@algolia/client-search'
-import { groupBy, getIconHtml } from './utils'
+import { groupBy } from './utils'
 import Clarity from '@microsoft/clarity'
 
 const client = algoliasearch(algoliaAppId, algoliaApiKey)
 
+// Initialize Vue app
 createApp({
 	setup() {
 		Clarity.init(clarityProjectId)
 
-		const state = reactive({
-			// Icons
-			icons: {
-				linkedin: getIconHtml(linkedin),
-				github: getIconHtml(github),
-				twitter: getIconHtml(twitter),
-				search: getIconHtml(search),
-				times: getIconHtml(times),
-				hashTag: getIconHtml(hashTag),
-				facebook: getIconHtml(facebook),
-				pinterest: getIconHtml(pinterest),
-				reddit: getIconHtml(reddit),
-				mail: getIconHtml(mail),
-				externalLink: getIconHtml(externalLink),
-				link: getIconHtml(link),
-				maximize: getIconHtml(maximize),
-				pen: getIconHtml(pen),
-				arrowRight: getIconHtml(arrowRight),
-				arrowLeft: getIconHtml(arrowLeft),
-				rss: getIconHtml(rss),
-			},
-		})
-
 		// Search related refs
 		const searchText = ref('')
-		let numberOfHits = ref<number>(0)
-		let hits = ref<Record<string, any[]>>({})
+		const numberOfHits = ref<number>(0)
+		const hits = ref<Record<string, any[]>>({})
 		const searchModelRef = ref<HTMLElement>()
 		const searchInput = ref<HTMLInputElement>()
-		const showMenu = ref<boolean>(true)
 		const isLoading = ref<boolean>(false)
+		const selectedIndex = ref<number>(-1)
 
-		// Image-related refs
-		const imageModel = ref<HTMLElement>()
-		const imageModelSrc = ref<HTMLImageElement>()
+		// Computed flat list for navigation
+		const flatHits = computed(() => {
+			const flat: any[] = []
+			Object.keys(hits.value).forEach((key) => {
+				hits.value[key].forEach((item) => {
+					flat.push(item)
+				})
+			})
+			return flat
+		})
+
+		// Reset selection on search
+		watch(searchText, () => {
+			selectedIndex.value = -1
+		})
+
+		// Mobile menu ref
+		const mobileMenuOpen = ref(false)
+
+		// Image modal refs
+		const imageModalVisible = ref(false)
+		const imageModalSrc = ref('')
+		const imageModalAlt = ref('')
 
 		onMounted(() => {
-			console.log('Welcome to my gollahalli.com!', __GIT_HASH__)
-			document.addEventListener('keydown', escapeKeyListener)
+			console.log('Welcome to gollahalli.com!', __GIT_HASH__)
+			document.addEventListener('keydown', keyListener)
+			initImageModal()
 		})
 
 		onBeforeUnmount(() => {
-			document.removeEventListener('keydown', escapeKeyListener)
+			document.removeEventListener('keydown', keyListener)
 		})
 
-		function escapeKeyListener(e: KeyboardEvent) {
-			if (e.key === 'Escape' && !searchModelRef.value?.classList.contains('hidden')) {
-				showSearchToggle()
+		function keyListener(e: KeyboardEvent) {
+			// Search Navigation
+			if (!searchModelRef.value?.classList.contains('hidden')) {
+				if (e.key === 'ArrowDown') {
+					e.preventDefault()
+					selectedIndex.value = Math.min(selectedIndex.value + 1, flatHits.value.length - 1)
+					scrollToSelected()
+				} else if (e.key === 'ArrowUp') {
+					e.preventDefault()
+					selectedIndex.value = Math.max(selectedIndex.value - 1, -1)
+					scrollToSelected()
+				} else if (e.key === 'Enter' && selectedIndex.value > -1) {
+					e.preventDefault()
+					const item = flatHits.value[selectedIndex.value]
+					if (item) {
+						window.location.href = item.uri
+					}
+				}
+			}
+
+			if (e.key === 'Escape') {
+				if (!searchModelRef.value?.classList.contains('hidden')) {
+					showSearchToggle()
+				}
+				if (imageModalVisible.value) {
+					closeImageModal()
+				}
 			}
 		}
 
-		function showMenuToggle() {
-			console.log('showMenuToggle')
-			showMenu.value = !showMenu.value
+		function scrollToSelected() {
+			// Simple logic to scroll the selected item into view would go here
+			// For now we rely on standard behavior or add specific logic if needed
+			// But we need to expose selectedIndex to template to show highlighting
+		}
+
+		function toggleMobileMenu() {
+			mobileMenuOpen.value = !mobileMenuOpen.value
 		}
 
 		function showSearchToggle() {
 			if (searchModelRef.value?.classList.contains('hidden')) {
 				searchModelRef.value.classList.remove('hidden')
 				searchInput.value?.focus()
+				selectedIndex.value = -1
 			} else {
 				searchModelRef.value?.classList.add('hidden')
-			}
-		}
-
-		function toggleMaximizeImage() {
-			if (imageModel.value?.classList.contains('hidden')) {
-				imageModel.value.classList.remove('hidden')
-			} else {
-				imageModel.value?.classList.add('hidden')
-				if (imageModelSrc.value) {
-					imageModelSrc.value.src = ''
-				}
-			}
-		}
-
-		function maximizeImage(event: PointerEvent, imgSrc: string) {
-			if (imageModelSrc.value) {
-				imageModelSrc.value.src = imgSrc
-			}
-		}
-
-		function outsideClick(event: PointerEvent, from: string) {
-			switch (from) {
-				case 'searchModelRef':
-					showSearchToggle()
-					break
-				case 'imageModel':
-					toggleMaximizeImage()
-					break
-				default:
-					break
+				selectedIndex.value = -1
 			}
 		}
 
@@ -150,24 +131,58 @@ createApp({
 			}
 		}
 
+		// Image modal functions
+		function initImageModal() {
+			document.querySelectorAll('.prose img').forEach((img) => {
+				const imgEl = img as HTMLImageElement
+				if (imgEl.width < 100 || imgEl.height < 100) return
+
+				imgEl.style.cursor = 'zoom-in'
+				imgEl.addEventListener('click', () => {
+					openImageModal(imgEl.src, imgEl.alt)
+				})
+			})
+		}
+
+		function openImageModal(src: string, alt: string) {
+			imageModalSrc.value = src
+			imageModalAlt.value = alt
+			imageModalVisible.value = true
+		}
+
+		function closeImageModal() {
+			imageModalVisible.value = false
+			imageModalSrc.value = ''
+			imageModalAlt.value = ''
+		}
+
+		function checkSelected(uri: string) {
+			if (selectedIndex.value === -1) return false
+			const selected = flatHits.value[selectedIndex.value]
+			return selected && selected.uri === uri
+		}
+
 		return {
-			...state,
+			// Search
 			searchModelRef,
 			searchInput,
-			imageModel,
-			imageModelSrc,
 			searchText,
 			numberOfHits,
 			hits,
 			isLoading,
-			escapeKeyListener,
-			showMenuToggle,
+			selectedIndex, // Exported for template
+			checkSelected, // Exported helper
 			showSearchToggle,
-			toggleMaximizeImage,
-			maximizeImage,
-			outsideClick,
 			searchAlgolia,
-			showMenu,
+			// Mobile menu
+			mobileMenuOpen,
+			toggleMobileMenu,
+			// Image modal
+			imageModalVisible,
+			imageModalSrc,
+			imageModalAlt,
+			openImageModal,
+			closeImageModal,
 		}
 	},
-}).mount('#profile')
+}).mount('#search-app')

@@ -1,14 +1,14 @@
 {{$page := .Page}}
-<figure @click="toggleMaximizeImage(); maximizeImage($event, '{{ .Get "src" }}')">
+<figure>
     <div class="relative flex justify-center">
         {{ with .Get "link"}}<a href="{{.}}">{{ end }}
-        <picture class="!m-0 cursor-pointer hover:invert-25">
+        <picture class="!m-0">
             {{ $imagePath := partial "image-path" (dict "page" $page "src" (.Get "src")) }}
             {{ $srcOriginal := $imagePath.originalSrc}}
             {{ $src := $imagePath.webpSrc }}
 
             <source srcset="{{ $src }}" class="mx-auto rounded-lg" type="image/webp">
-            <img src="{{ $srcOriginal }}" class="!m-0" ref="imgs" @click="maximizeImage($event, '{{ .Get "src" }}')" {{ with .Get "width" }}width="{{.}}"{{ end }} {{ if or (.Get "alt") (.Get "caption") }}alt="{{ with .Get "alt"}}{{.}}{{else}}{{ .Get "caption" }}{{ end }}"{{ end }}>
+            <img src="{{ $srcOriginal }}" class="!m-0 cursor-zoom-in" {{ with .Get "width" }}width="{{.}}"{{ end }} {{ if or (.Get "alt") (.Get "caption") }}alt="{{ with .Get "alt"}}{{.}}{{else}}{{ .Get "caption" }}{{ end }}"{{ end }}>
         </picture>
         {{ if .Get "link"}}</a>{{ end }}
     </div>

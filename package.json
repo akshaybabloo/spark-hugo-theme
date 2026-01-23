@@ -1,5 +1,5 @@
 {
-	"name": "spark2",
+	"name": "spark3",
 	"version": "1.0.0",
 	"author": "Akshay Raj Gollahalli",
 	"license": "MIT",
@@ -27,10 +27,6 @@
 	},
 	"dependencies": {
 		"@algolia/client-search": "^5.46.3",
-		"@fortawesome/fontawesome-free": "^7.1.0",
-		"@fortawesome/fontawesome-svg-core": "^7.1.0",
-		"@fortawesome/free-brands-svg-icons": "^7.1.0",
-		"@fortawesome/free-solid-svg-icons": "^7.1.0",
 		"@microsoft/clarity": "^1.0.2",
 		"firacode": "^6.2.0",
 		"video.js": "^8.23.4",

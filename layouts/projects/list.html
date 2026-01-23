@@ -1,41 +1,70 @@
 {{define "main"}}
 
-<h1>{{.Title}}</h1>
+<div class="w-full max-w-6xl mx-auto px-6 py-12 md:py-20">
+    <!-- Header -->
+    <div class="mb-16 md:mb-24 text-left">
+        <h1 class="text-5xl md:text-7xl lg:text-8xl font-black text-text-primary tracking-tight leading-none mb-6">
+            {{.Title}}
+        </h1>
+        <p class="text-xl md:text-2xl text-text-secondary max-w-2xl leading-relaxed">
+            Things I've built, contributed to, and experimented with.
+        </p>
+    </div>
 
-{{$slice := slice}}
-{{range $page := .Pages}}
-    {{range $tag := $page.Params.tags}}
-        {{$slice = $slice | append $tag}}
+    {{$slice := slice}}
+    {{range $page := .Pages}}
+        {{range $tag := $page.Params.tags}}
+            {{$slice = $slice | append $tag}}
+        {{end}}
     {{end}}
-{{end}}
 
-<div class="hidden">
-    <button class="text-xs font-semibold mr-2 px-2.5 py-0.5 rounded bg-gray-200 text-gray-800 hover:bg-gray-100">All</button>
-    {{ range $uniqueTags := $slice | uniq }}
-        <button class="text-xs font-semibold mr-2 px-2.5 py-0.5 rounded bg-gray-200 text-gray-800 hover:bg-gray-100">{{ $uniqueTags }}</button>
-    {{ end }}
-</div>
-
-<div class="relative px-4 mx-auto sm:max-w-xl md:max-w-full lg:max-w-screen-xl">
-    {{ range .Pages.GroupByParam "projectCategory" }}
-        <h2>{{.Key}}</h2>
-        <div class="relative grid gap-5 sm:grid-cols-2 lg:grid-cols-4 prose-a:no-underline">
-            {{ range .Pages }}
-                <a href="{{.Params.externalurl}}" class="flex flex-col justify-between overflow-hidden text-left transition duration-200 bg-gray-600 transform hover:scale-105 ease-in-out shadow-gray-950 rounded shadow-lg group hover:shadow-xl border border-gray-500">
-                    <div class="p-5">
-                        <h3 class="!mt-1 mb-2 font-bold text-l">{{ .Title }} {{ if (isset .Params "externalurl") }} <sup class="text-xs" v-html="icons.externalLink"></sup> {{end}}</h3>
-                        <p class="text-sm leading-5 text-gray-300">
-                            {{ .Params.description }}
-                        </p>
-                        <p class="text-sm leading-5 text-gray-300">
-                            Built with: {{ range .Params.tags }}<span class="bg-gray-600 border text-white text-xs font-semibold my-0.5 mx-0.5 px-2.5 py-0.5 rounded">{{ . }}</span> {{ end }}
-                        </p>
+    <div class="space-y-20">
+        {{ range .Pages.GroupByParam "projectCategory" }}
+        <section>
+            <div class="flex items-end justify-between gap-4 mb-8 border-b border-border pb-4">
+                <h2 class="text-2xl md:text-3xl font-bold text-text-primary">
+                    {{.Key}}
+                </h2>
+                <span class="text-text-muted font-mono text-sm mb-1.5">{{ len .Pages }} projects</span>
+            </div>
+            
+            <div class="grid gap-6 md:gap-8 sm:grid-cols-2 lg:grid-cols-3">
+                {{ range .Pages }}
+                <a href="{{.Params.externalurl}}"
+                   target="_blank"
+                   rel="noopener noreferrer"
+                   class="group flex flex-col h-full bg-surface/30 hover:bg-surface border border-white/5 hover:border-border rounded-2xl p-6 transition-all duration-300">
+                    
+                    <div class="flex items-start justify-between mb-4">
+                        <h3 class="text-xl font-bold text-text-primary group-hover:text-accent transition-colors relative inline-block">
+                            {{ .Title }}
+                        </h3>
+                        {{ if (isset .Params "externalurl") }}
+                        <span class="material-symbols-outlined text-text-muted group-hover:text-accent group-hover:translate-x-1 group-hover:-translate-y-1 transition-all duration-300">
+                            arrow_outward
+                        </span>
+                        {{ end }}
                     </div>
+                    
+                    <p class="text-text-secondary mb-6 leading-relaxed flex-grow">
+                        {{ .Params.description }}
+                    </p>
+                    
+                    {{ if .Params.tags }}
+                    <div class="flex flex-wrap gap-2 mt-auto pt-4 border-t border-white/5">
+                        {{ range .Params.tags }}
+                        <span class="text-xs font-medium px-2.5 py-1 rounded-md bg-surface text-text-muted group-hover:text-text-secondary transition-colors border border-white/5">
+                            #{{ . }}
+                        </span>
+                        {{ end }}
+                    </div>
+                    {{ end }}
                 </a>
-            {{end}}
-        </div>
-    {{end}}
+                {{end}}
+            </div>
+        </section>
+        {{end}}
+    </div>
 </div>
-
 
 {{end}}

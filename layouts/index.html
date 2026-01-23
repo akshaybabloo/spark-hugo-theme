@@ -19,95 +19,111 @@
     </script>
     {{ partial "main-script.html" . }}
 </head>
-<body class="text-white leading-normal tracking-wider">
+<body class="min-h-screen">
 
-<main id="profile" class="max-w-4xl flex items-center h-auto lg:h-screen flex-wrap mx-auto my-32 lg:my-0">
+<div id="search-app" class="min-h-screen flex flex-col">
+    <!-- Search button -->
+    <header class="fixed top-0 right-0 p-6 z-50">
+        <button class="p-3 text-text-secondary hover:text-text-primary transition-all duration-200 cursor-pointer rounded-full hover:bg-white/10"
+                type="button"
+                @click="showSearchToggle()"
+                aria-label="Search">
+            <span class="material-symbols-outlined text-2xl">search</span>
+        </button>
+    </header>
 
-    <!--Main Col-->
-    <div class="sm:relative w-full rounded-lg shadow-2xl mx-6 bg-gradient-to-r from-pink-500 via-red-500 to-yellow-500 p-1">
+    <!-- Main Content -->
+    <main class="flex-grow flex items-center justify-center p-6 md:p-12 lg:p-24 relative overflow-hidden">
+        
+        <div class="w-full max-w-7xl grid grid-cols-1 md:grid-cols-12 gap-12 md:gap-8 items-center z-10">
+            
+            <!-- Left Column: Text -->
+            <div class="md:col-span-6 lg:col-span-7 flex flex-col justify-center text-center md:text-left space-y-8 order-2 md:order-1">
+                
+                <div class="space-y-4">
+                    <p class="text-text-muted font-medium tracking-[0.2em] uppercase text-sm md:text-base">
+                        Software Engineer & Researcher
+                    </p>
+                    
+                    <h1 class="mb-3">
+                        <img src="{{ .Site.Params.namedLogo }}" 
+                             alt="{{ .Title }}" 
+                             class="h-16 md:h-20 lg:h-24 w-auto object-contain mx-auto md:mx-0">
+                    </h1>
+                </div>
 
-
-        <div class="p-4 md:p-12 text-center h-full w-full bg-gray-800 rounded-lg ">
-            <div class="rounded-full shadow-xl mx-auto sm:-mt-28 md:-mt-36 -mt-36 h-48 w-48 bg-cover bg-center relative bg-gradient-to-br from-pink-500 via-red-500 to-yellow-500 p-1">
-                <picture>
-                    {{ $imagePath := partial "image-path" (dict "page" . "src" .Site.Params.thumbnailUrl) }}
-                    {{ $srcOriginal := $imagePath.originalSrc}}
-                    {{ $src := $imagePath.webpSrc }}
-                    <source srcset="{{ $src }}" class="rounded-full lg:block" type="image/webp">
-                    <img src="{{.Site.Params.thumbnailUrl}}" class="rounded-full lg:block" alt="{{.Site.Title}}" height="200" width="200">
-                </picture>
-            </div>
-
-            <!-- Nav bar -->
-            <div class="pt-12 pb-8">
-                <nav class="flex items-center justify-between flex-wrap bg-gray-600 rounded-lg p-4">
-
-                    <div class="flex items-center flex-shrink text-white mr-6">
-                        <img src="{{.Site.Params.namedLogo}}" class="sm:w-48 w-40" alt="{{.Site.Title}}">
-                    </div>
-
-                    <div class="block lg:hidden">
-                        <button @click="showMenuToggle()"
-                                aria-label="Toggle navigation menu"
-                                class="flex items-center px-3 py-2 border rounded text-teal-200 border-teal-400 hover:text-white hover:border-white">
-                            <svg class="fill-current h-3 w-3" viewBox="0 0 20 20"
-                                    xmlns="http://www.w3.org/2000/svg">
-                                <title>Menu</title>
-                                <path d="M0 3h20v2H0V3zm0 6h20v2H0V9zm0 6h20v2H0v-2z"/>
-                            </svg>
-                        </button>
-                    </div>
-
-                    <div class="w-full block flex-grow lg:flex lg:items-center lg:w-auto"
-                            :class="{hidden: showMenu}">
-                        <div class="text-xl lg:flex-grow">
-                            {{ range.Site.Menus.main }}
-                            <a href="{{.URL}}"
-                                class="block mt-4 lg:inline-block lg:mt-0 hover:text-white mr-4">
-                                {{ .Name }}
-                            </a>
-                            {{ end }}
-                        </div>
-                    </div>
-
+                <!-- Navigation -->
+                <nav class="inline-flex flex-wrap items-center justify-center md:justify-start gap-x-6 gap-y-3 py-3 px-6 bg-surface/40 border border-white/5 rounded-2xl backdrop-blur-sm">
+                    {{ range .Site.Menus.main }}
+                    <a href="{{.URL}}"
+                       class="group text-lg font-bold text-text-primary hover:text-accent transition-colors relative">
+                        {{ .Name }}
+                        <span class="absolute -bottom-1 left-0 w-0 h-0.5 bg-accent transition-all duration-300 group-hover:w-full"></span>
+                    </a>
+                    {{ end }}
                 </nav>
+
+                <div class="text-text-secondary text-lg md:text-xl leading-relaxed max-w-2xl mx-auto md:mx-0 text-justify">
+                    {{ .Content }}
+                </div>
+
+                <!-- Social Icons -->
+                <div class="flex items-center justify-center md:justify-start gap-6 pt-4">
+                     <!-- Github -->
+                     <a href="{{ .Site.Params.social.github }}" target="_blank" rel="noopener noreferrer" 
+                        class="text-text-muted hover:text-text-primary transform hover:scale-110 transition-all duration-200" aria-label="GitHub">
+                        <div class="w-6 h-6">
+                            {{ partial "icons/github.html" . }}
+                        </div>
+                     </a>
+                     <!-- Linkedin -->
+                     <a href="{{ .Site.Params.social.linkedin }}" target="_blank" rel="noopener noreferrer"
+                        class="text-text-muted hover:text-text-primary transform hover:scale-110 transition-all duration-200" aria-label="LinkedIn">
+                        <div class="w-6 h-6">
+                            {{ partial "icons/linkedin.html" . }}
+                        </div>
+                     </a>
+                     <!-- Twitter -->
+                     <a href="{{ .Site.Params.social.twitter }}" target="_blank" rel="noopener noreferrer"
+                        class="text-text-muted hover:text-text-primary transform hover:scale-110 transition-all duration-200" aria-label="Twitter">
+                        <div class="w-6 h-6">
+                            {{ partial "icons/twitter.html" . }}
+                        </div>
+                     </a>
+                     <!-- Email -->
+                     <a href="mailto:{{ .Site.Params.email }}"
+                        class="text-text-muted hover:text-text-primary transform hover:scale-110 transition-all duration-200" aria-label="Email">
+                        <div class="w-6 h-6">
+                            {{ partial "icons/mail.html" . }}
+                        </div>
+                     </a>
+                </div>
             </div>
 
-            <h1 class="sr-only">{{ .Title }}</h1>
-
-
-            <div class="py-4 text-lg">{{ .Content }}</div>
-
-            <div class="mt-6 pb-16 lg:pb-0 w-4/6 mx-auto flex flex-wrap items-center justify-between">
-                <a class="link" href="{{ .Site.Params.social.linkedin }}">
-                    <i v-html="icons.linkedin" class="hover:text-gray-300" aria-hidden="true"></i>
-                    <span class="sr-only">LinkedIn</span>
-                </a>
-                <a class="link" href="{{ .Site.Params.social.twitter }}">
-                    <i v-html="icons.twitter" class="hover:text-gray-300" aria-hidden="true"></i>
-                    <span class="sr-only">Twitter</span>
-                </a>
-                <a class="link" href="{{ .Site.Params.social.github }}">
-                    <i v-html="icons.github" class="hover:text-gray-300" aria-hidden="true"></i>
-                    <span class="sr-only">GitHub</span>
-                </a>
-                <a class="link" href="mailto:{{ .Site.Params.email }}">
-                    <i v-html="icons.mail" class="hover:text-gray-300" aria-hidden="true"></i>
-                    <span class="sr-only">eMail</span>
-                </a>
+            <!-- Right Column: Image -->
+            <div class="md:col-span-5 lg:col-span-4 flex justify-center md:justify-end order-1 md:order-2">
+                <div class="relative w-48 h-48 md:w-80 md:h-80 lg:w-96 lg:h-96 group">
+                    <div class="absolute inset-0 bg-text-primary/10 rounded-full blur-2xl transform group-hover:scale-105 transition-transform duration-500"></div>
+                    <picture>
+                        <source srcset="{{$src}}" type="image/webp">
+                        <img src="{{$srcOriginal}}" 
+                             alt="{{ .Title }}" 
+                             class="relative w-full h-full object-cover rounded-full border-4 border-text-muted/20 shadow-2xl transform transition-transform duration-500 group-hover:scale-[1.02]">
+                    </picture>
+                </div>
             </div>
-        </div>
 
-        <!-- Search icon: Pin to top right corner -->
-        <div class="absolute top-0 right-0 h-12 w-18 p-4">
-            <button class="focus:outline-none cursor-pointer" type="button" @click="showSearchToggle()" aria-label="Search button"><i v-html="icons.search"
-                                                                                class="hover:text-gray-300"></i>
-            </button>
         </div>
+    </main>
 
-    </div>
-{{ partial "search.html" . }}
-</main>
+    <!-- Footer -->
+    <footer class="py-6 text-center text-text-muted text-sm opacity-60">
+        <p>&copy; {{ .Site.Title }} {{ .Site.Params.year }}</p>
+    </footer>
+
+    {{ partial "search.html" . }}
+</div>
+
 {{ partial "scripts.html" . }}
 </body>
 </html>

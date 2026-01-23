@@ -1,11 +1,37 @@
 {{ define "main" }}
 
-    <h1>{{ if ne "Tags" .Title }}{{.Title}} &mdash; {{ end }}{{"Tags"}}</h1>
+<div class="mb-8">
+    <h1 class="text-3xl font-bold text-text-primary">
+        {{ if ne "Tags" .Title }}{{.Title}}{{ else }}Tags{{ end }}
+    </h1>
+    {{ if ne "Tags" .Title }}
+    <p class="text-text-secondary mt-2">Articles tagged with "{{.Title}}"</p>
+    {{ else }}
+    <p class="text-text-secondary mt-2">Browse articles by topic</p>
+    {{ end }}
+</div>
 
-    <div class="prose-a:no-underline">
-        {{ range .Pages }}
-            <p class="!my-1"><a href="{{.Permalink}}">{{.Title}}</a></p>
-        {{end}}
-    </div>
+{{ if eq "Tags" .Title }}
+<!-- Tag cloud -->
+<div class="flex flex-wrap gap-2">
+    {{ range .Pages }}
+    <a href="{{.Permalink}}"
+       class="spark-tag hover:bg-surface-hover transition-colors text-sm py-1.5 px-3 no-underline">
+        #{{.Title}}
+        <span class="ml-1 text-text-muted">({{ len .Pages }})</span>
+    </a>
+    {{end}}
+</div>
+{{ else }}
+<!-- Articles list for a specific tag -->
+<div class="space-y-4">
+    {{ range .Pages }}
+    <a href="{{.Permalink}}" class="spark-card spark-card-hover p-4 block no-underline">
+        <h2 class="font-semibold text-text-primary mb-1">{{.Title}}</h2>
+        <p class="text-sm text-text-muted">{{.PublishDate.Format "Jan 2, 2006"}}</p>
+    </a>
+    {{end}}
+</div>
+{{ end }}
 
 {{ end }}

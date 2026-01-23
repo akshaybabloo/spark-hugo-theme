@@ -1,22 +1,50 @@
-<footer class="flex flex-col items-center justify-between px-6 py-4 bg-gray-800 sm:flex-row mt-6 border-t border-gray-600">
-    <a href="/" class="text-xl font-bold text-gray-400 hover:text-gray-300">
-        <img src="{{.Site.Params.namedLogo}}" class="w-32" alt="{{.Site.Title}}">
-    </a>
+<footer class="border-t border-border mt-auto bg-surface/30 backdrop-blur-sm">
+    <div class="max-w-7xl mx-auto px-6 py-8 md:py-10">
+        <div class="flex flex-col md:flex-row items-center justify-between gap-6">
+            
+            <!-- Left: Copyright -->
+            <div class="text-center md:text-left space-y-1">
+                <p class="text-sm font-medium text-text-primary">
+                    &copy; {{ .Site.Params.year }} {{ .Site.Title }}
+                </p>
+                <div class="flex items-center justify-center md:justify-start gap-4 text-xs text-text-muted">
+                    <a href="/privacy-policy" class="hover:text-text-primary transition-colors">Privacy</a>
+                    <span>&bull;</span>
+                    <a href="/cookie-policy" class="hover:text-text-primary transition-colors">Cookies</a>
+                </div>
+            </div>
 
-    <p class="py-2 text-gray-400 sm:py-0">Copyright &copy; {{ .Site.Title }} {{.Site.Params.year}} {{if .Site.Params.acknowledge }} | Theme by <a href="https://github.com/akshaybabloo/spark-hugo-theme">Akshay Raj Gollahalli</a>, generated using <a href="https://hugo.io">Hugo</a>
-        {{ end }}</p>
-
-    <div class="flex justify-center items-center space-x-1">
-        <a href="{{ .Site.Params.social.linkedin }}" class="inline-flex justify-center p-3 rounded-lg cursor-pointer text-gray-400 hover:text-white hover:bg-gray-600" aria-label="LinkedIn">
-            <i v-html="icons.linkedin"></i>
-        </a>
-
-        <a href="{{ .Site.Params.social.github }}" class="inline-flex justify-center p-3 rounded-lg cursor-pointer text-gray-400 hover:text-white hover:bg-gray-600" aria-label="GitHub">
-            <i v-html="icons.github"></i>
-        </a>
-
-        <a href="{{ .Site.Params.social.twitter }}" class="inline-flex justify-center p-3 rounded-lg cursor-pointer text-gray-400 hover:text-white hover:bg-gray-600" aria-label="Twitter">
-            <i v-html="icons.twitter"></i>
-        </a>
+            <!-- Right: Social Icons -->
+            <div class="flex items-center gap-4">
+                <a href="{{ .Site.Params.social.github }}" target="_blank" rel="noopener noreferrer"
+                   class="p-2 text-text-muted hover:text-text-primary hover:bg-surface rounded-full transition-all"
+                   aria-label="GitHub">
+                    <div class="w-5 h-5">
+                        {{ partial "icons/github.html" . }}
+                    </div>
+                </a>
+                <a href="{{ .Site.Params.social.linkedin }}" target="_blank" rel="noopener noreferrer"
+                   class="p-2 text-text-muted hover:text-text-primary hover:bg-surface rounded-full transition-all"
+                   aria-label="LinkedIn">
+                    <div class="w-5 h-5">
+                        {{ partial "icons/linkedin.html" . }}
+                    </div>
+                </a>
+                <a href="{{ .Site.Params.social.twitter }}" target="_blank" rel="noopener noreferrer"
+                   class="p-2 text-text-muted hover:text-text-primary hover:bg-surface rounded-full transition-all"
+                   aria-label="Twitter">
+                    <div class="w-5 h-5">
+                        {{ partial "icons/twitter.html" . }}
+                    </div>
+                </a>
+                <a href="mailto:{{ .Site.Params.email }}"
+                   class="p-2 text-text-muted hover:text-text-primary hover:bg-surface rounded-full transition-all"
+                   aria-label="Email">
+                    <div class="w-5 h-5">
+                         {{ partial "icons/mail.html" . }}
+                    </div>
+                </a>
+            </div>
+        </div>
     </div>
 </footer>

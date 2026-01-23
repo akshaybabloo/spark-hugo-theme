@@ -64,3 +64,46 @@
 {{ if .Param "math" }}
   {{ partialCached "math.html" . }}
 {{ end }}
+
+<style>
+    body {
+        {{/* Determine the active theme key based on Section or Type */}}
+        {{ $themeKey := "default" }}
+        {{ if eq .Section "projects" }}
+            {{ $themeKey = "projects" }}
+        {{ else if eq .Section "blog" }}
+            {{ $themeKey = "blog" }}
+        {{ else if eq .Type "publications" }}
+            {{ $themeKey = "publications" }}
+        {{ else if eq .Type "about" }}
+            {{ $themeKey = "about" }}
+        {{ end }}
+
+        {{/* Fetch the theme data from config, fallback to default if key missing */}}
+        {{ $theme := index .Site.Params.sectionThemes $themeKey | default .Site.Params.sectionThemes.default }}
+
+        /* 
+           Active Theme: {{ $themeKey | title }} (Loaded from config.toml)
+        */
+        --color-accent: {{ $theme.accent }} !important;
+        --color-bg: {{ $theme.bg }} !important;
+        --color-surface: {{ $theme.surface }} !important;
+        --color-surface-hover: {{ $theme.surfaceHover }} !important;
+        
+        /* Text Contrast Overrides */
+        --color-text-secondary: {{ $theme.textSecondary }} !important;
+        --color-text-muted: {{ $theme.textMuted }} !important;
+    }
+
+    /* 
+    --- Original Neutral Dark Mode (Saved) ---
+    body {
+        --color-accent: #fc8181 !important;
+        --color-bg: #0f0f0f !important;
+        --color-surface: #18181b !important;
+        --color-surface-hover: #27272a !important;
+        --color-text-secondary: #a1a1aa !important;
+        --color-text-muted: #71717a !important;
+    }
+    */
+</style>

@@ -1,4 +1,12 @@
 {{ define "main" }}
-
-{{.Content}}
-        {{ end }}
+<div class="prose prose-invert max-w-none 
+            prose-headings:text-text-primary 
+            prose-p:text-text-secondary 
+            prose-strong:text-text-primary 
+            prose-ul:text-text-secondary 
+            prose-ol:text-text-secondary 
+            prose-li:marker:text-text-muted
+            prose-a:text-text-primary prose-a:underline hover:prose-a:text-accent">
+    {{.Content}}
+</div>
+{{ end }}

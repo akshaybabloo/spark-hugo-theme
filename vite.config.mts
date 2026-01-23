@@ -94,9 +94,6 @@ export default defineConfig(({ mode }) => {
 					entryFileNames: 'js/[name]-[hash].[format].js',
 					manualChunks: {
 						vue: ['vue'],
-						'@fortawesome/fontawesome-svg-core': ['@fortawesome/fontawesome-svg-core'],
-						'@fortawesome/free-brands-svg-icons': ['@fortawesome/free-brands-svg-icons'],
-						'@fortawesome/free-solid-svg-icons': ['@fortawesome/free-solid-svg-icons'],
 						'@algolia/client-search': ['@algolia/client-search'],
 						'@microsoft/clarity': ['@microsoft/clarity'],
 					},

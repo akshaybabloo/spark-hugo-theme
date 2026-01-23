@@ -1,11 +1,36 @@
 {{ define "main" }}
 
-<h1>{{ if ne "Categories" .Title }}{{.Title}} &mdash; {{ end }}{{"Tags"}}</h1>
+<div class="mb-8">
+    <h1 class="text-3xl font-bold text-text-primary">
+        {{ if ne "Categories" .Title }}{{.Title}}{{ else }}Categories{{ end }}
+    </h1>
+    {{ if ne "Categories" .Title }}
+    <p class="text-text-secondary mt-2">Articles in "{{.Title}}"</p>
+    {{ else }}
+    <p class="text-text-secondary mt-2">Browse articles by category</p>
+    {{ end }}
+</div>
 
-<div class="prose-a:no-underline">
+{{ if eq "Categories" .Title }}
+<!-- Category list -->
+<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
     {{ range .Pages }}
-    <p class="!my-1"><a href="{{.Permalink}}">{{.Title}}</a></p>
+    <a href="{{.Permalink}}" class="spark-card spark-card-hover p-5 no-underline">
+        <h2 class="font-semibold text-text-primary mb-1">{{.Title}}</h2>
+        <p class="text-sm text-text-muted">{{ len .Pages }} articles</p>
+    </a>
     {{end}}
 </div>
+{{ else }}
+<!-- Articles list for a specific category -->
+<div class="space-y-4">
+    {{ range .Pages }}
+    <a href="{{.Permalink}}" class="spark-card spark-card-hover p-4 block no-underline">
+        <h2 class="font-semibold text-text-primary mb-1">{{.Title}}</h2>
+        <p class="text-sm text-text-muted">{{.PublishDate.Format "Jan 2, 2006"}}</p>
+    </a>
+    {{end}}
+</div>
+{{ end }}
 
 {{ end }}

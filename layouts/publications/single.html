@@ -1,0 +1,61 @@
+{{define "main"}}
+
+<div class="w-full max-w-6xl mx-auto px-6 py-12 md:py-20">
+    <!-- Header -->
+    <header class="mb-16 md:mb-20 md:text-left">
+        <h1 class="text-5xl md:text-7xl lg:text-8xl font-black text-text-primary tracking-tight leading-none mb-6">
+            {{.Title}}
+        </h1>
+        <p class="text-xl md:text-2xl text-text-secondary max-w-2xl leading-relaxed">
+            {{.Description}}
+        </p>
+    </header>
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-12">
+        <!-- Main Content (Bibliography) -->
+        <div class="{{ if .Site.Params.profiles }}lg:col-span-8{{ else }}lg:col-span-12{{ end }}">
+            <div class="prose prose-lg prose-invert max-w-none break-words text-justify
+                        prose-headings:text-text-primary prose-headings:font-bold prose-headings:tracking-tight prose-headings:border-b prose-headings:border-border prose-headings:pb-2 prose-headings:mt-12 prose-headings:mb-6
+                        prose-p:text-text-secondary prose-p:leading-relaxed prose-p:mb-6
+                        prose-a:text-text-primary prose-a:font-medium hover:prose-a:text-accent prose-a:no-underline
+                        prose-strong:text-text-primary prose-strong:bg-surface-hover prose-strong:px-1 prose-strong:rounded
+                        prose-li:my-0">
+                {{.Content}}
+            </div>
+        </div>
+
+        <!-- Sidebar (Google Scholar / ResearchGate) -->
+        {{ if .Site.Params.profiles }}
+        <aside class="hidden lg:block lg:col-span-4 space-y-8">
+            <div class="sticky top-24 p-8 rounded-3xl bg-surface/30 border border-white/5 backdrop-blur-sm">
+                <h3 class="text-xl font-bold text-text-primary mb-6">Profiles</h3>
+                <div class="flex flex-col gap-4">
+                    {{ if .Site.Params.profiles.googleScholar }}
+                    <a href="{{ .Site.Params.profiles.googleScholar }}" target="_blank" rel="noopener noreferrer" 
+                       class="flex items-center gap-3 text-text-secondary hover:text-text-primary group transition-colors p-3 hover:bg-surface rounded-xl border border-transparent hover:border-border">
+                        <span class="material-symbols-outlined text-text-muted group-hover:text-accent">school</span>
+                        <span class="font-medium">Google Scholar</span>
+                    </a>
+                    {{ end }}
+                    {{ if .Site.Params.profiles.researchGate }}
+                    <a href="{{ .Site.Params.profiles.researchGate }}" target="_blank" rel="noopener noreferrer" 
+                       class="flex items-center gap-3 text-text-secondary hover:text-text-primary group transition-colors p-3 hover:bg-surface rounded-xl border border-transparent hover:border-border">
+                        <span class="material-symbols-outlined text-text-muted group-hover:text-accent">science</span>
+                        <span class="font-medium">ResearchGate</span>
+                    </a>
+                    {{ end }}
+                    {{ if .Site.Params.profiles.orcid }}
+                    <a href="{{ .Site.Params.profiles.orcid }}" target="_blank" rel="noopener noreferrer" 
+                       class="flex items-center gap-3 text-text-secondary hover:text-text-primary group transition-colors p-3 hover:bg-surface rounded-xl border border-transparent hover:border-border">
+                        <span class="material-symbols-outlined text-text-muted group-hover:text-accent">id_card</span>
+                        <span class="font-medium">ORCID</span>
+                    </a>
+                    {{ end }}
+                </div>
+            </div>
+        </aside>
+        {{ end }}
+    </div>
+</div>
+
+{{end}}

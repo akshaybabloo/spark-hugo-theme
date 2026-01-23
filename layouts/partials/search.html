@@ -1,55 +1,98 @@
-<!-- search model -->
-<div class="fixed z-10 inset-0 overflow-auto backdrop-blur-lg bg-gray-800/80 hidden" ref="searchModelRef" @click="outsideClick($event, 'searchModelRef')">
-    <div class="relative max-w-4xl flex items-center h-auto flex-wrap mx-auto my-32" ref="innerContainer" @click.stop>
-        <div class="relative w-full rounded-lg shadow-2xl bg-gray-600 mx-6 ring-gray-800 p-4">
-            <div class="flex items-center">
-                <!-- search input -->
-                <div class="relative flex-grow">
-                    <div class="absolute h-10 mt-1 left-0 top-0 flex items-center pl-5">
-                        <span v-html="icons.search" class="text-gray-600" aria-hidden="true"></span>
-                    </div>
-                    <input type="search" placeholder="Enter search term" v-model="searchText" @input="searchAlgolia"
-                           class="block w-full bg-brand-white focus:outline-none focus:bg-white focus:shadow text-gray-700 font-bold rounded-lg pl-12 pr-4 py-3"
-                           ref="searchInput"
-                           aria-label="Search for content"
-                    >
-                </div>
-                <!-- close button -->
-                <div class="pl-4">
-                    <button class="focus:outline-none cursor-pointer" aria-label="Close" type="button" @click="showSearchToggle()">
-                        <span v-html="icons.times" class="hover:text-gray-300" aria-hidden="true"></span>
-                    </button>
-                </div>
-            </div>
-            <div class="mx-auto lg:mx-0 pt-3 border-b-2 border-gray-500 opacity-25"></div>
+<!-- Search Modal -->
+<div class="fixed inset-0 z-[100] hidden" ref="searchModelRef" @click="showSearchToggle()">
+    <!-- Backdrop -->
+    <div class="absolute inset-0 bg-bg/95 backdrop-blur-sm transition-opacity"></div>
 
-            <div class="p-2 overflow-auto max-h-96 w-full flex flex-col">
-                <p class="text-center my-auto mx-auto text-gray-400 text-xl font-medium" v-if="isLoading">Loading...</p>
-                <p class="text-center my-auto mx-auto text-gray-400 text-xl font-medium" v-if="!isLoading && numberOfHits === 0">
-                    <span v-if="searchText === ''">Type above to search</span>
-                    <span v-else>No results for "<span class="!text-white">{{"{{searchText}}"}}</span>"</span>
-                </p>
-                <div v-for="(contents, section) in hits" class="self-start w-full">
-                    <h2 class="text-xl font-bold pb-3 py-3 capitalize">{{"{{section}}"}}</h2>
-                    <section v-for="content in contents">
-                        <a :href="content.uri" class="block w-full rounded-lg shadow-2xl bg-gray-600 border border-gray-500 hover:border-liquid-lava p-2 my-1">{{"{{content.title}}"}}</a>
-                    </section>
-                </div>
+    <!-- Modal -->
+    <div class="relative w-full h-full flex items-start justify-center pt-20 px-4 pointer-events-none">
+        <div class="w-full max-w-2xl bg-surface rounded-2xl border border-white/10 shadow-2xl overflow-hidden pointer-events-auto flex flex-col max-h-[70vh]" @click.stop>
+            
+            <!-- Search Input -->
+            <div class="flex items-center gap-4 p-4 md:p-6 border-b border-border bg-surface relative">
+                <span class="material-symbols-outlined text-text-muted icon-lg">search</span>
+                <input type="search"
+                       placeholder="Search articles, projects..."
+                       v-model="searchText"
+                       @input="searchAlgolia"
+                       ref="searchInput"
+                       aria-label="Search"
+                       class="flex-1 bg-transparent text-text-primary placeholder-text-muted outline-none text-xl font-medium h-12">
+                
+                <kbd class="hidden md:inline-flex items-center gap-1 px-2.5 py-1 text-xs font-mono text-text-muted bg-surface-hover rounded-lg border border-border">
+                    ESC
+                </kbd>
+                <button type="button"
+                        class="md:hidden p-2 text-text-muted hover:text-text-primary transition-colors cursor-pointer"
+                        @click="showSearchToggle()"
+                        aria-label="Close search">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
             </div>
 
-            <div class="mx-auto lg:mx-0 pt-3 border-b-2 border-gray-500 opacity-25"></div>
-            <div class="mt-2 flow-root float-right">
-                <div class="flex">
-                    <div>
-                        Powered by
-                    </div>
-                    <div class="ml-2">
-                        <img width="100" src="/img/algolia-dark.svg" loading="lazy" alt="Algolia logo">
+            <!-- Results Area -->
+            <div class="overflow-y-auto flex-1 overscroll-contain">
+                <!-- Loading -->
+                <div class="py-12 flex flex-col items-center justify-center gap-3 text-text-muted" v-if="isLoading">
+                    <span class="material-symbols-outlined animate-spin text-3xl">progress_activity</span>
+                    <span class="text-sm font-medium">Searching...</span>
+                </div>
+
+                <!-- Empty State -->
+                <div class="py-16 text-center" v-if="!isLoading && numberOfHits === 0 && searchText === ''">
+                    <p class="text-text-secondary text-lg font-medium">Start typing to search...</p>
+                    <p class="text-text-muted text-sm mt-2">Find posts, projects, and more.</p>
+                </div>
+
+                <!-- No Results -->
+                <div class="py-16 text-center" v-if="!isLoading && numberOfHits === 0 && searchText !== ''">
+                    <span class="material-symbols-outlined text-4xl text-text-muted mb-4 opacity-50">search_off</span>
+                    <p class="text-text-secondary text-lg">No results found for "<span class="text-text-primary font-bold">{{"{{searchText}}"}}</span>"</p>
+                    <p class="text-text-muted text-sm mt-2">Try different keywords.</p>
+                </div>
+
+                <!-- Results List -->
+                <div v-if="!isLoading && numberOfHits > 0">
+                    <div v-for="(contents, section) in hits" :key="section">
+                        <div class="sticky top-0 z-10 px-6 py-2 text-xs font-bold text-accent uppercase tracking-wider bg-surface/95 backdrop-blur-sm border-b border-border">
+                            {{"{{section}}"}}
+                        </div>
+                        <div class="py-2">
+                            <a v-for="content in contents"
+                               :href="content.uri"
+                               :class="['group flex items-start gap-4 px-6 py-4 hover:bg-surface-hover transition-all no-underline border-l-2', checkSelected(content.uri) ? 'bg-surface-hover border-accent' : 'border-transparent hover:border-accent']">
+                                <div class="mt-1 p-2 rounded-lg bg-surface border border-border group-hover:bg-surface-hover group-hover:border-transparent transition-colors">
+                                     <span class="material-symbols-outlined text-text-muted icon-sm" v-if="section === 'Blog'">article</span>
+                                     <span class="material-symbols-outlined text-text-muted icon-sm" v-else-if="section === 'Projects'">code</span>
+                                     <span class="material-symbols-outlined text-text-muted icon-sm" v-else>description</span>
+                                </div>
+                                <div>
+                                    <h4 class="text-base font-semibold text-text-primary group-hover:text-accent transition-colors mb-1">
+                                        {{"{{content.title}}"}}
+                                    </h4>
+                                    <!-- Optional: Show snippet if available -->
+                                    <!-- <p class="text-sm text-text-secondary line-clamp-1">{{"{{content.content}}"}}</p> -->
+                                </div>
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>
 
+            <!-- Footer -->
+            <div class="flex items-center justify-between px-6 py-4 bg-surface-hover border-t border-border text-xs text-text-muted">
+                <div class="flex items-center gap-4">
+                    <span class="hidden md:inline">
+                        <span class="font-bold text-text-secondary">↑↓</span> to navigate
+                    </span>
+                    <span class="hidden md:inline">
+                        <span class="font-bold text-text-secondary">↵</span> to select
+                    </span>
+                </div>
+                <div class="flex items-center gap-2 opacity-60 hover:opacity-100 transition-opacity">
+                    <span>Search by</span>
+                    <img src="/img/algolia-dark.svg" alt="Algolia" class="h-4">
+                </div>
+            </div>
         </div>
     </div>
-
 </div>
