@@ -34,6 +34,6 @@
 		"@microsoft/clarity": "^1.0.2",
 		"firacode": "^6.2.0",
 		"video.js": "^8.23.4",
-		"vue": "^3.5.26"
+		"vue": "^3.5.27"
 	}
 }
