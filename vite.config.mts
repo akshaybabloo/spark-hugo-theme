@@ -69,7 +69,7 @@ export default defineConfig(({ mode }) => {
 		},
 		resolve: {
 			alias: {
-				vue: resolve(__dirname, '../../node_modules/vue/dist/vue.esm-bundler.js'),
+				vue: 'vue/dist/vue.esm-bundler.js',
 			},
 		},
 		build: {

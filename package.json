@@ -1,11 +1,11 @@
 {
 	"name": "spark3",
-	"version": "1.0.0",
+	"version": "3.0.0",
 	"author": "Akshay Raj Gollahalli",
 	"license": "MIT",
 	"private": true,
 	"scripts": {
-		"static": "npx gulp",
+		"static": "gulp",
 		"build:prod": "vite build",
 		"build:dev": "vite build --mode development",
 		"watch": "vite build --mode development --watch",

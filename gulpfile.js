@@ -8,24 +8,24 @@ const fontWoffFolderPath = './woff/'
 const srcFolderPath = './src/'
 
 // Following are the files that will be moved to their locations
-const srcFilesToMove = ['../../node_modules/firacode/distr/fira_code.css']
-const cssFilesToMove = ['../../node_modules/video.js/dist/video-js.min.css']
-const jsFilesToMove = ['../../node_modules/video.js/dist/video.min.js']
+const srcFilesToMove = [require.resolve('firacode/distr/fira_code.css')]
+const cssFilesToMove = [require.resolve('video.js/dist/video-js.min.css')]
+const jsFilesToMove = [require.resolve('video.js/dist/video.min.js')]
 const fontWoff2FilesToMove = [
-	'../../node_modules/firacode/distr/woff2/FiraCode-Bold.woff2',
-	'../../node_modules/firacode/distr/woff2/FiraCode-Light.woff2',
-	'../../node_modules/firacode/distr/woff2/FiraCode-Medium.woff2',
-	'../../node_modules/firacode/distr/woff2/FiraCode-Regular.woff2',
-	'../../node_modules/firacode/distr/woff2/FiraCode-SemiBold.woff2',
-	'../../node_modules/firacode/distr/woff2/FiraCode-VF.woff2',
+	require.resolve('firacode/distr/woff2/FiraCode-Bold.woff2'),
+	require.resolve('firacode/distr/woff2/FiraCode-Light.woff2'),
+	require.resolve('firacode/distr/woff2/FiraCode-Medium.woff2'),
+	require.resolve('firacode/distr/woff2/FiraCode-Regular.woff2'),
+	require.resolve('firacode/distr/woff2/FiraCode-SemiBold.woff2'),
+	require.resolve('firacode/distr/woff2/FiraCode-VF.woff2'),
 ]
 const fontWoffFilesToMove = [
-	'../../node_modules/firacode/distr/woff/FiraCode-Bold.woff',
-	'../../node_modules/firacode/distr/woff/FiraCode-Light.woff',
-	'../../node_modules/firacode/distr/woff/FiraCode-Medium.woff',
-	'../../node_modules/firacode/distr/woff/FiraCode-Regular.woff',
-	'../../node_modules/firacode/distr/woff/FiraCode-SemiBold.woff',
-	'../../node_modules/firacode/distr/woff/FiraCode-VF.woff',
+	require.resolve('firacode/distr/woff/FiraCode-Bold.woff'),
+	require.resolve('firacode/distr/woff/FiraCode-Light.woff'),
+	require.resolve('firacode/distr/woff/FiraCode-Medium.woff'),
+	require.resolve('firacode/distr/woff/FiraCode-Regular.woff'),
+	require.resolve('firacode/distr/woff/FiraCode-SemiBold.woff'),
+	require.resolve('firacode/distr/woff/FiraCode-VF.woff'),
 ]
 
 // Moves CSS files to their appropriate location
