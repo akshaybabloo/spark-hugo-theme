@@ -35,12 +35,12 @@
     <!-- Main Content -->
     <main class="flex-grow flex items-center justify-center p-6 md:p-12 lg:p-24 relative overflow-hidden">
         
-        <div class="w-full max-w-7xl grid grid-cols-1 md:grid-cols-12 gap-12 md:gap-8 items-center z-10">
+        <div class="w-full max-w-4xl flex flex-col items-center z-10">
             
-            <!-- Left Column: Text -->
-            <div class="md:col-span-6 lg:col-span-7 flex flex-col justify-center text-center md:text-left space-y-8 order-2 md:order-1">
+            <!-- Centered Text -->
+            <div class="flex flex-col justify-center text-center space-y-8">
                 
-                <div class="space-y-4">
+                <div class="space-y-3">
                     <p class="text-text-muted font-medium tracking-[0.2em] uppercase text-sm md:text-base">
                         Software Engineer & Researcher
                     </p>
@@ -48,12 +48,12 @@
                     <h1 class="mb-3">
                         <img src="{{ .Site.Params.namedLogo }}" 
                              alt="{{ .Title }}" 
-                             class="h-16 md:h-20 lg:h-24 w-auto object-contain mx-auto md:mx-0">
+                             class="h-16 md:h-20 lg:h-24 w-auto object-contain mx-auto">
                     </h1>
                 </div>
 
                 <!-- Navigation -->
-                <nav class="inline-flex flex-wrap items-center justify-center md:justify-start gap-x-6 gap-y-3 py-3 px-6 bg-surface/40 border border-white/5 rounded-2xl backdrop-blur-sm">
+                <nav class="inline-flex flex-wrap items-center justify-center gap-x-6 gap-y-3 py-3 px-6 bg-surface/40 border border-white/5 rounded-2xl backdrop-blur-sm mx-auto">
                     {{ range .Site.Menus.main }}
                     <a href="{{.URL}}"
                        class="group text-lg font-bold text-text-primary hover:text-accent transition-colors relative">
@@ -63,12 +63,12 @@
                     {{ end }}
                 </nav>
 
-                <div class="text-text-secondary text-lg md:text-xl leading-relaxed max-w-2xl mx-auto md:mx-0 text-justify">
+                <div class="text-text-secondary text-lg md:text-xl leading-relaxed max-w-2xl mx-auto text-center">
                     {{ .Content }}
                 </div>
 
                 <!-- Social Icons -->
-                <div class="flex items-center justify-center md:justify-start gap-6 pt-4">
+                <div class="flex items-center justify-center gap-6 pt-4">
                      <!-- Github -->
                      <a href="{{ .Site.Params.social.github }}" target="_blank" rel="noopener noreferrer" 
                         class="text-text-muted hover:text-text-primary transform hover:scale-110 transition-all duration-200" aria-label="GitHub">
@@ -100,18 +100,8 @@
                 </div>
             </div>
 
-            <!-- Right Column: Image -->
-            <div class="md:col-span-5 lg:col-span-4 flex justify-center md:justify-end order-1 md:order-2">
-                <div class="relative w-48 h-48 md:w-80 md:h-80 lg:w-96 lg:h-96 group">
-                    <div class="absolute inset-0 bg-text-primary/10 rounded-full blur-2xl transform group-hover:scale-105 transition-transform duration-500"></div>
-                    <picture>
-                        <source srcset="{{$src}}" type="image/webp">
-                        <img src="{{$srcOriginal}}" 
-                             alt="{{ .Title }}" 
-                             class="relative w-full h-full object-cover rounded-full border-4 border-text-muted/20 shadow-2xl transform transition-transform duration-500 group-hover:scale-[1.02]">
-                    </picture>
-                </div>
-            </div>
+            <!-- Right Column: Image (Removed) -->
+
 
         </div>
     </main>

@@ -2,14 +2,34 @@
 
 <div class="w-full max-w-6xl mx-auto px-6 py-12 md:py-20">
     <!-- Header -->
-    <header class="mb-16 md:mb-24 md:text-left">
-        <h1 class="text-5xl md:text-7xl lg:text-8xl font-black text-text-primary tracking-tight leading-none mb-8">
+    <header class="mb-16 md:mb-24">
+        <h1 class="text-5xl md:text-7xl lg:text-8xl font-black text-text-primary tracking-tight leading-none mb-12 md:text-left text-center">
             {{.Title}}
         </h1>
-        <div class="prose prose-lg prose-invert max-w-none text-justify text-text-secondary leading-relaxed
-                    prose-p:text-text-secondary prose-p:leading-relaxed prose-a:text-text-primary prose-a:no-underline hover:prose-a:text-accent prose-a:transition-colors
-                    prose-li:my-0">
-            {{.Content}}
+
+        <div class="flex flex-col md:flex-row gap-12 items-start">
+            <!-- Image Section -->
+             <div class="w-full md:w-auto flex-shrink-0 flex justify-center md:justify-start">
+                {{ $imagePath := partial "image-path" (dict "page" . "src" .Site.Params.thumbnailUrl) }}
+                {{ $srcOriginal := $imagePath.originalSrc}}
+                {{ $src := $imagePath.webpSrc }}
+                
+                <div class="relative w-64 h-64 md:w-72 md:h-72 group">
+                    <div class="absolute inset-0 bg-text-primary/10 rounded-full blur-2xl transform group-hover:scale-105 transition-transform duration-500"></div>
+                    <picture>
+                        <source srcset="{{$src}}" type="image/webp">
+                        <img src="{{$srcOriginal}}" 
+                             alt="{{ .Title }}" 
+                             class="relative w-full h-full object-cover rounded-full border-4 border-text-muted/20 shadow-2xl transform transition-transform duration-500 group-hover:scale-[1.02]">
+                    </picture>
+                </div>
+            </div>
+
+            <div class="prose prose-lg prose-invert max-w-none text-justify text-text-secondary leading-relaxed
+                        prose-p:text-text-secondary prose-p:leading-relaxed prose-a:text-text-primary prose-a:no-underline hover:prose-a:text-accent prose-a:transition-colors
+                        prose-li:my-0 flex-grow">
+                {{.Content}}
+            </div>
         </div>
     </header>
 
@@ -38,6 +58,19 @@
                 </div>
                 <div class="pl-2">
                     {{ partial "education.html" . }}
+                </div>
+            </section>
+            {{ end }}
+
+            <!-- Research Interests -->
+            {{ range $k, $i := .Site.Data.Interests }}
+            <section class="relative">
+                <div class="flex items-center gap-4 mb-10">
+                     <span class="w-12 h-1 bg-accent rounded-full"></span>
+                    <h2 class="text-3xl font-bold text-text-primary tracking-tight">{{$k}}</h2>
+                </div>
+                <div class="pl-2">
+                    {{ partial "interests.html" . }}
                 </div>
             </section>
             {{ end }}

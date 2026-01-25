@@ -1,0 +1,8 @@
+<ul class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    {{ range . }}
+    <li class="flex items-center gap-3 p-4 rounded-xl bg-surface border border-white/5 hover:border-accent/50 transition-colors group">
+        <span class="w-2 h-2 rounded-full bg-accent group-hover:scale-125 transition-transform"></span>
+        <span class="text-text-secondary group-hover:text-text-primary transition-colors font-medium">{{ . }}</span>
+    </li>
+    {{ end }}
+</ul>
