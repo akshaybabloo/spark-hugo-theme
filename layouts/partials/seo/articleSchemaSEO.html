@@ -24,7 +24,7 @@
         },
         "author": {
             "@type": "Person",
-            "name": "{{ .Params.author.firstName }} {{ .Params.author.lastName }}",
+            "name": "{{ if .Params.author }}{{ .Params.author.firstName }} {{ .Params.author.lastName }}{{ else }}{{ .Site.Title }}{{ end }}",
             "image": {
                 "@type": "ImageObject",
                 "url": {{ .Site.Params.logoPhoto | absURL | jsonify | safeJS }},

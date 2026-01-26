@@ -29,6 +29,7 @@
 {{ end -}}
 
 <meta name="description" content="{{ $.Scratch.Get "description" }}"/>
+{{ if .Params.tags }}<meta name="keywords" content="{{ delimit .Params.tags ", " }}" />{{ end }}
 
 {{ if not (eq .Type "blog") }}
   {{- partial "seo/websiteSchemaSEO.html" . -}}
