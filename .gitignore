@@ -20,4 +20,6 @@ node_modules/
 !/src/tailwind.css
 app-*.es.js
 vendor-*.es.js
+app-*.esm.js
+rolldown-runtime-*.esm.js
 *.map

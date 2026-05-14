@@ -92,10 +92,16 @@ export default defineConfig(({ mode }) => {
 					},
 					chunkFileNames: 'js/[name]-[hash].[format].js',
 					entryFileNames: 'js/[name]-[hash].[format].js',
-					manualChunks: {
-						vue: ['vue'],
-						'@algolia/client-search': ['@algolia/client-search'],
-						'@microsoft/clarity': ['@microsoft/clarity'],
+					manualChunks(id) {
+						if (id.includes('node_modules/@algolia/client-search')) {
+							return '@algolia/client-search'
+						}
+						if (id.includes('node_modules/@microsoft/clarity')) {
+							return '@microsoft/clarity'
+						}
+						if (id.includes('node_modules/vue') || id.includes('node_modules/@vue')) {
+							return 'vue'
+						}
 					},
 				},
 				input: {
