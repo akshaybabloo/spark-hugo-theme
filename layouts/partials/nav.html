@@ -37,6 +37,7 @@
                 <button type="button"
                         class="p-2.5 text-text-secondary hover:text-text-primary hover:bg-white/5 rounded-full transition-all cursor-pointer"
                         @click="showSearchToggle()"
+                        :aria-expanded="searchOpen"
                         aria-label="Search">
                     <span class="material-symbols-outlined icon-md">search</span>
                 </button>
@@ -45,6 +46,7 @@
                 <button @click="toggleMobileMenu()"
                         type="button"
                         aria-label="Toggle navigation menu"
+                        :aria-expanded="mobileMenuOpen"
                         class="lg:hidden p-2.5 text-text-secondary hover:text-text-primary hover:bg-white/5 rounded-full transition-all cursor-pointer">
                     <span class="material-symbols-outlined icon-md">menu</span>
                 </button>
@@ -52,23 +54,26 @@
         </div>
 
         <!-- Mobile Navigation Dropdown -->
-        <div v-show="mobileMenuOpen" 
-             x-transition:enter="transition ease-out duration-200"
-             x-transition:enter-start="opacity-0 -translate-y-2"
-             x-transition:enter-end="opacity-100 translate-y-0"
-             x-transition:leave="transition ease-in duration-150"
-             x-transition:leave-start="opacity-100 translate-y-0"
-             x-transition:leave-end="opacity-0 -translate-y-2"
-             class="lg:hidden absolute top-20 left-0 w-full bg-surface/95 backdrop-blur-xl border-b border-border shadow-2xl overflow-hidden">
-            <div class="px-6 py-4 space-y-2">
-                {{ $currentPage := . }}
-                {{ range .Site.Menus.main }}
-                <a href="{{.URL}}"
-                   class="block px-4 py-3 rounded-xl text-base font-semibold transition-all {{ if or ($currentPage.IsMenuCurrent "main" .) ($currentPage.HasMenuCurrent "main" .) }}text-text-primary bg-white/10{{ else }}text-text-secondary hover:text-text-primary hover:bg-white/5{{ end }}">
-                    {{ .Name }}
-                </a>
-                {{ end }}
+        <transition
+            enter-active-class="transition ease-out duration-200"
+            enter-from-class="opacity-0 -translate-y-2"
+            enter-to-class="opacity-100 translate-y-0"
+            leave-active-class="transition ease-in duration-150"
+            leave-from-class="opacity-100 translate-y-0"
+            leave-to-class="opacity-0 -translate-y-2">
+            <div v-show="mobileMenuOpen"
+                 v-cloak
+                 class="lg:hidden absolute top-20 left-0 w-full bg-surface/95 backdrop-blur-xl border-b border-border shadow-2xl overflow-hidden">
+                <div class="px-6 py-4 space-y-2">
+                    {{ $currentPage := . }}
+                    {{ range .Site.Menus.main }}
+                    <a href="{{.URL}}"
+                       class="block px-4 py-3 rounded-xl text-base font-semibold transition-all {{ if or ($currentPage.IsMenuCurrent "main" .) ($currentPage.HasMenuCurrent "main" .) }}text-text-primary bg-white/10{{ else }}text-text-secondary hover:text-text-primary hover:bg-white/5{{ end }}">
+                        {{ .Name }}
+                    </a>
+                    {{ end }}
+                </div>
             </div>
-        </div>
+        </transition>
     </div>
 </nav>

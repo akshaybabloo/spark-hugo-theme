@@ -1,5 +1,5 @@
 <!-- Search Modal -->
-<div class="fixed inset-0 z-[100] hidden" ref="searchModelRef" @click="showSearchToggle()">
+<div class="fixed inset-0 z-[100]" v-cloak ref="searchModelRef" v-show="searchOpen" role="dialog" aria-modal="true" aria-label="Site search" @click="showSearchToggle()">
     <!-- Backdrop -->
     <div class="absolute inset-0 bg-bg/95 backdrop-blur-sm transition-opacity"></div>
 
@@ -16,7 +16,7 @@
                        @input="searchAlgolia"
                        ref="searchInput"
                        aria-label="Search"
-                       class="flex-1 bg-transparent text-text-primary placeholder-text-muted outline-none text-xl font-medium h-12">
+                       class="flex-1 bg-transparent text-text-primary placeholder-text-muted border-0 outline-none focus:ring-0 focus:outline-none text-xl font-medium h-12">
                 
                 <kbd class="hidden md:inline-flex items-center gap-1 px-2.5 py-1 text-xs font-mono text-text-muted bg-surface-hover rounded-lg border border-border">
                     ESC
@@ -59,6 +59,7 @@
                         <div class="py-2">
                             <a v-for="content in contents"
                                :href="content.uri"
+                               class="search-result"
                                :class="['group flex items-start gap-4 px-6 py-4 hover:bg-surface-hover transition-all no-underline border-l-2', checkSelected(content.uri) ? 'bg-surface-hover border-accent' : 'border-transparent hover:border-accent']">
                                 <div class="mt-1 p-2 rounded-lg bg-surface border border-border group-hover:bg-surface-hover group-hover:border-transparent transition-colors">
                                      <span class="material-symbols-outlined text-text-muted icon-sm" v-if="section === 'Blog'">article</span>

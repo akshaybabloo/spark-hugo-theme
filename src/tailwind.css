@@ -40,6 +40,11 @@ body {
     @apply bg-bg text-text-primary antialiased;
 }
 
+/* Hide Vue-controlled elements until the app has mounted (prevents modal flash) */
+[v-cloak] {
+    display: none !important;
+}
+
 .highlight pre {
     @apply my-4 !p-4;
 }

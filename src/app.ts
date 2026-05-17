@@ -1,6 +1,6 @@
 import './tailwind.css'
 import './custom.scss'
-import { createApp, onMounted, onBeforeUnmount, ref, computed, watch } from 'vue'
+import { createApp, onMounted, onBeforeUnmount, ref, computed, watch, nextTick } from 'vue'
 import { searchClient as algoliasearch } from '@algolia/client-search'
 import { groupBy } from './utils'
 import Clarity from '@microsoft/clarity'
@@ -20,6 +20,7 @@ createApp({
 		const searchInput = ref<HTMLInputElement>()
 		const isLoading = ref<boolean>(false)
 		const selectedIndex = ref<number>(-1)
+		const searchOpen = ref<boolean>(false)
 
 		// Computed flat list for navigation
 		const flatHits = computed(() => {
@@ -57,7 +58,7 @@ createApp({
 
 		function keyListener(e: KeyboardEvent) {
 			// Search Navigation
-			if (!searchModelRef.value?.classList.contains('hidden')) {
+			if (searchOpen.value) {
 				if (e.key === 'ArrowDown') {
 					e.preventDefault()
 					selectedIndex.value = Math.min(selectedIndex.value + 1, flatHits.value.length - 1)
@@ -72,11 +73,13 @@ createApp({
 					if (item) {
 						window.location.href = item.uri
 					}
+				} else if (e.key === 'Tab') {
+					trapFocus(e)
 				}
 			}
 
 			if (e.key === 'Escape') {
-				if (!searchModelRef.value?.classList.contains('hidden')) {
+				if (searchOpen.value) {
 					showSearchToggle()
 				}
 				if (imageModalVisible.value) {
@@ -85,10 +88,33 @@ createApp({
 			}
 		}
 
+		// Keep keyboard focus within the open search modal
+		function trapFocus(e: KeyboardEvent) {
+			const modal = searchModelRef.value
+			if (!modal) return
+			const focusable = Array.from(
+				modal.querySelectorAll<HTMLElement>('a[href], button, input, [tabindex]:not([tabindex="-1"])'),
+			).filter((el) => el.offsetParent !== null)
+			if (focusable.length === 0) return
+
+			const first = focusable[0]
+			const last = focusable[focusable.length - 1]
+			if (e.shiftKey && document.activeElement === first) {
+				e.preventDefault()
+				last.focus()
+			} else if (!e.shiftKey && document.activeElement === last) {
+				e.preventDefault()
+				first.focus()
+			}
+		}
+
+		// Scroll the highlighted search result into view during arrow-key navigation
 		function scrollToSelected() {
-			// Simple logic to scroll the selected item into view would go here
-			// For now we rely on standard behavior or add specific logic if needed
-			// But we need to expose selectedIndex to template to show highlighting
+			if (selectedIndex.value < 0) return
+			nextTick(() => {
+				const results = document.querySelectorAll<HTMLElement>('.search-result')
+				results[selectedIndex.value]?.scrollIntoView({ block: 'nearest' })
+			})
 		}
 
 		function toggleMobileMenu() {
@@ -96,13 +122,10 @@ createApp({
 		}
 
 		function showSearchToggle() {
-			if (searchModelRef.value?.classList.contains('hidden')) {
-				searchModelRef.value.classList.remove('hidden')
-				searchInput.value?.focus()
-				selectedIndex.value = -1
-			} else {
-				searchModelRef.value?.classList.add('hidden')
-				selectedIndex.value = -1
+			searchOpen.value = !searchOpen.value
+			selectedIndex.value = -1
+			if (searchOpen.value) {
+				nextTick(() => searchInput.value?.focus())
 			}
 		}
 
@@ -170,6 +193,7 @@ createApp({
 			numberOfHits,
 			hits,
 			isLoading,
+			searchOpen, // Drives modal visibility / aria-expanded
 			selectedIndex, // Exported for template
 			checkSelected, // Exported helper
 			showSearchToggle,

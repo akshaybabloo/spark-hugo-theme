@@ -130,7 +130,7 @@
                 </div>
 
                 <!-- Content -->
-                <div class="prose prose-lg prose-invert max-w-none text-justify
+                <div class="prose prose-lg prose-invert mx-auto
                             prose-headings:text-text-primary prose-headings:font-bold prose-headings:tracking-tight
                             prose-p:text-text-secondary prose-p:leading-relaxed
                             prose-a:text-text-primary prose-a:font-medium prose-a:underline prose-a:decoration-text-muted prose-a:underline-offset-4 hover:prose-a:decoration-text-primary prose-a:transition-all
@@ -206,28 +206,30 @@
 
                 <!-- Navigation -->
                 <nav class="grid grid-cols-1 sm:grid-cols-2 gap-6 my-12">
-                    {{ if .Next }}
-                    <a href="{{ .Next.Permalink }}" class="group block p-6 rounded-2xl border border-border bg-surface hover:bg-surface-hover transition-all">
+                    {{/* PrevInSection is the older post in this section (published before this one) */}}
+                    {{ with .PrevInSection }}
+                    <a href="{{ .Permalink }}" class="group block p-6 rounded-2xl border border-border bg-surface hover:bg-surface-hover transition-all">
                         <span class="text-sm text-text-muted mb-2 flex items-center gap-1">
                             <span class="material-symbols-outlined icon-sm">arrow_back</span>
                             Previous Article
                         </span>
                         <span class="block font-bold text-text-primary group-hover:text-accent transition-colors">
-                            {{ .Next.Title }}
+                            {{ .Title }}
                         </span>
                     </a>
                     {{ else }}
                     <div></div>
                     {{ end }}
 
-                    {{ if .Prev }}
-                    <a href="{{ .Prev.Permalink }}" class="group block p-6 rounded-2xl border border-border bg-surface hover:bg-surface-hover transition-all text-right">
+                    {{/* NextInSection is the newer post in this section (published after this one) */}}
+                    {{ with .NextInSection }}
+                    <a href="{{ .Permalink }}" class="group block p-6 rounded-2xl border border-border bg-surface hover:bg-surface-hover transition-all text-right">
                         <span class="text-sm text-text-muted mb-2 flex items-center justify-end gap-1">
                             Next Article
                             <span class="material-symbols-outlined icon-sm">arrow_forward</span>
                         </span>
                         <span class="block font-bold text-text-primary group-hover:text-accent transition-colors">
-                            {{ .Prev.Title }}
+                            {{ .Title }}
                         </span>
                     </a>
                     {{ end }}

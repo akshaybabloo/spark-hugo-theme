@@ -27,6 +27,7 @@
         <button class="p-3 text-text-secondary hover:text-text-primary transition-all duration-200 cursor-pointer rounded-full hover:bg-white/10"
                 type="button"
                 @click="showSearchToggle()"
+                :aria-expanded="searchOpen"
                 aria-label="Search">
             <span class="material-symbols-outlined text-2xl">search</span>
         </button>
