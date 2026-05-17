@@ -34,8 +34,15 @@
     </header>
 
     <!-- Main Content -->
-    <main class="flex-grow flex items-center justify-center p-6 md:p-12 lg:p-24 relative overflow-hidden">
-        
+    <main class="grow flex items-center justify-center p-6 md:p-12 lg:p-24 relative overflow-hidden">
+
+        {{ if .Site.Params.homeAnimation }}
+        <!-- Game of Life background animation -->
+        <canvas id="automata-bg"
+                aria-hidden="true"
+                class="absolute inset-0 z-0 h-full w-full pointer-events-none opacity-0"></canvas>
+        {{ end }}
+
         <div class="w-full max-w-4xl flex flex-col items-center z-10">
             
             <!-- Centered Text -->

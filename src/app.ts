@@ -50,6 +50,12 @@ createApp({
 			console.log('Welcome to gollahalli.com!', __GIT_HASH__)
 			document.addEventListener('keydown', keyListener)
 			initImageModal()
+
+			// Homepage-only cellular-automata background (lazy-loaded with anime.js)
+			const automataCanvas = document.getElementById('automata-bg') as HTMLCanvasElement | null
+			if (automataCanvas) {
+				import('./automata').then(({ initAutomata }) => initAutomata(automataCanvas))
+			}
 		})
 
 		onBeforeUnmount(() => {

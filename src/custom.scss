@@ -1,6 +1,19 @@
 // @import url("../../../node_modules/firacode/distr/fira_code.css");
 @import "firacode/distr/fira_code.css";
 
+// Hide Vue-controlled elements until the app has mounted (prevents modal flash)
+[v-cloak] {
+    display: none !important;
+}
+
+// Cellular-automata hero background: fade the pattern out behind the centred
+// hero text so it stays a backdrop and never competes with the content.
+#automata-bg {
+    $mask: radial-gradient(ellipse 58% 55% at 50% 42%, transparent 26%, #000 86%);
+    -webkit-mask-image: $mask;
+    mask-image: $mask;
+}
+
 article {
     %headings {
         .anchor-link {

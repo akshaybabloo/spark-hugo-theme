@@ -28,6 +28,7 @@
 	"dependencies": {
 		"@algolia/client-search": "^5.46.3",
 		"@microsoft/clarity": "^1.0.2",
+		"animejs": "^4.4.1",
 		"firacode": "^6.2.0",
 		"video.js": "^8.23.4",
 		"vue": "^3.5.27"
