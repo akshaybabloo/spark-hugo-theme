@@ -33,21 +33,21 @@
                     {{ if .Site.Params.profiles.googleScholar }}
                     <a href="{{ .Site.Params.profiles.googleScholar }}" target="_blank" rel="noopener noreferrer" 
                        class="flex items-center gap-3 text-text-secondary hover:text-text-primary group transition-colors p-3 hover:bg-surface rounded-xl border border-transparent hover:border-border">
-                        <span class="material-symbols-outlined text-text-muted group-hover:text-accent">school</span>
+                        <span aria-hidden="true" class="material-symbols-outlined text-text-muted group-hover:text-accent">school</span>
                         <span class="font-medium">Google Scholar</span>
                     </a>
                     {{ end }}
                     {{ if .Site.Params.profiles.researchGate }}
                     <a href="{{ .Site.Params.profiles.researchGate }}" target="_blank" rel="noopener noreferrer" 
                        class="flex items-center gap-3 text-text-secondary hover:text-text-primary group transition-colors p-3 hover:bg-surface rounded-xl border border-transparent hover:border-border">
-                        <span class="material-symbols-outlined text-text-muted group-hover:text-accent">science</span>
+                        <span aria-hidden="true" class="material-symbols-outlined text-text-muted group-hover:text-accent">science</span>
                         <span class="font-medium">ResearchGate</span>
                     </a>
                     {{ end }}
                     {{ if .Site.Params.profiles.orcid }}
                     <a href="{{ .Site.Params.profiles.orcid }}" target="_blank" rel="noopener noreferrer" 
                        class="flex items-center gap-3 text-text-secondary hover:text-text-primary group transition-colors p-3 hover:bg-surface rounded-xl border border-transparent hover:border-border">
-                        <span class="material-symbols-outlined text-text-muted group-hover:text-accent">id_card</span>
+                        <span aria-hidden="true" class="material-symbols-outlined text-text-muted group-hover:text-accent">id_card</span>
                         <span class="font-medium">ORCID</span>
                     </a>
                     {{ end }}

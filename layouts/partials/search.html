@@ -9,7 +9,7 @@
             
             <!-- Search Input -->
             <div class="flex items-center gap-4 p-4 md:p-6 border-b border-border bg-surface relative">
-                <span class="material-symbols-outlined text-text-muted icon-lg">search</span>
+                <span aria-hidden="true" class="material-symbols-outlined text-text-muted icon-lg">search</span>
                 <input type="search"
                        placeholder="Search articles, projects..."
                        v-model="searchText"
@@ -25,7 +25,7 @@
                         class="md:hidden p-2 text-text-muted hover:text-text-primary transition-colors cursor-pointer"
                         @click="showSearchToggle()"
                         aria-label="Close search">
-                    <span class="material-symbols-outlined">close</span>
+                    <span aria-hidden="true" class="material-symbols-outlined">close</span>
                 </button>
             </div>
 
@@ -33,7 +33,7 @@
             <div class="overflow-y-auto flex-1 overscroll-contain">
                 <!-- Loading -->
                 <div class="py-12 flex flex-col items-center justify-center gap-3 text-text-muted" v-if="isLoading">
-                    <span class="material-symbols-outlined animate-spin text-3xl">progress_activity</span>
+                    <span aria-hidden="true" class="material-symbols-outlined animate-spin text-3xl">progress_activity</span>
                     <span class="text-sm font-medium">Searching...</span>
                 </div>
 
@@ -45,7 +45,7 @@
 
                 <!-- No Results -->
                 <div class="py-16 text-center" v-if="!isLoading && numberOfHits === 0 && searchText !== ''">
-                    <span class="material-symbols-outlined text-4xl text-text-muted mb-4 opacity-50">search_off</span>
+                    <span aria-hidden="true" class="material-symbols-outlined text-4xl text-text-muted mb-4 opacity-50">search_off</span>
                     <p class="text-text-secondary text-lg">No results found for "<span class="text-text-primary font-bold">{{"{{searchText}}"}}</span>"</p>
                     <p class="text-text-muted text-sm mt-2">Try different keywords.</p>
                 </div>
@@ -62,9 +62,9 @@
                                class="search-result"
                                :class="['group flex items-start gap-4 px-6 py-4 hover:bg-surface-hover transition-all no-underline border-l-2', checkSelected(content.uri) ? 'bg-surface-hover border-accent' : 'border-transparent hover:border-accent']">
                                 <div class="mt-1 p-2 rounded-lg bg-surface border border-border group-hover:bg-surface-hover group-hover:border-transparent transition-colors">
-                                     <span class="material-symbols-outlined text-text-muted icon-sm" v-if="section === 'Blog'">article</span>
-                                     <span class="material-symbols-outlined text-text-muted icon-sm" v-else-if="section === 'Projects'">code</span>
-                                     <span class="material-symbols-outlined text-text-muted icon-sm" v-else>description</span>
+                                     <span aria-hidden="true" class="material-symbols-outlined text-text-muted icon-sm" v-if="section === 'Blog'">article</span>
+                                     <span aria-hidden="true" class="material-symbols-outlined text-text-muted icon-sm" v-else-if="section === 'Projects'">code</span>
+                                     <span aria-hidden="true" class="material-symbols-outlined text-text-muted icon-sm" v-else>description</span>
                                 </div>
                                 <div>
                                     <h4 class="text-base font-semibold text-text-primary group-hover:text-accent transition-colors mb-1">

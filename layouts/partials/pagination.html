@@ -6,12 +6,12 @@
     <a href="{{ $pag.Prev.URL }}"
        aria-label="Previous page"
        class="flex items-center gap-2 px-4 py-2 rounded-full text-text-secondary hover:text-text-primary hover:bg-surface border border-transparent hover:border-border transition-all duration-300 group">
-        <span class="material-symbols-outlined icon-sm group-hover:-translate-x-1 transition-transform">arrow_back</span>
+        <span aria-hidden="true" class="material-symbols-outlined icon-sm group-hover:-translate-x-1 transition-transform">arrow_back</span>
         <span class="hidden sm:inline font-medium">Prev</span>
     </a>
     {{ else }}
     <span class="flex items-center gap-2 px-4 py-2 rounded-full text-text-muted/50 cursor-not-allowed border border-transparent">
-        <span class="material-symbols-outlined icon-sm">arrow_back</span>
+        <span aria-hidden="true" class="material-symbols-outlined icon-sm">arrow_back</span>
         <span class="hidden sm:inline font-medium">Prev</span>
     </span>
     {{ end }}
@@ -21,12 +21,15 @@
         {{ range $pag.Pagers }}
             {{ if eq . $pag }}
             <!-- Active Page -->
-            <span class="w-10 h-10 flex items-center justify-center rounded-full bg-accent text-surface font-bold shadow-lg shadow-accent/20">
+            <span aria-current="page"
+                  aria-label="Page {{ .PageNumber }}, current page"
+                  class="w-10 h-10 flex items-center justify-center rounded-full bg-accent text-surface font-bold shadow-lg shadow-accent/20">
                 {{ .PageNumber }}
             </span>
             {{ else }}
             <!-- Other Page -->
             <a href="{{ .URL }}"
+               aria-label="Page {{ .PageNumber }}"
                class="w-10 h-10 flex items-center justify-center rounded-full text-text-secondary hover:text-text-primary hover:bg-surface transition-colors font-medium">
                 {{ .PageNumber }}
             </a>
@@ -45,12 +48,12 @@
        aria-label="Next page"
        class="flex items-center gap-2 px-4 py-2 rounded-full text-text-secondary hover:text-text-primary hover:bg-surface border border-transparent hover:border-border transition-all duration-300 group">
         <span class="hidden sm:inline font-medium">Next</span>
-        <span class="material-symbols-outlined icon-sm group-hover:translate-x-1 transition-transform">arrow_forward</span>
+        <span aria-hidden="true" class="material-symbols-outlined icon-sm group-hover:translate-x-1 transition-transform">arrow_forward</span>
     </a>
     {{ else }}
     <span class="flex items-center gap-2 px-4 py-2 rounded-full text-text-muted/50 cursor-not-allowed border border-transparent">
         <span class="hidden sm:inline font-medium">Next</span>
-        <span class="material-symbols-outlined icon-sm">arrow_forward</span>
+        <span aria-hidden="true" class="material-symbols-outlined icon-sm">arrow_forward</span>
     </span>
     {{ end }}
 </nav>

@@ -57,7 +57,7 @@
                     </picture>
                 {{ else }}
                     <div class="w-full h-full bg-surface-hover flex items-center justify-center text-text-muted">
-                        <span class="material-symbols-outlined text-6xl opacity-20">article</span>
+                        <span aria-hidden="true" class="material-symbols-outlined text-6xl opacity-20">article</span>
                     </div>
                 {{ end }}
                 <div class="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors duration-300"></div>
@@ -81,7 +81,7 @@
                 <div class="pt-4">
                     <a href="{{ .RelPermalink }}" class="inline-flex items-center text-text-primary font-semibold hover:text-accent transition-colors">
                         Read Article 
-                        <span class="material-symbols-outlined ml-2 group-hover:translate-x-1 transition-transform">arrow_forward</span>
+                        <span aria-hidden="true" class="material-symbols-outlined ml-2 group-hover:translate-x-1 transition-transform">arrow_forward</span>
                     </a>
                 </div>
             </div>
@@ -115,7 +115,7 @@
                     </picture>
                 {{ else }}
                      <div class="w-full h-full bg-surface-hover flex items-center justify-center text-text-muted">
-                        <span class="material-symbols-outlined text-4xl opacity-20">article</span>
+                        <span aria-hidden="true" class="material-symbols-outlined text-4xl opacity-20">article</span>
                     </div>
                 {{ end }}
             </a>

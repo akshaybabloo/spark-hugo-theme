@@ -13,6 +13,7 @@
                 {{ $currentPage := . }}
                 {{ range .Site.Menus.main }}
                 <a href="{{.URL}}"
+                   {{ if or ($currentPage.IsMenuCurrent "main" .) ($currentPage.HasMenuCurrent "main" .) }}aria-current="page"{{ end }}
                    class="relative text-sm font-semibold tracking-wide transition-colors py-2 group/link {{ if or ($currentPage.IsMenuCurrent "main" .) ($currentPage.HasMenuCurrent "main" .) }}text-text-primary{{ else }}text-text-secondary hover:text-text-primary{{ end }}">
                     {{ .Name }}
                     <span class="absolute bottom-0 left-0 w-full h-0.5 bg-text-primary transform origin-left transition-transform duration-300 {{ if or ($currentPage.IsMenuCurrent "main" .) ($currentPage.HasMenuCurrent "main" .) }}scale-x-100{{ else }}scale-x-0 group-hover/link:scale-x-100{{ end }}"></span>
@@ -27,7 +28,7 @@
                     {{ with .GetPage "/blog/" }}
                         {{ with .OutputFormats.Get "rss" }}
                             <a href="{{ .Permalink }}" class="p-2 text-text-muted hover:text-text-primary transition-colors hidden sm:block" aria-label="Blog RSS feed">
-                                <span class="material-symbols-outlined">rss_feed</span>
+                                <span aria-hidden="true" class="material-symbols-outlined">rss_feed</span>
                             </a>
                         {{ end }}
                     {{ end }}
@@ -39,7 +40,7 @@
                         @click="showSearchToggle()"
                         :aria-expanded="searchOpen"
                         aria-label="Search">
-                    <span class="material-symbols-outlined icon-md">search</span>
+                    <span aria-hidden="true" class="material-symbols-outlined icon-md">search</span>
                 </button>
 
                 <!-- Mobile menu button -->
@@ -48,7 +49,7 @@
                         aria-label="Toggle navigation menu"
                         :aria-expanded="mobileMenuOpen"
                         class="lg:hidden p-2.5 text-text-secondary hover:text-text-primary hover:bg-white/5 rounded-full transition-all cursor-pointer">
-                    <span class="material-symbols-outlined icon-md">menu</span>
+                    <span aria-hidden="true" class="material-symbols-outlined icon-md">menu</span>
                 </button>
             </div>
         </div>
@@ -68,6 +69,7 @@
                     {{ $currentPage := . }}
                     {{ range .Site.Menus.main }}
                     <a href="{{.URL}}"
+                       {{ if or ($currentPage.IsMenuCurrent "main" .) ($currentPage.HasMenuCurrent "main" .) }}aria-current="page"{{ end }}
                        class="block px-4 py-3 rounded-xl text-base font-semibold transition-all {{ if or ($currentPage.IsMenuCurrent "main" .) ($currentPage.HasMenuCurrent "main" .) }}text-text-primary bg-white/10{{ else }}text-text-secondary hover:text-text-primary hover:bg-white/5{{ end }}">
                         {{ .Name }}
                     </a>

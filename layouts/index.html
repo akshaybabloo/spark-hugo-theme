@@ -22,6 +22,8 @@
 <body class="min-h-screen">
 
 <div id="search-app" class="min-h-screen flex flex-col">
+    <a href="#main-content"
+       class="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[200] focus:rounded-lg focus:bg-surface focus:px-4 focus:py-2 focus:text-text-primary focus:ring-2 focus:ring-accent">Skip to content</a>
     <!-- Search button -->
     <header class="fixed top-0 right-0 p-6 z-50">
         <button class="p-3 text-text-secondary hover:text-text-primary transition-all duration-200 cursor-pointer rounded-full hover:bg-white/10"
@@ -29,12 +31,12 @@
                 @click="showSearchToggle()"
                 :aria-expanded="searchOpen"
                 aria-label="Search">
-            <span class="material-symbols-outlined text-2xl">search</span>
+            <span aria-hidden="true" class="material-symbols-outlined text-2xl">search</span>
         </button>
     </header>
 
     <!-- Main Content -->
-    <main class="grow flex items-center justify-center p-6 md:p-12 lg:p-24 relative overflow-hidden">
+    <main id="main-content" tabindex="-1" class="grow flex items-center justify-center p-6 md:p-12 lg:p-24 relative overflow-hidden outline-none">
 
         {{ if .Site.Params.homeAnimation }}
         <!-- Game of Life background animation -->
