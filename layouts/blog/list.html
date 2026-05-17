@@ -52,7 +52,8 @@
                         <img class="object-cover w-full h-full transform group-hover:scale-105 transition-transform duration-700"
                              src="{{ $srcOriginal }}"
                              alt="{{ .Title }}"
-                             loading="eager">
+                             loading="eager"
+                             fetchpriority="high">
                     </picture>
                 {{ else }}
                     <div class="w-full h-full bg-surface-hover flex items-center justify-center text-text-muted">

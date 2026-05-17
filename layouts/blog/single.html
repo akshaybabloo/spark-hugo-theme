@@ -55,7 +55,7 @@
                     {{ $src := $imagePath.webpSrc }}
 
                     <source srcset="{{ $src }}" type="image/webp">
-                    <img class="w-full rounded-none md:rounded-2xl shadow-2xl cursor-zoom-in" src="{{ $srcOriginal }}" alt="{{ $element.imageCaption }}">
+                    <img class="w-full rounded-none md:rounded-2xl shadow-2xl cursor-zoom-in" src="{{ $srcOriginal }}" alt="{{ $element.imageCaption }}" fetchpriority="high">
                 </picture>
                 {{ if $element.imageCaption }}
                 <figcaption class="text-center text-sm text-text-muted mt-4 italic">{{ $element.imageCaption }}</figcaption>
