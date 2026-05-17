@@ -167,8 +167,17 @@ createApp({
 				if (imgEl.width < 100 || imgEl.height < 100) return
 
 				imgEl.style.cursor = 'zoom-in'
-				imgEl.addEventListener('click', () => {
-					openImageModal(imgEl.src, imgEl.alt)
+				// Make the zoomable image operable by keyboard, not just mouse.
+				imgEl.tabIndex = 0
+				imgEl.setAttribute('role', 'button')
+				imgEl.setAttribute('aria-label', `Enlarge image${imgEl.alt ? `: ${imgEl.alt}` : ''}`)
+				const open = () => openImageModal(imgEl.src, imgEl.alt)
+				imgEl.addEventListener('click', open)
+				imgEl.addEventListener('keydown', (e) => {
+					if (e.key === 'Enter' || e.key === ' ') {
+						e.preventDefault()
+						open()
+					}
 				})
 			})
 		}
