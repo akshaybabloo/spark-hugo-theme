@@ -5,16 +5,16 @@
         "@type": "WebSite",
         "publisher": {
             "@type": "Organization",
-            "name": "{{ .Site.Title }}",
+            "name": {{ .Site.Title | jsonify | safeJS }},
             "url": {{ .Site.BaseURL | jsonify | safeJS }},
             "logo": {
                 "@type": "ImageObject",
-                "url": {{ $image.Permalink }},
+                "url": {{ $image.Permalink | jsonify | safeJS }},
                 "width": {{ $image.Width }},
                 "height": {{ $image.Height }}
             }
         },
-        "url": {{ .Permalink }},
+        "url": {{ .Permalink | jsonify | safeJS }},
         "mainEntityOfPage": {
             "@type": "WebPage",
             "@id": {{ .Site.BaseURL | jsonify | safeJS }}

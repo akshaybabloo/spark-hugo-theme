@@ -33,26 +33,21 @@
             },
             "url": {{ .Site.BaseURL | jsonify | safeJS }},
             "sameAs": [
-                {{ .Site.Params.twitter | jsonify | safeJS }},
-                {{ .Site.Params.github | jsonify | safeJS }},
-                {{ .Site.Params.linkedin | jsonify | safeJS }},
+                {{ .Site.Params.social.twitter | jsonify | safeJS }},
+                {{ .Site.Params.social.github | jsonify | safeJS }},
+                {{ .Site.Params.social.linkedin | jsonify | safeJS }},
                 {{ .Site.BaseURL | jsonify | safeJS }}
             ]
         },
-        "headline": "{{ .Title }}",
+        "headline": {{ .Title | jsonify | safeJS }},
         "url": {{ .Permalink | jsonify | safeJS }},
-        "datePublished": {{ .PublishDate.Format "2006-01-02T15:04:05-0700" | safeHTML}},
-        {{- if not (eq .Lastmod .Date) -}}
-        "dateModified": {{ .Lastmod.Format "2006-01-02T15:04:05-0700" | safeHTML}},
-        {{- end -}}
-        "image": {
-            "@type": "ImageObject",
-            "url": {{ $src | absURL | jsonify | safeJS }},
-            "width": 2600,
-            "height": 1430
-        },
-        "keywords": "{{ delimit .Params.tags ", " }}",
-        "description": "{{ .Description | safeHTML }}",
+        "datePublished": {{ .PublishDate.Format "2006-01-02T15:04:05-07:00" | jsonify | safeJS }},
+        {{- if not (eq .Lastmod .Date) }}
+        "dateModified": {{ .Lastmod.Format "2006-01-02T15:04:05-07:00" | jsonify | safeJS }},
+        {{- end }}
+        "image": {{ $src | absURL | jsonify | safeJS }},
+        "keywords": {{ delimit .Params.tags ", " | jsonify | safeJS }},
+        "description": {{ .Description | jsonify | safeJS }},
         "mainEntityOfPage": {
             "@type": "WebPage",
             "@id": {{ .Site.BaseURL | jsonify | safeJS }}
