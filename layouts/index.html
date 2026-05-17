@@ -39,6 +39,7 @@
         {{ if .Site.Params.homeAnimation }}
         <!-- Game of Life background animation -->
         <canvas id="automata-bg"
+                data-shape="{{ .Site.Params.homeAnimationShape | default `circle` }}"
                 aria-hidden="true"
                 class="absolute inset-0 z-0 h-full w-full pointer-events-none opacity-0"></canvas>
         {{ end }}

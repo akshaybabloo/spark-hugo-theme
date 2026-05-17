@@ -17,6 +17,9 @@ export function initAutomata(canvas: HTMLCanvasElement): void {
 
 	const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
+	// Cell shape, set from config.toml via the canvas `data-shape` attribute.
+	const shape: 'square' | 'circle' = canvas.dataset.shape === 'square' ? 'square' : 'circle'
+
 	// Cell colour follows the active section theme (--color-accent on <body>).
 	const accent = getComputedStyle(document.body).getPropertyValue('--color-accent').trim() || '#fb7185'
 
@@ -85,16 +88,21 @@ export function initAutomata(canvas: HTMLCanvasElement): void {
 		ctx.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight)
 		ctx.fillStyle = accent
 		const radius = DOT_SIZE / 2
+		const offset = (CELL - DOT_SIZE) / 2 // centres a square within its cell
 		for (let i = 0; i < cur.length; i++) {
 			// Ease each cell's alpha toward its alive/dead target.
 			fade[i] += ((cur[i] ? 1 : 0) - fade[i]) * 0.2
 			if (fade[i] < 0.02) continue
 			ctx.globalAlpha = fade[i] * 0.32
-			const cx = (i % cols) * CELL + CELL / 2
-			const cy = ((i / cols) | 0) * CELL + CELL / 2
-			ctx.beginPath()
-			ctx.arc(cx, cy, radius, 0, Math.PI * 2)
-			ctx.fill()
+			const x = (i % cols) * CELL
+			const y = ((i / cols) | 0) * CELL
+			if (shape === 'square') {
+				ctx.fillRect(x + offset, y + offset, DOT_SIZE, DOT_SIZE)
+			} else {
+				ctx.beginPath()
+				ctx.arc(x + CELL / 2, y + CELL / 2, radius, 0, Math.PI * 2)
+				ctx.fill()
+			}
 		}
 		ctx.globalAlpha = 1
 	}
