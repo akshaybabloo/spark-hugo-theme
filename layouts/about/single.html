@@ -37,7 +37,7 @@
         <!-- Main Content Column -->
         <div class="lg:col-span-8 space-y-20">
             <!-- Experience -->
-            {{ range $k, $i := .Site.Data.Experience }}
+            {{ range $k, $i := hugo.Data.Experience }}
             <section class="relative">
                 <div class="flex items-center gap-4 mb-10">
                     <span class="w-12 h-1 bg-accent rounded-full"></span>
@@ -50,7 +50,7 @@
             {{ end }}
 
             <!-- Education -->
-            {{ range $k, $i := .Site.Data.Education }}
+            {{ range $k, $i := hugo.Data.Education }}
             <section class="relative">
                 <div class="flex items-center gap-4 mb-10">
                      <span class="w-12 h-1 bg-accent rounded-full"></span>
@@ -63,7 +63,7 @@
             {{ end }}
 
             <!-- Research Interests -->
-            {{ range $k, $i := .Site.Data.Interests }}
+            {{ range $k, $i := hugo.Data.Interests }}
             <section class="relative">
                 <div class="flex items-center gap-4 mb-10">
                      <span class="w-12 h-1 bg-accent rounded-full"></span>

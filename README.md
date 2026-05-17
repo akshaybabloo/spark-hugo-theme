@@ -1,6 +1,6 @@
 # Spark 3
 
-This is the third version of the Spark theme, significantly redesigned in 2026 to feature a modern, minimalist, and high-contrast aesthetic. It is built on Hugo v0.133+.
+This is the third version of the Spark theme, significantly redesigned in 2026 to feature a modern, minimalist, and high-contrast aesthetic. It is built on Hugo v0.156+.
 
 It uses the following technologies:
 
