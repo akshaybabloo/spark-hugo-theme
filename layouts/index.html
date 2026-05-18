@@ -32,7 +32,7 @@
     {{ end }}
 
     <a href="#main-content"
-       class="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[200] focus:rounded-lg focus:bg-surface focus:px-4 focus:py-2 focus:text-text-primary focus:ring-2 focus:ring-accent">Skip to content</a>
+       class="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-200 focus:rounded-lg focus:bg-surface focus:px-4 focus:py-2 focus:text-text-primary focus:ring-2 focus:ring-accent">Skip to content</a>
     <!-- Search button -->
     <header class="fixed top-0 right-0 p-6 z-50">
         <button class="p-3 text-text-secondary hover:text-text-primary transition-all duration-200 cursor-pointer rounded-full hover:bg-white/10"
@@ -137,9 +137,29 @@
                 {{ else if eq $type "julia" }}
                     <p class="text-accent font-bold text-xs uppercase tracking-widest mb-2">Julia Set</p>
                     <p class="text-text-secondary text-sm leading-relaxed">A dynamic fractal where the complex constant is mapped to your mouse position, allowing real-time morphing of its filaments.</p>
+                {{ else if eq $type "attractors" }}
+                    <p class="text-accent font-bold text-xs uppercase tracking-widest mb-2">Strange Attractors</p>
+                    <p class="text-text-secondary text-sm leading-relaxed">A visualization of chaos theory. Particles trace paths through a system of differential equations, showing sensitive dependence on initial conditions.</p>
+                {{ else if eq $type "rd" }}
+                    <p class="text-accent font-bold text-xs uppercase tracking-widest mb-2">Reaction-Diffusion</p>
+                    <p class="text-text-secondary text-sm leading-relaxed">Simulates two virtual chemicals reacting and diffusing to create organic, biological patterns like zebra stripes or brain coral.</p>
+                {{ else if eq $type "physarum" }}
+                    <p class="text-accent font-bold text-xs uppercase tracking-widest mb-2">Physarum Simulation</p>
+                    <p class="text-text-secondary text-sm leading-relaxed">A particle simulation inspired by slime mold. Particles leave scent trails and follow paths of highest concentration to build complex networks.</p>
+                {{ else if eq $type "boids" }}
+                    <p class="text-accent font-bold text-xs uppercase tracking-widest mb-2">Boids Flocking</p>
+                    <p class="text-text-secondary text-sm leading-relaxed">Simulates emergent flocking behavior using three simple rules: separation, alignment, and cohesion.</p>
+                {{ else if eq $type "lsystem" }}
+                    <p class="text-accent font-bold text-xs uppercase tracking-widest mb-2">L-Systems</p>
+                    <p class="text-text-secondary text-sm leading-relaxed">A recursive formal grammar used to model the growth processes of plant development, generating infinitely detailed fractal trees.</p>
+                {{ else if eq $type "lissajous" }}
+                    <p class="text-accent font-bold text-xs uppercase tracking-widest mb-2">Lissajous Curves</p>
+                    <p class="text-text-secondary text-sm leading-relaxed">Graphs of a system of parametric equations describing complex harmonic motion, creating retro oscilloscope patterns.</p>
+                {{ else if eq $type "penrose" }}
+                    <p class="text-accent font-bold text-xs uppercase tracking-widest mb-2">Penrose Tiling</p>
+                    <p class="text-text-secondary text-sm leading-relaxed">An aperiodic tiling of the plane using the Golden Ratio, creating a mathematically perfect mosaic that never repeats.</p>
                 {{ end }}
-            </div>
-            <div class="w-3 h-3 bg-surface border-l border-b border-white/10 rotate-45 ml-4 -mt-1.5"></div>
+            </div>            <div class="w-3 h-3 bg-surface border-l border-b border-white/10 rotate-45 ml-4 -mt-1.5"></div>
         </div>
     </div>
     {{ end }}

@@ -27,3 +27,10 @@ automata-*.esm.js
 mandelbrot-*.esm.js
 animation-*.esm.js
 julia-*.esm.js
+attractors-*.esm.js
+rd-*.esm.js
+physarum-*.esm.js
+boids-*.esm.js
+lsystem-*.esm.js
+lissajous-*.esm.js
+penrose-*.esm.js

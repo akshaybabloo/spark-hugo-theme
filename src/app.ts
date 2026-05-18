@@ -59,6 +59,20 @@ createApp({
 					import('./mandelbrot').then(({ initMandelbrot }) => initMandelbrot(automataCanvas))
 				} else if (type === 'julia') {
 					import('./julia').then(({ initJulia }) => initJulia(automataCanvas))
+				} else if (type === 'attractors') {
+					import('./attractors').then(({ initAttractors }) => initAttractors(automataCanvas))
+				} else if (type === 'rd') {
+					import('./rd').then(({ initRD }) => initRD(automataCanvas))
+				} else if (type === 'physarum') {
+					import('./physarum').then(({ initPhysarum }) => initPhysarum(automataCanvas))
+				} else if (type === 'boids') {
+					import('./boids').then(({ initBoids }) => initBoids(automataCanvas))
+				} else if (type === 'lsystem') {
+					import('./lsystem').then(({ initLSystem }) => initLSystem(automataCanvas))
+				} else if (type === 'lissajous') {
+					import('./lissajous').then(({ initLissajous }) => initLissajous(automataCanvas))
+				} else if (type === 'penrose') {
+					import('./penrose').then(({ initPenrose }) => initPenrose(automataCanvas))
 				} else {
 					import('./automata').then(({ initAutomata }) => initAutomata(automataCanvas))
 				}
