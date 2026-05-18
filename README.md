@@ -47,7 +47,7 @@ From the root of your Hugo site, clone the theme into `themes/` by running:
 
 ```bash
 # Clone theme into the themes/spark directory
-$ git clone https://github.com/akshaybabloo/spark-hugo-theme.git themes/spark
+$ git clone -b spark-3 --single-branch https://github.com/akshaybabloo/spark-hugo-theme.git themes/spark3
 ```
 
 ## Usage
