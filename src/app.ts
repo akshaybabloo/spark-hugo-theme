@@ -73,6 +73,8 @@ createApp({
 					import('./lissajous').then(({ initLissajous }) => initLissajous(automataCanvas))
 				} else if (type === 'penrose') {
 					import('./penrose').then(({ initPenrose }) => initPenrose(automataCanvas))
+				} else if (type === 'bubble') {
+					import('./bubble').then(({ initBubble }) => initBubble(automataCanvas))
 				} else {
 					import('./automata').then(({ initAutomata }) => initAutomata(automataCanvas))
 				}

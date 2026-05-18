@@ -158,8 +158,10 @@
                 {{ else if eq $type "penrose" }}
                     <p class="text-accent font-bold text-xs uppercase tracking-widest mb-2">Penrose Tiling</p>
                     <p class="text-text-secondary text-sm leading-relaxed">An aperiodic tiling of the plane using the Golden Ratio, creating a mathematically perfect mosaic that never repeats.</p>
-                {{ end }}
-            </div>            <div class="w-3 h-3 bg-surface border-l border-b border-white/10 rotate-45 ml-4 -mt-1.5"></div>
+                {{ else if eq $type "bubble" }}
+                    <p class="text-accent font-bold text-xs uppercase tracking-widest mb-2">Bubble Universe</p>
+                    <p class="text-text-secondary text-sm leading-relaxed">Based on an iterated trigonometric formula that creates a field of glowing, organic 'bubbles' that morph and flow over time.</p>
+                {{ end }}            </div>            <div class="w-3 h-3 bg-surface border-l border-b border-white/10 rotate-45 ml-4 -mt-1.5"></div>
         </div>
     </div>
     {{ end }}
