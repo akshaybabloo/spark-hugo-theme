@@ -8,7 +8,7 @@ description = ""
 homepage = "https://www.gollahalli.com/"
 tags = []
 features = []
-min_version = "0.80.0"
+min_version = "0.160.0"
 
 [author]
   name = "Akshay Raj Gollahalli"
