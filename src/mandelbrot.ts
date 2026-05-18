@@ -19,6 +19,7 @@ void main() { gl_Position = vec4(a_pos, 0.0, 1.0); }
 const FRAGMENT_SRC = `
 precision highp float;
 uniform vec2  u_resolution;
+uniform vec2  u_mouse;
 uniform float u_time;
 uniform vec3  u_accent;
 
@@ -33,25 +34,43 @@ void main() {
 	float scale = mix(1.6, 0.05, breathe);
 	int   limit = int(mix(140.0, float(MAX_ITER), breathe));
 
-	vec2 c = CENTER + uv * scale;
+	// Mouse parallax: slightly offset the center based on mouse position.
+	vec2 mouseOffset = (u_mouse - 0.5) * scale * 0.15;
+	vec2 c = CENTER + uv * scale + mouseOffset;
 	vec2 z = vec2(0.0);
 	float iter = 0.0;
+	float trap = 1e10;
 	bool escaped = false;
+
 	for (int i = 0; i < MAX_ITER; i++) {
 		if (i >= limit) break;
 		z = vec2(z.x * z.x - z.y * z.y, 2.0 * z.x * z.y) + c;
+
+		// Orbit Trap: track minimum distance to the axes. Creates "stalks" or "veins".
+		trap = min(trap, abs(z.x));
+		trap = min(trap, abs(z.y));
+
 		if (dot(z, z) > 256.0) { escaped = true; iter = float(i); break; }
 	}
 
-	// Inside the set: transparent, lets the page background show through.
-	if (!escaped) { gl_FragColor = vec4(0.0); return; }
+	// Inside the set: show a faint version of the trap for subtle texture.
+	if (!escaped) {
+		float insideTrap = pow(clamp(1.0 - trap, 0.0, 1.0), 10.0);
+		gl_FragColor = vec4(u_accent, insideTrap * 0.12);
+		return;
+	}
 
 	// Smooth (fractional) iteration count for continuous colour bands.
 	float mu = iter + 1.0 - log(log(dot(z, z)) * 0.5) / log(2.0);
 
 	// Cyclic alpha ramp scrolling over time -> flowing bands.
 	float band = sin(mu * 0.35 - u_time * 0.6) * 0.5 + 0.5;
-	gl_FragColor = vec4(u_accent, band * 0.34);
+
+	// Mix smooth escape-time with the orbit trap.
+	float trapEffect = pow(clamp(1.0 - trap, 0.0, 1.0), 6.0);
+	float alpha = clamp(band * 0.34 + trapEffect * 0.35, 0.0, 0.7);
+
+	gl_FragColor = vec4(u_accent, alpha);
 }
 `
 
@@ -78,8 +97,16 @@ export function initMandelbrot(canvas: HTMLCanvasElement): void {
 	gl.vertexAttribPointer(posLoc, 2, gl.FLOAT, false, 0, 0)
 
 	const uResolution = gl.getUniformLocation(program, 'u_resolution')
+	const uMouse = gl.getUniformLocation(program, 'u_mouse')
 	const uTime = gl.getUniformLocation(program, 'u_time')
 	gl.uniform3f(gl.getUniformLocation(program, 'u_accent'), ar / 255, ag / 255, ab / 255)
+
+	let mx = 0.5
+	let my = 0.5
+	window.addEventListener('mousemove', (e) => {
+		mx = e.clientX / window.innerWidth
+		my = 1 - e.clientY / window.innerHeight
+	})
 
 	function resize() {
 		const w = canvas.clientWidth
@@ -96,6 +123,7 @@ export function initMandelbrot(canvas: HTMLCanvasElement): void {
 
 	function render(seconds: number) {
 		gl.uniform1f(uTime, seconds)
+		gl.uniform2f(uMouse, mx, my)
 		gl.drawArrays(gl.TRIANGLES, 0, 3)
 	}
 
