@@ -1,47 +1,53 @@
 # Spark 3
 
-This is the third version of the Spark theme, significantly redesigned in 2026 to feature a modern, minimalist, and high-contrast aesthetic. It is built on Hugo v0.156+.
+This is the third version of the Spark theme, significantly redesigned in 2026 to feature a modern, minimalist, high-contrast aesthetic, and a suite of high-performance mathematical background animations. It is built for Hugo v0.160+.
 
 It uses the following technologies:
 
-- [Tailwind CSS](https://tailwindcss.com/) - For styling (v4)
-- [Vue.js](https://vuejs.org/) - For interactivity (Search, Mobile Menu)
-- [Algolia](https://www.algolia.com/) - For search (Instant search with keyboard navigation)
-- [Vite](https://vitejs.dev/) - For asset bundling
-- [Material Symbols](https://fonts.google.com/icons) - For icons
-- [TypeScript](https://www.typescriptlang.org/) - For type checking
+- **Tailwind CSS v4** - For styling and utility classes.
+- **Vue 3** - For interactivity (Algolia Search, Image Modal).
+- **Vite 8 & Rolldown** - For lightning-fast asset bundling and ESM chunking.
+- **WebGL & Canvas 2D** - For 11 distinct mathematical background animations.
+- **TypeScript** - For robust front-end scripting.
+- **pnpm** - For monorepo workspace management.
 
 ## Key Features
 
 ### Design & Layout
-*   **Modern Split Hero:** Homepage features a striking split layout (Text Left, Image Right) with bold typography (`text-8xl`).
-*   **Glassmorphism:** Sticky navigation bar and search modal use `backdrop-blur` for a modern feel.
-*   **Responsive Grid:** Project and Blog lists use a clean, responsive grid system (1-3 columns) that handles different screen sizes elegantly.
-*   **Immersive Reading:** Blog posts feature a centered `max-w-7xl` layout with a sticky sidebar for Table of Contents and Share buttons.
+*   **Immersive Hero:** Homepage features a centered, minimalist layout backed by an interactive, animated mathematical background.
+*   **Section Theming:** Dynamic palettes (Ruby Red, Sapphire Blue, Amethyst Purple, etc.) that adapt based on the active content section.
+*   **Glassmorphism:** Navigation and interactive elements use `backdrop-blur` for a modern feel.
+*   **Responsive Grid:** Clean, responsive grid systems for Projects and Blog posts.
+
+### Mathematical Animations
+Spark 3 includes 11 high-performance, interchangeable background animations that lazy-load on the homepage. Configure them via `homeAnimationType` in `config.toml`:
+
+1.  `life`: Conway's Game of Life cellular automaton.
+2.  `mandelbrot`: Fractal set with "Orbit Trap" textures and mouse parallax (WebGL).
+3.  `julia`: Interactive fractal morphing mapped to real-time mouse position (WebGL).
+4.  `attractors`: Chaotic Lorenz Attractor with 3D-to-2D projection.
+5.  `rd`: Reaction-Diffusion procedural shader for organic patterns (WebGL).
+6.  `physarum`: Multi-agent slime mold simulation.
+7.  `boids`: Emergent flocking behavior simulation.
+8.  `lsystem`: Animated "Fractal Garden" featuring Ferns, Plants, and Flowers.
+9.  `lissajous`: Harmonic motion curve visualizer (Oscilloscope style).
+10. `penrose`: Animated aperiodic Penrose Tiling with breathing inflation.
+11. `bubble`: High-performance WebGL Bubble Universe computing 62,500 points in parallel (WebGL).
 
 ### Components
-*   **Advanced Search:** Floating "Command Palette" style search modal.
-    *   **Keyboard Navigation:** Use `↑` `↓` to navigate and `Enter` to select.
-    *   **Categorized Results:** Groups results by section (Blog, Projects).
-*   **Smart Pagination:** Pill-shaped pagination with tactile hover effects and clear active state visibility.
+*   **Advanced Search:** Floating "Command Palette" style search modal powered by Algolia.
+    *   **Keyboard Navigation:** Use `↑` `↓` to navigate, `Enter` to select, and `ESC` to close.
+*   **Smart Pagination:** Pill-shaped pagination with tactile hover effects.
 *   **Interactive Cards:** Project cards feature subtle borders and "lift" animations on hover.
-
-### Page Templates
-*   **Home:** Custom split hero layout.
-*   **Projects:** Grid layout with hover-interactive cards.
-*   **Blog:**
-    *   **Featured Post:** The first post on Page 1 is highlighted with a large split layout.
-    *   **Grid:** Subsequent posts (and all posts on Page 2+) follow a clean 3-column grid.
-*   **About:** Custom timeline layout for Experience and Education, plus a "Connect" sidebar.
-*   **Publications:** Specialized bibliography layout with hanging indents and citation styling.
+*   **Animation Info System:** A bottom-left `(i)` button that reveals the math behind the currently active background animation.
 
 ## Quick Start
 
 From the root of your Hugo site, clone the theme into `themes/` by running:
 
 ```bash
-# Clone theme into the themes/spark2 directory
-$ git clone https://github.com/akshaybabloo/spark-hugo-theme.git themes/spark2
+# Clone theme into the themes/spark directory
+$ git clone https://github.com/akshaybabloo/spark-hugo-theme.git themes/spark
 ```
 
 ## Usage
@@ -121,31 +127,24 @@ Please see the configuration [here](https://github.com/akshaybabloo/gollahalli.c
 
 ```toml
 baseURL = "https://www.gollahalli.com/"
-theme = "spark2"
+theme = "spark"
 
 [pagination]
-pagerSize = 12  # Recommended for optimal grid alignment (3x4)
+pagerSize = 12
 
 [params]
-# ... (standard params)
+homeAnimation = true
+homeAnimationType = "bubble" # Select from the 11 options above
 ```
-
-## Front Matter
-
-### `projects` Page
-```yaml
-projectCategory: "Open Source" # Used for grouping in list layout
-externalurl: "https://..."     # Link to external project
-```
-
-### `publications` Page
-Uses a custom layout `layouts/publications/single.html`. The content should be a standard markdown list of citations.
 
 ## Development
 
-For theme changes:
-1.  Install dependencies: `npm install` inside `themes/spark2`.
-2.  Run dev server: `npm run watch` (runs Vite in watch mode).
+Spark 3 is built as a `pnpm` workspace. To modify the theme:
+
+1.  Run `pnpm install` at the repository root.
+2.  Run `pnpm run static` to stage fonts.
+3.  Run `pnpm --filter spark3 run watch` to start Vite in watch mode.
+4.  Run `hugo serve` to view changes.
 
 ## License
 
