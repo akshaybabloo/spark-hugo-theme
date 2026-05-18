@@ -26,3 +26,4 @@ rolldown-runtime-*.esm.js
 automata-*.esm.js
 mandelbrot-*.esm.js
 animation-*.esm.js
+julia-*.esm.js

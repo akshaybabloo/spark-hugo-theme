@@ -54,8 +54,11 @@ createApp({
 			// Homepage-only background animation, lazy-loaded by type
 			const automataCanvas = document.getElementById('automata-bg') as HTMLCanvasElement | null
 			if (automataCanvas) {
-				if (automataCanvas.dataset.type === 'mandelbrot') {
+				const type = automataCanvas.dataset.type
+				if (type === 'mandelbrot') {
 					import('./mandelbrot').then(({ initMandelbrot }) => initMandelbrot(automataCanvas))
+				} else if (type === 'julia') {
+					import('./julia').then(({ initJulia }) => initJulia(automataCanvas))
 				} else {
 					import('./automata').then(({ initAutomata }) => initAutomata(automataCanvas))
 				}
