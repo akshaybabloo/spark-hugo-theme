@@ -39,8 +39,9 @@
     <main id="main-content" tabindex="-1" class="grow flex items-center justify-center p-6 md:p-12 lg:p-24 relative overflow-hidden outline-none">
 
         {{ if .Site.Params.homeAnimation }}
-        <!-- Game of Life background animation -->
+        <!-- Homepage background animation (Game of Life or Mandelbrot set) -->
         <canvas id="automata-bg"
+                data-type="{{ .Site.Params.homeAnimationType | default `life` }}"
                 data-shape="{{ .Site.Params.homeAnimationShape | default `circle` }}"
                 aria-hidden="true"
                 class="absolute inset-0 z-0 h-full w-full pointer-events-none opacity-0"></canvas>

@@ -24,3 +24,5 @@ app-*.esm.js
 rolldown-runtime-*.esm.js
 *.map
 automata-*.esm.js
+mandelbrot-*.esm.js
+animation-*.esm.js

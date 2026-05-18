@@ -51,10 +51,14 @@ createApp({
 			document.addEventListener('keydown', keyListener)
 			initImageModal()
 
-			// Homepage-only cellular-automata background (lazy-loaded with anime.js)
+			// Homepage-only background animation, lazy-loaded by type
 			const automataCanvas = document.getElementById('automata-bg') as HTMLCanvasElement | null
 			if (automataCanvas) {
-				import('./automata').then(({ initAutomata }) => initAutomata(automataCanvas))
+				if (automataCanvas.dataset.type === 'mandelbrot') {
+					import('./mandelbrot').then(({ initMandelbrot }) => initMandelbrot(automataCanvas))
+				} else {
+					import('./automata').then(({ initAutomata }) => initAutomata(automataCanvas))
+				}
 			}
 		})
 
