@@ -46,9 +46,14 @@ createApp({
 		const imageModalSrc = ref('')
 		const imageModalAlt = ref('')
 
+		// Animation info ref
+		const animationInfoOpen = ref(false)
+		const toggleAnimationInfo = () => { animationInfoOpen.value = !animationInfoOpen.value }
+
 		onMounted(() => {
 			console.log('Welcome to gollahalli.com!', __GIT_HASH__)
 			document.addEventListener('keydown', keyListener)
+			document.addEventListener('click', clickListener)
 			initImageModal()
 
 			// Homepage-only background animation, lazy-loaded by type
@@ -85,7 +90,17 @@ createApp({
 
 		onBeforeUnmount(() => {
 			document.removeEventListener('keydown', keyListener)
+			document.removeEventListener('click', clickListener)
 		})
+
+		function clickListener(e: MouseEvent) {
+			if (animationInfoOpen.value) {
+				const target = e.target as HTMLElement | null
+				if (target && !target.closest('.animation-info-container')) {
+					animationInfoOpen.value = false
+				}
+			}
+		}
 
 		function keyListener(e: KeyboardEvent) {
 			// Search Navigation
@@ -115,6 +130,9 @@ createApp({
 				}
 				if (imageModalVisible.value) {
 					closeImageModal()
+				}
+				if (animationInfoOpen.value) {
+					animationInfoOpen.value = false
 				}
 			}
 		}
@@ -247,6 +265,9 @@ createApp({
 			imageModalAlt,
 			openImageModal,
 			closeImageModal,
+			// Animation info
+			animationInfoOpen,
+			toggleAnimationInfo,
 		}
 	},
 }).mount('#search-app')

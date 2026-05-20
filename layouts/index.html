@@ -121,11 +121,14 @@
 
     {{ if .Site.Params.homeAnimation }}
     <!-- Animation Info (Bottom Left) -->
-    <div class="fixed bottom-4 left-4 z-50 group">
-        <button class="flex items-center justify-center p-3 text-text-muted/40 hover:text-text-primary transition-all duration-300 rounded-full hover:bg-white/5" aria-label="Animation Info">
+    <div class="fixed bottom-4 left-4 z-50 group animation-info-container">
+        <button class="flex items-center justify-center p-3 text-text-muted/40 hover:text-text-primary focus:outline-none transition-all duration-300 rounded-full hover:bg-white/5" 
+                aria-label="Animation Info"
+                @click.prevent="toggleAnimationInfo()">
             <span class="material-symbols-outlined text-xl">info</span>
         </button>
-        <div class="absolute bottom-full left-2 mb-4 opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto transition-all duration-300 transform translate-y-2 group-hover:translate-y-0 z-50">
+        <div class="absolute bottom-full left-2 mb-4 transition-all duration-300 transform z-50"
+             :class="animationInfoOpen ? 'opacity-100 pointer-events-auto translate-y-0' : 'opacity-0 pointer-events-none translate-y-2 lg:group-hover:opacity-100 lg:group-hover:pointer-events-auto lg:group-hover:translate-y-0'">
             <div class="w-64 md:w-80 bg-surface/95 backdrop-blur-md border border-white/10 rounded-2xl p-4 shadow-2xl text-left">
                 {{ $type := .Site.Params.homeAnimationType | default "life" }}
                 {{ if eq $type "life" }}
