@@ -12,25 +12,25 @@
 		"fmt": "biome format --write"
 	},
 	"devDependencies": {
-		"@biomejs/biome": "^2.3.12",
+		"@biomejs/biome": "^2.5.8",
 		"@tailwindcss/forms": "^0.5.11",
-		"@tailwindcss/postcss": "^4.1.18",
-		"@tailwindcss/typography": "^0.5.19",
-		"@tailwindcss/vite": "^4.1.18",
+		"@tailwindcss/postcss": "^4.3.3",
+		"@tailwindcss/typography": "^0.5.20",
+		"@tailwindcss/vite": "^4.3.3",
 		"gulp": "^5.0.1",
 		"gulp-cli": "^3.1.0",
-		"postcss": "^8.5.14",
-		"sass": "^1.97.3",
-		"tailwindcss": "^4.1.18",
+		"postcss": "^8.5.26",
+		"sass": "^1.102.0",
+		"tailwindcss": "^4.3.3",
 		"typescript": "^6.0.3",
-		"vite": "^8.0.11"
+		"vite": "^8.2.1"
 	},
 	"dependencies": {
-		"@algolia/client-search": "^5.47.0",
+		"@algolia/client-search": "^5.56.0",
 		"@microsoft/clarity": "^1.0.2",
-		"animejs": "^4.4.1",
+		"animejs": "^4.5.0",
 		"firacode": "^6.2.0",
-		"video.js": "^8.23.4",
-		"vue": "^3.5.27"
+		"video.js": "^8.24.0",
+		"vue": "^3.5.41"
 	}
 }
