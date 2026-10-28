@@ -30,7 +30,7 @@
 		"@microsoft/clarity": "^1.0.2",
 		"animejs": "^4.5.0",
 		"firacode": "^6.2.0",
-		"video.js": "^8.24.0",
+		"video.js": "^10.2.0",
 		"vue": "^3.5.41"
 	}
 }
